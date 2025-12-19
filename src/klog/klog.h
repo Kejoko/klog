@@ -107,8 +107,14 @@ enum klog_level_e {
  * @brief
  * @details
  * @pre klog has not been initialized.
+ * @param max_number_loggers The maximum number of loggers able to be created
+ * @param logger_name_max_length The maximum length of a logger's name. This
+ *      also determines the width of the logger names when printing. A max
+ *      length of 8 will print 8 characters for each logger name, where it
+ *      will be left-justified and filled with spaces if the name is not long
+ *      enough to fill all characters.
  */
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t max_logger_name_length);
+void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length);
 
 /**
  * @fn klog_deinitialize
@@ -164,10 +170,10 @@ void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum 
  * @pre klog has been initialized.
  * @pre logger_handle is valid.
  * @param logger_handle
- * @param level 
+ * @param requested_level 
  * @param format
  * @param ...
  */
-void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e level, const char* format, ...);
+void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requested_level, const char* format, ...);
 
 #endif // KLOG_INCLUDED

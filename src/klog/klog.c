@@ -7,6 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* ================================================================================================================== */
+/* Klog globals                                                                                                       */
+/* ================================================================================================================== */
+
+/* Set by the user -------------------------------------------------------------------------------------------------- */
+
 /* Whether or not klog has been initialized */
 bool g_klog_is_initialized = false;
 
@@ -14,7 +20,9 @@ bool g_klog_is_initialized = false;
 uint32_t g_klog_max_number_loggers = 0;
 
 /* The maximum length allowed for a logger's name */
-uint32_t g_klog_max_logger_name_length = 0;
+uint32_t g_klog_logger_name_max_length = 0;
+
+/* Internal state --------------------------------------------------------------------------------------------------- */
 
 /* The current number of loggers which actually exist */
 uint32_t g_klog_current_number_loggers_created = 0;
@@ -48,7 +56,7 @@ const char* klog_impl_get_level_string(const enum klog_level_e requested_level) 
 /* API Implementation                                                                                                 */
 /* ================================================================================================================== */
 
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t max_logger_name_length) {
+void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length) {
     if (g_klog_is_initialized) {
         printf("Trying to initialize klog, when it is already initialized\n");
         exit(1);
@@ -59,16 +67,16 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t max_logge
         exit(1);
     }
 
-    if (max_logger_name_length == 0) {
+    if (logger_name_max_length == 0) {
         printf("Trying to initialize klog with maximum length of logger names set to 0");
         exit(1);
     }
 
     g_klog_max_number_loggers = max_number_loggers;
-    g_klog_max_logger_name_length = max_logger_name_length;
+    g_klog_logger_name_max_length = logger_name_max_length;
 
     /* set all characters to space (' ') by default, so we can auto fill the end of the names if they are too short */
-    const uint32_t total_logger_names_array_size = g_klog_max_logger_name_length * g_klog_max_number_loggers;
+    const uint32_t total_logger_names_array_size = g_klog_logger_name_max_length * g_klog_max_number_loggers;
     gp_klog_logger_names = malloc(total_logger_names_array_size);
     memset(gp_klog_logger_names, ' ', total_logger_names_array_size);
 
@@ -104,7 +112,7 @@ void klog_deinitialize(void) {
     }
 
     g_klog_max_number_loggers = 0;
-    g_klog_max_logger_name_length = 0;
+    g_klog_logger_name_max_length = 0;
     g_klog_current_number_loggers_created = 0;
     free(gp_klog_logger_names);
     free(gp_klog_logger_levels);
@@ -125,9 +133,9 @@ klog_logger_handle_t klog_logger_create(const char* logger_name) {
 
     const klog_logger_handle_t current_logger_handle = g_klog_current_number_loggers_created;
 
-    const uint32_t logger_name_start_index = current_logger_handle * g_klog_max_logger_name_length;
-    const uint32_t num_chars_to_copy = strlen(logger_name) >= g_klog_max_logger_name_length ?
-        g_klog_max_logger_name_length : /* copy as much as we can fit */
+    const uint32_t logger_name_start_index = current_logger_handle * g_klog_logger_name_max_length;
+    const uint32_t num_chars_to_copy = strlen(logger_name) >= g_klog_logger_name_max_length ?
+        g_klog_logger_name_max_length : /* copy as much as we can fit */
         strlen(logger_name);            /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
     memcpy(&gp_klog_logger_names[logger_name_start_index], logger_name, num_chars_to_copy);
 
@@ -172,17 +180,17 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
     va_list args;
     va_start(args, format);
     /* +1 for null termination */
-    int total_length = vsnprintf(0, 0, format, args) + 1;
+    const int total_length = vsnprintf(0, 0, format, args) + 1;
     va_end(args);
     char* resulting_string = malloc(total_length);
     va_start(args, format);
     vsnprintf(resulting_string, total_length, format, args);
     va_end(args);
 
-    const char* logger_name = &gp_klog_logger_names[logger_handle * g_klog_max_logger_name_length];
+    const char* logger_name = &gp_klog_logger_names[logger_handle * g_klog_logger_name_max_length];
     const char* level_string = klog_impl_get_level_string(requested_level);
 
-    printf("[%.*s] [%.*s] %s\n", g_klog_max_logger_name_length, logger_name, G_klog_level_string_length, level_string, resulting_string);
+    printf("[%.*s] [%.*s] %s\n", g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, resulting_string);
 
     free(resulting_string);
 }
