@@ -15,7 +15,6 @@ uint32_t g_klog_max_number_loggers = 0;
 
 /* The maximum length allowed for a logger's name */
 uint32_t g_klog_max_logger_name_length = 0;
-uint32_t g_klog_null_terminated_logger_name_length = 0;
 
 /* The current number of loggers which actually exist */
 uint32_t g_klog_current_number_loggers_created = 0;
@@ -67,11 +66,9 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t max_logge
 
     g_klog_max_number_loggers = max_number_loggers;
     g_klog_max_logger_name_length = max_logger_name_length;
-    g_klog_null_terminated_logger_name_length = g_klog_max_logger_name_length + 1;
 
-    /* +1 to allow for 32 characters and null termination */
-    /* set all characters to space (' ') by default, so we can null terminate at a fixed length */
-    const uint32_t total_logger_names_array_size = g_klog_null_terminated_logger_name_length * g_klog_max_number_loggers;
+    /* set all characters to space (' ') by default, so we can auto fill the end of the names if they are too short */
+    const uint32_t total_logger_names_array_size = g_klog_max_logger_name_length * g_klog_max_number_loggers;
     gp_klog_logger_names = malloc(total_logger_names_array_size);
     memset(gp_klog_logger_names, ' ', total_logger_names_array_size);
 
@@ -128,14 +125,11 @@ klog_logger_handle_t klog_logger_create(const char* logger_name) {
 
     const klog_logger_handle_t current_logger_handle = g_klog_current_number_loggers_created;
 
-    const uint32_t logger_name_start_index = current_logger_handle * g_klog_null_terminated_logger_name_length;
+    const uint32_t logger_name_start_index = current_logger_handle * g_klog_max_logger_name_length;
     const uint32_t num_chars_to_copy = strlen(logger_name) >= g_klog_max_logger_name_length ?
         g_klog_max_logger_name_length : /* copy as much as we can fit */
-        strlen(logger_name);          /* copy it all */
+        strlen(logger_name);            /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
     memcpy(&gp_klog_logger_names[logger_name_start_index], logger_name, num_chars_to_copy);
-
-    const uint32_t null_terminator_index = logger_name_start_index + g_klog_max_logger_name_length;
-    gp_klog_logger_names[null_terminator_index] = '\0';
 
     const uint32_t logger_level_index = current_logger_handle;
     gp_klog_logger_levels[logger_level_index] = KLOG_LEVEL_OFF;
@@ -185,10 +179,10 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
     vsnprintf(resulting_string, total_length, format, args);
     va_end(args);
 
-    const char* logger_name = &gp_klog_logger_names[logger_handle * g_klog_null_terminated_logger_name_length];
+    const char* logger_name = &gp_klog_logger_names[logger_handle * g_klog_max_logger_name_length];
     const char* level_string = klog_impl_get_level_string(requested_level);
 
-    printf("[%s] [%.*s] %s\n", logger_name, G_klog_level_string_length, level_string, resulting_string);
+    printf("[%.*s] [%.*s] %s\n", g_klog_max_logger_name_length, logger_name, G_klog_level_string_length, level_string, resulting_string);
 
     free(resulting_string);
 }
