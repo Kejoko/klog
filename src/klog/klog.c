@@ -30,13 +30,18 @@ uint8_t* gp_klog_logger_levels = NULL;
 char* gp_klog_level_strings = NULL;
 
 /* ================================================================================================================== */
+/* Constants                                                                                                          */
+/* ================================================================================================================== */
+
+const uint32_t G_klog_level_string_length = 8;
+const uint32_t G_klog_number_levels = KLOG_LEVEL_TRACE + 1;
+
+/* ================================================================================================================== */
 /* Helper functions                                                                                                   */
 /* ================================================================================================================== */
 
 const char* klog_impl_get_level_string(const enum klog_level_e requested_level) {
-    const uint32_t level_string_length = 8;
-    const uint32_t level_string_length_null_terminated = level_string_length + 1;
-    const uint32_t i = level_string_length_null_terminated * requested_level;
+    const uint32_t i = G_klog_level_string_length * requested_level;
     return &gp_klog_level_strings[i];
 }
 
@@ -73,12 +78,8 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t max_logge
     const uint32_t total_logger_levels_array_size = g_klog_max_number_loggers;
     gp_klog_logger_levels = calloc(total_logger_levels_array_size, sizeof(gp_klog_logger_levels));
 
-    const uint32_t level_string_length = 8;
-    const uint32_t level_string_length_null_terminated = level_string_length + 1;
-    const uint32_t number_of_levels = KLOG_LEVEL_TRACE + 1;
-    const uint32_t level_string_array_total_bytes = level_string_length_null_terminated * number_of_levels; 
+    const uint32_t level_string_array_total_bytes = G_klog_level_string_length * G_klog_number_levels; 
     gp_klog_level_strings = malloc(level_string_array_total_bytes);
-    memset(gp_klog_level_strings, '\0', level_string_array_total_bytes);
     const char off_string[]      = "off     ";
     const char critical_string[] = "critical";
     const char error_string[]    = "error   ";
@@ -86,13 +87,13 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t max_logge
     const char info_string[]     = "info    ";
     const char debug_string[]    = "debug   ";
     const char trace_string[]    = "trace   ";
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_OFF        * level_string_length_null_terminated], off_string, sizeof(off_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_CRITICAL   * level_string_length_null_terminated], critical_string, sizeof(critical_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_ERROR      * level_string_length_null_terminated], error_string, sizeof(error_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_WARNING    * level_string_length_null_terminated], warning_string, sizeof(warning_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_INFO       * level_string_length_null_terminated], info_string, sizeof(info_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_DEBUG      * level_string_length_null_terminated], debug_string, sizeof(debug_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_TRACE      * level_string_length_null_terminated], trace_string, sizeof(trace_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_OFF      * G_klog_number_levels], off_string, sizeof(off_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_CRITICAL * G_klog_number_levels], critical_string, sizeof(critical_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_ERROR    * G_klog_number_levels], error_string, sizeof(error_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_WARNING  * G_klog_number_levels], warning_string, sizeof(warning_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_INFO     * G_klog_number_levels], info_string, sizeof(info_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_DEBUG    * G_klog_number_levels], debug_string, sizeof(debug_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_TRACE    * G_klog_number_levels], trace_string, sizeof(trace_string));
 
     g_klog_current_number_loggers_created = 0;
 
@@ -184,9 +185,10 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
     vsnprintf(resulting_string, total_length, format, args);
     va_end(args);
 
+    const char* logger_name = &gp_klog_logger_names[logger_handle * g_klog_null_terminated_logger_name_length];
     const char* level_string = klog_impl_get_level_string(requested_level);
 
-    printf("[%s] [%s] %s\n", &gp_klog_logger_names[logger_handle * g_klog_null_terminated_logger_name_length], level_string, resulting_string);
+    printf("[%s] [%.*s] %s\n", logger_name, G_klog_level_string_length, level_string, resulting_string);
 
     free(resulting_string);
 }
