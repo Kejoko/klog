@@ -92,13 +92,13 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_na
     const char info_string[]     = "info    ";
     const char debug_string[]    = "debug   ";
     const char trace_string[]    = "trace   ";
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_OFF      * G_klog_number_levels], off_string, sizeof(off_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_CRITICAL * G_klog_number_levels], critical_string, sizeof(critical_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_ERROR    * G_klog_number_levels], error_string, sizeof(error_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_WARNING  * G_klog_number_levels], warning_string, sizeof(warning_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_INFO     * G_klog_number_levels], info_string, sizeof(info_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_DEBUG    * G_klog_number_levels], debug_string, sizeof(debug_string));
-    memcpy(&gp_klog_level_strings[KLOG_LEVEL_TRACE    * G_klog_number_levels], trace_string, sizeof(trace_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_OFF      * G_klog_level_string_length], off_string, strlen(off_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_CRITICAL * G_klog_level_string_length], critical_string, strlen(critical_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_ERROR    * G_klog_level_string_length], error_string, strlen(error_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_WARNING  * G_klog_level_string_length], warning_string, strlen(warning_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_INFO     * G_klog_level_string_length], info_string, strlen(info_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_DEBUG    * G_klog_level_string_length], debug_string, strlen(debug_string));
+    memcpy(&gp_klog_level_strings[KLOG_LEVEL_TRACE    * G_klog_level_string_length], trace_string, strlen(trace_string));
 
     g_klog_current_number_loggers_created = 0;
 
