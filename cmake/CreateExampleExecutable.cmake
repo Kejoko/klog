@@ -8,7 +8,7 @@ function(create_example_executable main_file)
 
     target_compile_definitions(${executable_name} PRIVATE ${GNEISS_COMPILE_DEFINITIONS})
     target_compile_options(${executable_name} PRIVATE ${GNEISS_CMAKE_C_FLAGS})
-    target_include_directories(${executable_name} PRIVATE ${GNEISS_INCLUDE_DIRS})
+    target_include_directories(${executable_name} PRIVATE ${GNEISS_INCLUDE_DIR})
 
     set(link_libraries ${ARGN})
 

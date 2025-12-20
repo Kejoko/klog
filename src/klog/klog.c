@@ -7,17 +7,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "platform.h"
-
-#ifdef GNEISS_OS_WINDOWS
+#ifdef _WIN32
 #error "Klog does not support Windows"
 #endif
 
-#ifdef GNEISS_OS_MACOS
+#ifdef __APPLE__
 #error "Klog does not support MacOS"
 #endif
 
-#ifdef GNEISS_OS_LINUX
+#ifdef  __linux__
 #include <unistd.h>
 #include <sys/syscall.h>
 #ifndef SYS_gettid

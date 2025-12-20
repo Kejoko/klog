@@ -55,10 +55,10 @@ endforeach()
 # Source                                                                      #
 # =========================================================================== #
 
-set(GNEISS_ROOT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
-set(GNEISS_INCLUDE_DIRS ${GNEISS_ROOT_SOURCE_DIR})
+set(GNEISS_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
+set(GNEISS_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
-add_subdirectory("${GNEISS_ROOT_SOURCE_DIR}/klog")
+add_subdirectory("${GNEISS_SOURCE_DIR}/klog")
 
 # =========================================================================== #
 # Test                                                                        #
