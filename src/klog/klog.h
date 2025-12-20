@@ -87,7 +87,10 @@
 /**
  * @typedef klog_logger_handle_t The handle to a klog logger
  */
-typedef uint32_t klog_logger_handle_t;
+// typedef uint32_t klog_logger_handle_t;
+typedef struct {
+    uint32_t value;
+} klog_logger_handle_t;
 
 /**
  * @enum klog_level_e The different levels of verbosity
@@ -176,4 +179,4 @@ void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum 
  */
 void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requested_level, const char* format, ...);
 
-#endif // KLOG_INCLUDED
+#endif /* KLOG_INCLUDED */

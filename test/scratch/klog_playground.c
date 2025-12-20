@@ -12,9 +12,9 @@ int main(void) {
     klog(handle_1, KLOG_LEVEL_TRACE, "This should also not appear");
     klog(handle_1, KLOG_LEVEL_INFO, "This should appear with the format %d with %f stuff %s - first log statement", 42, 42.42f, "fourty two");
 
-    /* When compiled in, this should cause a crash due to using a logger handle that doesn't exist */
-#if 0
-    klog(1, KLOG_LEVEL_INFO, "This should crash the program");
+#if 0 /* When compiled in, this should cause a crash due to using a logger handle that doesn't exist */
+    const klog_logger_handle_t handle_1_custom = handle_1;
+    klog(handle_1_custom, KLOG_LEVEL_INFO, "This should crash the program");
 #endif
 
     const klog_logger_handle_t handle_2 = klog_logger_create("B");
@@ -23,23 +23,22 @@ int main(void) {
 
     const char* name_3 = "ABC";
     const klog_logger_handle_t handle_3 = klog_logger_create(name_3);
-    klog_logger_set_level(2, 4);
-    klog(2, 6, "Logger ABC should not log trace");
+    const klog_logger_handle_t handle_3_custom = {2};
+    klog_logger_set_level(handle_3_custom, 4);
+    klog(handle_3_custom, 6, "Logger ABC should not log trace");
     klog(handle_3, 4, "Logger ABC should log this - third log statement");
-    klog_logger_set_level(2, 5);
+    klog_logger_set_level(handle_3_custom, 5);
     klog(handle_3, 6, "Logger ABC should not log this");
     klog(handle_3, 5, "Logger ABC should log this too - fourth log statement");
 
-    /* When compiled in, this should cause a crash due to setting the level for a logger handle that doesn't exist */
-#if 0
-    klog_logger_set_level(3, 5);
+    const klog_logger_handle_t handle_4_custom = {3};
+#if 0 /* When compiled in, this should cause a crash due to setting the level for a logger handle that doesn't exist */
+    klog_logger_set_level(handle_4_custom, 5);
 #endif
-
     klog_logger_create("123456");
-    klog(3, 5, "Logging with an off logger shouldn't do anything");
+    klog(handle_4_custom, 5, "Logging with an off logger shouldn't do anything");
 
-    /* When compiled in, this should cause a crash due to creating more loggers than we are allowed */
-#if 0
+#if 0 /* When compiled in, this should cause a crash due to creating more loggers than we are allowed */
     klog_logger_create("error");
 #endif
 

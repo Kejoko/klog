@@ -7,6 +7,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "platform.h"
+
+#ifdef GNEISS_OS_WINDOWS
+#error "Klog does not support Windows"
+#endif
+
+#ifdef GNEISS_OS_MACOS
+#error "Klog does not support MacOS"
+#endif
+
+#ifdef GNEISS_OS_LINUX
+#include <unistd.h>
+#include <sys/syscall.h>
+#ifndef SYS_gettid
+#error "SYS_gettid is unavailable on this system"
+#endif
+#endif
+
 /* ================================================================================================================== */
 /* Klog globals                                                                                                       */
 /* ================================================================================================================== */
@@ -27,13 +45,13 @@ uint32_t g_klog_logger_name_max_length = 0;
 /* The current number of loggers which actually exist */
 uint32_t g_klog_current_number_loggers_created = 0;
 
-/* Array of logger names, each null terminated */
+/* Array of logger names, non-null terminated */
 char* gp_klog_logger_names = NULL;
 
 /* Array of uint8_t for the current allowed level for each logger */
 uint8_t* gp_klog_logger_levels = NULL;
 
-/* Array of char* representing each of the logging levels in a nicely printable format, each null terminated */
+/* Array of the logging levels stringified in a nicely printable format, all fixed width. Non-null terminated */
 char* gp_klog_level_strings = NULL;
 
 /* ================================================================================================================== */
@@ -47,9 +65,13 @@ const uint32_t G_klog_number_levels = KLOG_LEVEL_TRACE + 1;
 /* Helper functions                                                                                                   */
 /* ================================================================================================================== */
 
+pid_t klog_get_current_thread_id(void) {
+    return syscall(SYS_gettid);
+}
+
 const char* klog_impl_get_level_string(const enum klog_level_e requested_level) {
-    const uint32_t i = G_klog_level_string_length * requested_level;
-    return &gp_klog_level_strings[i];
+    const uint32_t i_level_string = G_klog_level_string_length * requested_level;
+    return &gp_klog_level_strings[i_level_string];
 }
 
 /* ================================================================================================================== */
@@ -131,20 +153,20 @@ klog_logger_handle_t klog_logger_create(const char* logger_name) {
         exit(1);
     }
 
-    const klog_logger_handle_t current_logger_handle = g_klog_current_number_loggers_created;
+    const uint32_t current_logger_handle = g_klog_current_number_loggers_created;
 
     const uint32_t logger_name_start_index = current_logger_handle * g_klog_logger_name_max_length;
-    const uint32_t num_chars_to_copy = strlen(logger_name) >= g_klog_logger_name_max_length ?
+    const uint32_t number_chars_to_copy = strlen(logger_name) >= g_klog_logger_name_max_length ?
         g_klog_logger_name_max_length : /* copy as much as we can fit */
         strlen(logger_name);            /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
-    memcpy(&gp_klog_logger_names[logger_name_start_index], logger_name, num_chars_to_copy);
+    memcpy(&gp_klog_logger_names[logger_name_start_index], logger_name, number_chars_to_copy);
 
-    const uint32_t logger_level_index = current_logger_handle;
-    gp_klog_logger_levels[logger_level_index] = KLOG_LEVEL_OFF;
+    gp_klog_logger_levels[current_logger_handle] = KLOG_LEVEL_OFF;
 
     g_klog_current_number_loggers_created++;
 
-    return current_logger_handle;
+    const klog_logger_handle_t handle = {current_logger_handle};
+    return handle;
 }
 
 void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum klog_level_e updated_level) {
@@ -153,12 +175,12 @@ void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum 
         exit(1);
     }
 
-    if (logger_handle >= g_klog_current_number_loggers_created) {
-        printf("Trying to set level for logger %d, when only %d loggers exist\n", logger_handle, g_klog_current_number_loggers_created);
+    if (logger_handle.value >= g_klog_current_number_loggers_created) {
+        printf("Trying to set level for logger %d, when only %d loggers exist\n", logger_handle.value, g_klog_current_number_loggers_created);
         exit(1);
     }
 
-    gp_klog_logger_levels[logger_handle] = updated_level;
+    gp_klog_logger_levels[logger_handle.value] = updated_level;
 }
 
 void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requested_level, const char* format, ...) {
@@ -167,13 +189,12 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
         exit(1);
     }
 
-    if (logger_handle >= g_klog_current_number_loggers_created) {
-        printf("Trying to log with logger %d, when only %d loggers exist\n", logger_handle, g_klog_current_number_loggers_created);
+    if (logger_handle.value >= g_klog_current_number_loggers_created) {
+        printf("Trying to log with logger %d, when only %d loggers exist\n", logger_handle.value, g_klog_current_number_loggers_created);
         exit(1);
     }
 
-    const uint32_t current_level = gp_klog_logger_levels[logger_handle];
-    if (requested_level > current_level) {
+    if (requested_level > gp_klog_logger_levels[logger_handle.value]) {
         return;
     }
 
@@ -187,10 +208,11 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
     vsnprintf(resulting_string, total_length, format, args);
     va_end(args);
 
-    const char* logger_name = &gp_klog_logger_names[logger_handle * g_klog_logger_name_max_length];
+    const pid_t thread_id = klog_get_current_thread_id();
+    const char* logger_name = &gp_klog_logger_names[logger_handle.value * g_klog_logger_name_max_length];
     const char* level_string = klog_impl_get_level_string(requested_level);
 
-    printf("[%.*s] [%.*s] %s\n", g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, resulting_string);
+    printf("%5d [%.*s] [%.*s] %s\n", thread_id, g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, resulting_string);
 
     free(resulting_string);
 }
