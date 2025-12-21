@@ -4,7 +4,7 @@
 
 /* This is testing klog with max loggers set to 4, and name length set to 6 */
 int main(void) {
-    klog_initialize(4, 6);
+    klog_initialize(4, 6, 10, 100, NULL, NULL);
 
     const klog_logger_handle_t handle_1 = klog_logger_create("MyLogger");
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");

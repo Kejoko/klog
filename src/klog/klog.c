@@ -63,6 +63,50 @@ const uint32_t G_klog_number_levels = KLOG_LEVEL_TRACE + 1;
 /* Helper functions                                                                                                   */
 /* ================================================================================================================== */
 
+bool klog_initialization_parameters_is_valid(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_size, const uint32_t message_max_length) {
+    if (g_klog_is_initialized) {
+        printf("Trying to initialize klog, when it is already initialized\n");
+        return false;
+    }
+
+    if (max_number_loggers == 0) {
+        printf("Trying to initialize klog with maximum number of loggers set to 0");
+        return false;
+    }
+
+    if (logger_name_max_length == 0) {
+        printf("Trying to initialize klog with maximum length of logger names set to 0");
+        return false;
+    }
+
+    if (message_queue_size == 0) {
+        printf("Trying to initialize klog with maximum message queue size set to 0\n");
+        return false;
+    }
+
+    if (message_max_length == 0) {
+        printf("Trying to initialize klog with maximum length of messages set to 0\n");
+        return false;
+    }
+
+    return true;
+}
+
+void klog_initialize_stdout(const klog_init_stdout_info_t* p_klog_init_stdout_info) {
+    if (p_klog_init_stdout_info == NULL) {
+        printf("No stdout sink provided\n");
+        return;
+    }
+}
+
+void klog_initialize_file(const klog_init_file_info_t* p_klog_init_file_info) {
+    if (p_klog_init_file_info == NULL) {
+        printf("No file sink provided\n");
+        return;
+    }
+}
+
+/* @todo kjk 2025/12/20 Implement for other (non linux) platforms */
 pid_t klog_get_current_thread_id(void) {
     return syscall(SYS_gettid);
 }
@@ -76,19 +120,8 @@ const char* klog_impl_get_level_string(const enum klog_level_e requested_level) 
 /* API Implementation                                                                                                 */
 /* ================================================================================================================== */
 
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length) {
-    if (g_klog_is_initialized) {
-        printf("Trying to initialize klog, when it is already initialized\n");
-        exit(1);
-    }
-
-    if (max_number_loggers == 0) {
-        printf("Trying to initialize klog with maximum number of loggers set to 0");
-        exit(1);
-    }
-
-    if (logger_name_max_length == 0) {
-        printf("Trying to initialize klog with maximum length of logger names set to 0");
+void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_size, const uint32_t message_max_length, const klog_init_stdout_info_t* p_klog_init_stdout_info, const klog_init_file_info_t* p_klog_init_file_info) {
+    if (!klog_initialization_parameters_is_valid(max_number_loggers, logger_name_max_length, message_queue_size, message_max_length)) {
         exit(1);
     }
 
@@ -121,6 +154,11 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_na
     memcpy(&gp_klog_level_strings[KLOG_LEVEL_TRACE    * G_klog_level_string_length], trace_string, strlen(trace_string));
 
     g_klog_current_number_loggers_created = 0;
+
+    /* @todo kjk 2025/12/20 Create message queue */
+
+    klog_initialize_stdout(p_klog_init_stdout_info);
+    klog_initialize_file(p_klog_init_file_info);
 
     g_klog_is_initialized = true;
 }

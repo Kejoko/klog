@@ -82,15 +82,25 @@
  * ------------------------------------------------------------------------
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 
 /**
- * @typedef klog_logger_handle_t The handle to a klog logger
+ * @struct klog_logger_handle_t The handle to a klog logger
  */
-// typedef uint32_t klog_logger_handle_t;
 typedef struct {
     uint32_t value;
 } klog_logger_handle_t;
+
+typedef struct {
+    uint8_t max_level;
+    bool use_color;
+} klog_init_stdout_info_t;
+
+typedef struct {
+    uint8_t max_level;
+    const char* filename_prefix;
+} klog_init_file_info_t;
 
 /**
  * @enum klog_level_e The different levels of verbosity
@@ -116,8 +126,10 @@ enum klog_level_e {
  *      length of 8 will print 8 characters for each logger name, where it
  *      will be left-justified and filled with spaces if the name is not long
  *      enough to fill all characters.
+ * @param p_stdout_init_info
+ * @param p_file_init_info
  */
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length);
+void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_size, const uint32_t message_max_length, const klog_init_stdout_info_t* p_klog_init_stdout_info, const klog_init_file_info_t* p_klog_init_file_info);
 
 /**
  * @fn klog_deinitialize
