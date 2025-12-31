@@ -2,84 +2,8 @@
 #define KLOG_INCLUDED
 
 /**
- * ------------------------------------------------------------------------
- * Requirements
- * ------------------------------------------------------------------------
- *
- * Log message structure
- * - Timestamp
- * - Thread ID
- * - Logging Silo
- * - Message
- *
- * Log sink structure
- * - All threads log to one file, with no clobbering
- *
- * API (compile time)
- * - set maximum verbosity
- *
- * API (runtime)
- * - initialize (can only happen once, program error if re-initialization attempt)
- *   - max number of threads
- *   - max number of items in the queue
- *   - format
- *   - sinks (file vs stdout)
- *     - filename
- *     - color
- * - create silo
- *   - name of silo, level
- * - log a message
- *   - silo
- *   - level
- *   - message
- *
- * Performance
- * - thread safe
- *
- * ------------------------------------------------------------------------
- * Implementation possiblities
- * ------------------------------------------------------------------------
- *
- * Possibility 1 - Multiple producers and single consumer
- * - Benefits
- *   - Threads only block when trying to submit to the queue
- *     - Blocking for queue submission is shorter than bloking for system resources for IO
- * - Drawbacks
- *   - Dedicated thread for consumer
- *     - Can be expensive if it is always polling the the queue of messages
- *
- * Possibility 2 - Producers only
- * - Mutex for each sink
- *   - Each thread has to acquire the mutex to output
- * - Benefits
- *   - Less threading
- *   - Simpler implementation
- * - Drawbacks
- *   - Blocking for IO will be very frequent, and blocking for system resource acquisition can be long
- *   - Will block once for each sync
- *
- * Possibility 3 - Producers only via threads
- * - Mutexes for each sync, new thread for each log
- * - Benefits
- *   - Main threads no longer block, because their logging threads will block instead
- * - Drawbacks
- *   - Many threads will be created and destroyed, lots of context switching overhead
- *
- * Possibility 4 - One output thread per processing thread
- * - Submit logs to the output thread, output thread handles all IO
- * - Benefits
- *   - Main threads do not block, because their logging threads will block instead
- * - Drawbacks
- *   - How do we determine which threads get a logging thread?
- *     - We don't want a logging thread for every single minor thread, only for the main ones
- *
- * ------------------------------------------------------------------------
- * Behavior (external view)
- * ------------------------------------------------------------------------
- *
- * ------------------------------------------------------------------------
- * Behavior (internal view)
- * ------------------------------------------------------------------------
+ * @todo kjk 2025/12/30 Document everything with Doxygen
+ * @todo kjk 2025/12/30 Separate helper functions into their own header file so we can test them
  */
 
 #include <stdbool.h>
@@ -129,7 +53,7 @@ enum klog_level_e {
  * @param p_stdout_init_info
  * @param p_file_init_info
  */
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_size, const uint32_t message_max_length, const klog_init_stdout_info_t* p_klog_init_stdout_info, const klog_init_file_info_t* p_klog_init_file_info);
+void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const klog_init_stdout_info_t* p_klog_init_stdout_info, const klog_init_file_info_t* p_klog_init_file_info);
 
 /**
  * @fn klog_deinitialize
