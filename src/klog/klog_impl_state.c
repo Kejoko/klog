@@ -25,15 +25,15 @@ uint32_t g_klog_message_max_length = 0;
 
 uint32_t g_klog_current_number_loggers_created = 0;
 
-char* gp_klog_logger_names = NULL;
+char*    gp_klog_logger_names = NULL;
 
 uint8_t* gp_klog_logger_levels = NULL;
 
-char* gp_klog_level_strings = NULL;
+char*    gp_klog_level_strings = NULL;
 
-char* gp_klog_message_queue = NULL;
+char*    gp_klog_message_queue = NULL;
 
-bool g_klog_is_initialized = false;
+bool     g_klog_is_initialized = false;
 
 /* ================================================================================================================== */
 /* Constants                                                                                                          */

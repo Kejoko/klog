@@ -7,12 +7,14 @@ add_library(
     SHARED
     ${GNEISS_INCLUDE_DIR}/klog/klog.h
     klog.c
-    klog_impl_state.h
-    klog_impl_state.c
     klog_impl_initialization.h
     klog_impl_initialization.c
+    klog_impl_log.h
+    klog_impl_log.c
     klog_impl_message_creation.h
     klog_impl_message_creation.c
+    klog_impl_state.h
+    klog_impl_state.c
 )
 target_include_directories(klog PUBLIC ${GNEISS_INCLUDE_DIR})
 target_compile_options(klog PUBLIC ${GNEISS_CMAKE_C_FLAGS})

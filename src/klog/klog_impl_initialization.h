@@ -6,7 +6,7 @@
 
 #include "klog/klog.h"
 
-bool klog_impl_parameters_are_valid(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length);
+bool klog_impl_parameters_are_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length);
 
 char*    klog_impl_create_logger_names_buffer(const uint32_t max_number_loggers, const uint32_t logger_name_max_length);
 uint8_t* klog_impl_create_logger_levels_buffer(const uint32_t max_number_loggers);

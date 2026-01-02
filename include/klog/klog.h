@@ -69,6 +69,9 @@ void klog_deinitialize(void);
  *      loggers, and store the truncated version. This will allow us to have
  *      "duplicate" truncated versions, resulting from differing full names.
  *      This will require us to store the hash of each logger in memory too.
+ * @todo Return a negative value upon failure instead of fully crashing the
+ *      program. The program will crash when we try to print with a negative
+ *      handle instead.
  * @brief Create a handle to a logger for the given name
  * @details If a logger does not exist using the given name, create one and
  *      return the corresponding handle. If a logger with the given name does

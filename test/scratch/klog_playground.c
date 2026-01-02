@@ -37,6 +37,8 @@ int main(void) {
 #endif
     klog_logger_create("123456");
     klog(handle_4_custom, 5, "Logging with an off logger shouldn't do anything");
+    klog_logger_set_level(handle_4_custom, KLOG_LEVEL_INFO);
+    klog(handle_4_custom, KLOG_LEVEL_INFO, "Multiple formats (one - %d)\ntwo\n\n%s%d\n5", 1, "four", 4);
 
 #if 0 /* When compiled in, this should cause a crash due to creating more loggers than we are allowed */
     klog_logger_create("error");

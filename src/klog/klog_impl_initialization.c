@@ -5,8 +5,8 @@
 #include "./klog_impl_initialization.h"
 #include "./klog_impl_state.h"
 
-bool klog_impl_parameters_are_valid(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
-    if (g_klog_is_initialized) {
+bool klog_impl_parameters_are_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
+    if (klog_is_initialized) {
         printf("Trying to initialize klog, when it is already initialized\n");
         return false;
     }

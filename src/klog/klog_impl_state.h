@@ -31,19 +31,19 @@ extern uint32_t g_klog_message_max_length;
 extern uint32_t g_klog_current_number_loggers_created;
 
 /* Array of logger names, non-null terminated */
-extern char* gp_klog_logger_names;
+extern char*    gp_klog_logger_names;
 
 /* Array of uint8_t for the current allowed level for each logger */
 extern uint8_t* gp_klog_logger_levels;
 
 /* Array of the logging levels stringified in a nicely printable format, all fixed width. Non-null terminated */
-extern char* gp_klog_level_strings;
+extern char*    gp_klog_level_strings;
 
 /* The queue of messages */
-extern char* gp_klog_message_queue;
+extern char*    gp_klog_message_queue;
 
 /* Whether or not klog has been initialized */
-extern bool g_klog_is_initialized;
+extern bool     g_klog_is_initialized;
 
 /* ================================================================================================================== */
 /* Constants                                                                                                          */
