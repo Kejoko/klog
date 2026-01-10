@@ -2,8 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "klog/klog.h" /* For KLOG_LEVEL_TRACE value */
-#include "./klog_impl_state.h"
+#include "./klog_state.h"
 
 /* ================================================================================================================== */
 /* Klog globals                                                                                                       */
@@ -35,9 +34,3 @@ char*    gp_klog_message_queue = NULL;
 
 bool     g_klog_is_initialized = false;
 
-/* ================================================================================================================== */
-/* Constants                                                                                                          */
-/* ================================================================================================================== */
-
-const uint32_t G_klog_level_string_length = 8;
-const uint32_t G_klog_number_levels = KLOG_LEVEL_TRACE + 1;

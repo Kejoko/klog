@@ -1,8 +1,14 @@
-#ifndef KLOG_IMPL_STATE_INCLUDED
-#define KLOG_IMPL_STATE_INCLUDED
+#ifndef KLOG_STATE_INCLUDED
+#define KLOG_STATE_INCLUDED
 
 #include <stdbool.h>
 #include <stdint.h>
+
+/**
+ * @brief The only implementation file which can include this is klog.c, though
+ *      the unit test files may also include this file so they can inspect the
+ *      state after certain operations to ensure correctness
+ */
 
 /* ================================================================================================================== */
 /* Klog globals                                                                                                       */
@@ -45,11 +51,4 @@ extern char*    gp_klog_message_queue;
 /* Whether or not klog has been initialized */
 extern bool     g_klog_is_initialized;
 
-/* ================================================================================================================== */
-/* Constants                                                                                                          */
-/* ================================================================================================================== */
-
-extern const uint32_t G_klog_level_string_length;
-extern const uint32_t G_klog_number_levels;
-
-#endif /* KLOG_IMPL_STATE_INCLUDED */
+#endif /* KLOG_STATE_INCLUDED */

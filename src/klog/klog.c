@@ -7,24 +7,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./klog_impl_initialization.h"
-#include "./klog_impl_log.h"
-#include "./klog_impl_message_creation.h"
-#include "./klog_impl_state.h"
+#include "./klog_state.h"
+#include "./klog_initialize.h"
+#include "./klog_output.h"
+#include "./klog_format.h"
 
 void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const klog_init_stdout_info_t* p_klog_init_stdout_info, const klog_init_file_info_t* p_klog_init_file_info) {
-    if (!klog_impl_parameters_are_valid(g_klog_is_initialized, max_number_loggers, logger_name_max_length, message_queue_number_elements, message_max_length)) {
+    if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, logger_name_max_length, message_queue_number_elements, message_max_length)) {
         exit(1);
     }
 
     g_klog_max_number_loggers = max_number_loggers;
     g_klog_logger_name_max_length = logger_name_max_length;
 
-    gp_klog_logger_names = klog_impl_create_logger_names_buffer(g_klog_max_number_loggers, g_klog_logger_name_max_length);
+    gp_klog_logger_names = klog_initialize_create_logger_names_buffer(g_klog_max_number_loggers, g_klog_logger_name_max_length);
 
-    gp_klog_logger_levels = klog_impl_create_logger_levels_buffer(g_klog_max_number_loggers);
+    gp_klog_logger_levels = klog_initialize_create_logger_levels_buffer(g_klog_max_number_loggers);
 
-    gp_klog_level_strings = klog_impl_create_level_strings_buffer();
+    gp_klog_level_strings = klog_initialize_create_level_strings_buffer();
 
     g_klog_current_number_loggers_created = 0;
 
@@ -32,10 +32,10 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_na
     /* g_klog_message_queue_number_elements = message_queue_number_elements; */
     g_klog_message_queue_number_elements = 1;
     g_klog_message_max_length = message_max_length;
-    gp_klog_message_queue = klog_impl_create_message_queue(g_klog_message_queue_number_elements, g_klog_message_max_length);
+    gp_klog_message_queue = klog_initialize_create_message_queue(g_klog_message_queue_number_elements, g_klog_message_max_length);
 
-    klog_impl_initialize_stdout(p_klog_init_stdout_info);
-    klog_impl_initialize_file(p_klog_init_file_info);
+    klog_initialize_stdout(p_klog_init_stdout_info);
+    klog_initialize_file(p_klog_init_file_info);
 
     /* @todo kjk 2025/12/20 Create threads */
     /*  create backing threads accordingly. 0 is valid, meaning we always do IO in this thread */
@@ -141,7 +141,8 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
 
     va_list args;
     va_start(args, format);
-    char* total_message = klog_impl_create_message(logger_handle, requested_level, format, args);
+    const klog_format_context_t format_context;
+    char* total_message = klog_format(format_context, logger_handle, requested_level, format, args);
     va_end(args);
 
     if (g_klog_number_backing_threads > 0) {
@@ -150,7 +151,7 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
         return;
     }
 
-    klog_impl_log_stdout(total_message);
+    klog_output_stdout(total_message);
 
     free(total_message);
 }

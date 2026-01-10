@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./klog_impl_initialization.h"
-#include "./klog_impl_state.h"
+#include "./klog_constants.h"
+#include "./klog_initialize.h"
 
-bool klog_impl_parameters_are_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
+bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
     if (klog_is_initialized) {
         printf("Trying to initialize klog, when it is already initialized\n");
         return false;
@@ -34,7 +34,7 @@ bool klog_impl_parameters_are_valid(const bool klog_is_initialized, const uint32
     return true;
 }
 
-char* klog_impl_create_logger_names_buffer(const uint32_t max_number_loggers, const uint32_t logger_name_max_length) {
+char* klog_initialize_create_logger_names_buffer(const uint32_t max_number_loggers, const uint32_t logger_name_max_length) {
     /* set all characters to space (' ') by default, so we can auto fill the end of the names if they are too short */
     const uint32_t total_logger_names_array_size = max_number_loggers * logger_name_max_length;
     char* p_logger_names = malloc(total_logger_names_array_size);
@@ -42,13 +42,13 @@ char* klog_impl_create_logger_names_buffer(const uint32_t max_number_loggers, co
     return p_logger_names;
 }
 
-uint8_t* klog_impl_create_logger_levels_buffer(const uint32_t max_number_loggers) {
+uint8_t* klog_initialize_create_logger_levels_buffer(const uint32_t max_number_loggers) {
     const uint32_t total_logger_levels_array_size = max_number_loggers;
     uint8_t* p_logger_levels = calloc(total_logger_levels_array_size, sizeof(uint8_t*));
     return p_logger_levels;
 }
 
-char* klog_impl_create_level_strings_buffer(void) {
+char* klog_initialize_create_level_strings_buffer(void) {
     const uint32_t level_string_array_total_bytes = G_klog_level_string_length * G_klog_number_levels; 
     char* p_level_strings = malloc(level_string_array_total_bytes);
     const char off_string[]      = "off     ";
@@ -68,21 +68,21 @@ char* klog_impl_create_level_strings_buffer(void) {
     return p_level_strings;
 }
 
-char* klog_impl_create_message_queue(const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
+char* klog_initialize_create_message_queue(const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
     const uint32_t message_queue_size_bytes = message_queue_number_elements * message_max_length;
     char* p_message_queue = malloc(message_queue_size_bytes);
     memset(p_message_queue, 0, message_queue_size_bytes);
     return p_message_queue;
 }
 
-void klog_impl_initialize_stdout(const klog_init_stdout_info_t* p_klog_init_stdout_info) {
+void klog_initialize_stdout(const klog_init_stdout_info_t* p_klog_init_stdout_info) {
     if (p_klog_init_stdout_info == NULL) {
         printf("No stdout sink provided\n");
         return;
     }
 }
 
-void klog_impl_initialize_file(const klog_init_file_info_t* p_klog_init_file_info) {
+void klog_initialize_file(const klog_init_file_info_t* p_klog_init_file_info) {
     if (p_klog_init_file_info == NULL) {
         printf("No file sink provided\n");
         return;
