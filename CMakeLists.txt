@@ -5,11 +5,17 @@
 set(PROJECT_NAME "Gneiss")
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 include(GneissVersion)
 
 cmake_minimum_required(VERSION 3.20)
 
 project(${PROJECT_NAME} VERSION ${GNEISS_MAJOR_VERSION}.${GNEISS_MINOR_VERSION}.${GNEISS_PATCH_VERSION} LANGUAGES C)
+
+include(CTest)
+enable_testing()
+
+include(CreateUnitTest)
 
 # =========================================================================== #
 # Project config                                                              #
@@ -61,11 +67,8 @@ set(GNEISS_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 add_subdirectory("${GNEISS_SOURCE_DIR}/klog")
 
 # =========================================================================== #
-# Test                                                                        #
+# Tests                                                                       #
 # =========================================================================== #
-
-include(CTest)
-enable_testing()
 
 set(GNEISS_TEST_DIR "${PROJECT_SOURCE_DIR}/test")
 add_subdirectory("${GNEISS_TEST_DIR}/unit")
