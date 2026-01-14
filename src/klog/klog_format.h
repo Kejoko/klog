@@ -33,7 +33,7 @@ typedef struct {
     uint32_t  number_format_strings;
 
     /* An array of format strings, each index of this points to a format string */
-    char**    format_strings;
+    const char**    format_strings;
 
     /* An array of lengths, so we know how long each of the format strings are */
     uint32_t* format_string_lengths;
@@ -42,14 +42,13 @@ typedef struct {
     uint32_t* va_arg_start_indices;
 
     /* An array of amount, each representing the amount of va_args the corresponding format string should use */
-    uint32_t* va_arg_amount;
+    uint32_t* va_arg_amounts;
 } klog_format_split_t;
 
-pid_t klog_format_get_current_thread_id(void);
-
+pid_t       klog_format_get_current_thread_id(void);
 const char* klog_format_get_level_string(const klog_format_context_t context, const enum klog_level_e requested_level);
 
-klog_format_split_t klog_format_split_strings(char* full_format);
+klog_format_split_t klog_format_split_strings(const char* full_format);
 
 char* klog_format(const klog_format_context_t context, const klog_logger_handle_t logger_handle, const enum klog_level_e requested_level, const char* format, va_list args);
 

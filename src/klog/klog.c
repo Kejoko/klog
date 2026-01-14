@@ -141,7 +141,7 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
 
     va_list args;
     va_start(args, format);
-    const klog_format_context_t format_context;
+    const klog_format_context_t format_context = {g_klog_logger_name_max_length, gp_klog_logger_names, gp_klog_level_strings};
     char* total_message = klog_format(format_context, logger_handle, requested_level, format, args);
     va_end(args);
 

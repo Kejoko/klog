@@ -23,3 +23,4 @@ target_compile_options(klog PUBLIC ${GNEISS_CMAKE_C_FLAGS})
 target_compile_definitions(klog PUBLIC ${GNEISS_COMPILE_DEFINITIONS})
 target_compile_definitions(klog PUBLIC ${GNEISS_COMPILE_DEFINITIONS})
 
+create_unit_test(ut/test-klog_format_split_strings.c klog)
