@@ -5,17 +5,6 @@
 
 #include "../klog_format.h"
 
-#define DO_BASE_CASE
-
-#define DO_SIMPLE_NEWLINES
-/* #define DO_COMPLEX_NEWLINES */
- 
-/* #define DO_SIMPLE_ARGS */
-/* #define DO_COMPLEX_ARGS */
- 
-/* #define DO_SIMPLE_COMBINED */
-/* #define DO_COMPLEX_COMBINED */
-
 /* ------------------------------------------------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------------------------------------------------ */
 /* Test utility ----------------------------------------------------------------------------------------------------- */
@@ -26,10 +15,8 @@ int do_comparison(
     const char* test_name,
     const klog_format_split_t* const p_result,
     const uint32_t expected_number_format_strings,
-    const char** expected_format_strings,
-    const uint32_t* expected_format_string_lengths,
-    const uint32_t* expected_va_arg_start_indices,
-    const uint32_t* expected_va_arg_amounts
+    char** expected_format_strings,
+    const uint32_t* expected_format_string_lengths
 ) {
     if (p_result->number_format_strings != expected_number_format_strings) {
         printf("[%s] number format strings (%d) != expected (%d)\n", test_name, p_result->number_format_strings, expected_number_format_strings);
@@ -61,38 +48,72 @@ int do_comparison(
             printf("[%s] format string %d (\"%.*s\") != expected (\"%.*s\")\n", test_name, i_format_string, expected_format_string_lengths[i_format_string], p_result->format_strings[i_format_string], expected_format_string_lengths[i_format_string], expected_format_strings[i_format_string]);
             return 1;
         }
-        
-        // Ensure result va arg start index == expected va arg start index
-        if (p_result->va_arg_start_indices[i_format_string] != expected_va_arg_start_indices[i_format_string]) {
-            printf("[%s] format string %d va arg start index (%d) != expected (%d)\n", test_name, i_format_string, p_result->va_arg_start_indices[i_format_string], expected_va_arg_start_indices[i_format_string]);
-            return 1;
-        }
-        
-        // Ensure result va arg amount == expected va arg amount
-        if (p_result->va_arg_amounts[i_format_string] != expected_va_arg_amounts[i_format_string]) {
-            printf("[%s] format string %d va arg amount (%d) != expected (%d)\n", test_name, i_format_string, p_result->va_arg_amounts[i_format_string], expected_va_arg_amounts[i_format_string]);
-            return 1;
-        }
     }
     return 0;
 }
 
 void free_things(
-    const klog_format_split_t* p_result,
-    const char** expected_format_strings,
-    uint32_t* expected_format_string_lengths,
-    uint32_t* expected_va_arg_start_indices,
-    uint32_t* expected_va_arg_amounts
+    klog_format_split_t* const p_result,
+    const uint32_t number_format_strings,
+    char** format_strings,
+    uint32_t* format_string_lengths
 ) {
+    printf("Freeing result's array of %d pointers to format strings        at %p\n", number_format_strings, (void*)p_result->format_strings);
     free(p_result->format_strings);
-    free(p_result->format_string_lengths);
-    free(p_result->va_arg_start_indices);
-    free(p_result->va_arg_amounts);
+    printf("Freeing result's array of %d pointers to format string lengths at %p\n", number_format_strings, (void*)p_result->format_string_lengths);
+    free((uint32_t*)p_result->format_string_lengths);
 
-    free(expected_format_strings);
-    free(expected_format_string_lengths);
-    free(expected_va_arg_start_indices);
-    free(expected_va_arg_amounts);
+    printf("Freeing %d format strings\n", number_format_strings);
+    free(format_strings);
+    // for (uint32_t i_format_string = 0; i_format_string < number_format_strings; ++i_format_string) {
+    //     const uint32_t curr_length = format_string_lengths[i_format_string];
+    //     if (curr_length > 0) {
+    //         printf("  string %d length is %d - freeing\n", i_format_string, curr_length);
+    //         free(format_strings[i_format_string]);
+    //     } else {
+    //         printf("  string %d length is %d - not freeing\n", i_format_string, curr_length);
+    //     }
+    // }
+    
+    printf("Freeing format string lengths\n");
+    free(format_string_lengths);
+}
+
+int run_test(
+    const char* test_name,
+    const char* input,
+    const uint32_t expected_number_format_strings,
+    char** expected_format_strings,
+    uint32_t* expected_format_string_lengths
+) {
+    printf("===================================================================\n");
+    printf("%s\n", test_name);
+    printf("===================================================================\n");
+
+    // Get the result value
+
+    klog_format_split_t result = klog_format_split_strings(input);
+    printf("===================================================================\n");
+
+    // Check equality
+
+    const int success = do_comparison(
+        test_name,
+        &result,
+        expected_number_format_strings,
+        expected_format_strings,
+        expected_format_string_lengths
+    );
+    printf("===================================================================\n");
+
+    // Clean up and return
+
+    free_things(&result, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
+    printf("===================================================================\n");
+    
+    printf("\n\n\n");
+
+    return success;
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -102,49 +123,17 @@ void free_things(
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 int base_case(void) {
-#ifdef DO_BASE_CASE
-    // Create expected
-
-    const char* input = "Base case";
+    char* input = "Base case";
 
     uint32_t expected_number_format_strings = 1;
 
-    const char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
+    char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
     expected_format_strings[0] = input;
     
     uint32_t* expected_format_string_lengths = malloc(expected_number_format_strings * sizeof(uint32_t));
     expected_format_string_lengths[0] = 9;
-    
-    uint32_t* expected_va_arg_start_indices = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    
-    uint32_t* expected_va_arg_amounts = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
 
-    // Get the result value
-
-    const klog_format_split_t result = klog_format_split_strings(input);
-
-    // Check equality
-
-    const int success = do_comparison(
-        "base_case",
-        &result,
-        expected_number_format_strings,
-        expected_format_strings,
-        expected_format_string_lengths,
-        expected_va_arg_start_indices,
-        expected_va_arg_amounts
-    );
-
-    // Clean up and return
-
-    free_things(&result, expected_format_strings, expected_format_string_lengths, expected_va_arg_start_indices, expected_va_arg_amounts);
-    
-    return success;
-#else
-    return 0;
-#endif
+    return run_test("base_case", input, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
 }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -154,131 +143,69 @@ int base_case(void) {
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 int single_newline(void) {
-#ifdef DO_SIMPLE_NEWLINES
-    // Create expected
-
-    const char* input = "two\nlines";
+    char* input = "two\nlines";
 
     uint32_t expected_number_format_strings = 2;
 
-    const char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
+    char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
     expected_format_strings[0] = input;
     expected_format_strings[1] = input + 4;
     
     uint32_t* expected_format_string_lengths = malloc(expected_number_format_strings * sizeof(uint32_t));
     expected_format_string_lengths[0] = 3;
     expected_format_string_lengths[1] = 5;
-    
-    uint32_t* expected_va_arg_start_indices = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    
-    uint32_t* expected_va_arg_amounts = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
 
-    // Get the result value
-
-    const klog_format_split_t result = klog_format_split_strings(input);
-
-    // Check equality
-
-    const int success = do_comparison(
-        "single_newline",
-        &result,
-        expected_number_format_strings,
-        expected_format_strings,
-        expected_format_string_lengths,
-        expected_va_arg_start_indices,
-        expected_va_arg_amounts
-    );
-
-    // Clean up and return
-
-    free_things(&result, expected_format_strings, expected_format_string_lengths, expected_va_arg_start_indices, expected_va_arg_amounts);
-    
-    return success;
-#else
-    return 0;
-#endif
+    return run_test("single_newline", input, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
 }
 
 int four_lines(void) {
-#ifdef DO_SIMPLE_NEWLINES
     // Create expected
 
-    /* "1" */
-    /* "two" */
-    /* " 33333 " */
-    /* "four" */
-    const char* input = "1\ntwo\n 33333 \nfour";
+    /* "1"                                      */
+    /* "two"                                    */
+    /* " 33333 "                                */
+    /* "four"                                   */
+
+    /* Line Count:       1  2    3        4     */
+    /* Lengths:                                 */
+    /*                   1  123  1234567  1234  */
+    char* input = "1\ntwo\n 33333 \nfour";
+    /* Start indices:                           */
+    /*   00 +            01 2345 6789           */
+    /*   10 +                        0123 4567  */
 
     uint32_t expected_number_format_strings = 4;
 
-    const char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
+    char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
     expected_format_strings[0] = input;
     expected_format_strings[1] = input + 2;
-    expected_format_strings[2] = input + 8;
-    expected_format_strings[3] = input + 16;
+    expected_format_strings[2] = input + 6;
+    expected_format_strings[3] = input + 14;
     
     uint32_t* expected_format_string_lengths = malloc(expected_number_format_strings * sizeof(uint32_t));
     expected_format_string_lengths[0] = 1;
     expected_format_string_lengths[1] = 3;
     expected_format_string_lengths[2] = 7;
     expected_format_string_lengths[3] = 4;
-    
-    uint32_t* expected_va_arg_start_indices = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    expected_va_arg_start_indices[2] = 0;
-    expected_va_arg_start_indices[3] = 0;
-    
-    uint32_t* expected_va_arg_amounts = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    expected_va_arg_start_indices[2] = 0;
-    expected_va_arg_start_indices[3] = 0;
 
-    // Get the result value
-
-    const klog_format_split_t result = klog_format_split_strings(input);
-
-    // Check equality
-
-    const int success = do_comparison(
-        "four_lines",
-        &result,
-        expected_number_format_strings,
-        expected_format_strings,
-        expected_format_string_lengths,
-        expected_va_arg_start_indices,
-        expected_va_arg_amounts
-    );
-
-    // Clean up and return
-
-    free_things(&result, expected_format_strings, expected_format_string_lengths, expected_va_arg_start_indices, expected_va_arg_amounts);
-    
-    return success;
-#else
-    return 0;
-#endif
+    return run_test("four_lines", input, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
 }
 
 int two_consecutive_newlines(void) {
-#ifdef DO_SIMPLE_NEWLINES
-    // Create expected
+    /* "  1"                                    */
+    /* ""                                       */
+    /* "two  "                                  */
 
-    /* "  1" */
-    /* "" */
-    /* "two  " */
-    const char* input = "  1\n\ntwo  ";
-    /* start indices     0123 4 56789 */
-    /* line count        1    2 3*/
+    /* Line Count:       1    2 3               */
+    /* Lengths:                                 */
+    /*                   123  0 12345           */
+    char* input = "  1\n\ntwo  ";
+    /* Start Indices:                           */
+    /*   00 +            0123 4 56789           */
 
     uint32_t expected_number_format_strings = 3;
 
-    const char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
+    char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
     expected_format_strings[0] = input;
     expected_format_strings[1] = input + 4;
     expected_format_strings[2] = input + 5;
@@ -287,55 +214,29 @@ int two_consecutive_newlines(void) {
     expected_format_string_lengths[0] = 3;
     expected_format_string_lengths[1] = 0;
     expected_format_string_lengths[2] = 5;
-    
-    uint32_t* expected_va_arg_start_indices = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    expected_va_arg_start_indices[2] = 0;
-    
-    uint32_t* expected_va_arg_amounts = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    expected_va_arg_start_indices[2] = 0;
 
-    // Get the result value
-
-    const klog_format_split_t result = klog_format_split_strings(input);
-
-    // Check equality
-
-    const int success = do_comparison(
-        "two_consecutive_newlines",
-        &result,
-        expected_number_format_strings,
-        expected_format_strings,
-        expected_format_string_lengths,
-        expected_va_arg_start_indices,
-        expected_va_arg_amounts
-    );
-
-    // Clean up and return
-
-    free_things(&result, expected_format_strings, expected_format_string_lengths, expected_va_arg_start_indices, expected_va_arg_amounts);
-    
-    return success;
-#else
-    return 0;
-#endif
-
+    return run_test("two_consecutive_newlines", input, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
 }
 
 int five_consecutive_newlines(void) {
-#ifdef DO_COMPLEX_NEWLINES
-    // Create expected
+    /* "1"                                      */
+    /* ""                                       */
+    /* ""                                       */
+    /* ""                                       */
+    /* ""                                       */
 
-    const char* input = "1\n\n\n\n\nanother";
-    /* start indices     01 2 3 4 5 6 */
-    /* line count        1  2 3 4 5 6*/
+    /* "another"                                */
+    /* Line Count:       1  2 3 4 5 6           */
+    /* Lengths:                                 */
+    /*                   1  0 0 0 0 1234567     */
+    char* input = "1\n\n\n\n\nanother";
+    /* Start Indices:                           */
+    /*   00 +            01 2 3 4 5 6789        */
+    /*   10 +                           012     */
 
     uint32_t expected_number_format_strings = 6;
 
-    const char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
+    char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
     expected_format_strings[0] = input;
     expected_format_strings[1] = input + 2;
     expected_format_strings[2] = input + 3;
@@ -350,70 +251,75 @@ int five_consecutive_newlines(void) {
     expected_format_string_lengths[3] = 0;
     expected_format_string_lengths[4] = 0;
     expected_format_string_lengths[5] = 7;
+
+    return run_test("five_consecutive_newlines", input, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
+}
+
+int first_last(void) {
+    /* ""                                       */
+    /* "aa"                                     */
+    /* "bbbb"                                   */
+    /* ""                                       */
+
+    /* Line Count:       1 2   3     4          */
+    /* Lengths:                                 */
+    /*                   0 12  1234  0          */
+    char* input = "\naa\nbbbb\n";
+    /* Start Indices:                           */
+    /*   00 +            0 123 45678 9          */
+
+    uint32_t expected_number_format_strings = 4;
+
+    char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
+    expected_format_strings[0] = input;
+    expected_format_strings[1] = input + 1;
+    expected_format_strings[2] = input + 4;
+    expected_format_strings[3] = input + 9;
     
-    uint32_t* expected_va_arg_start_indices = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    expected_va_arg_start_indices[2] = 0;
-    expected_va_arg_start_indices[3] = 0;
-    expected_va_arg_start_indices[4] = 0;
-    expected_va_arg_start_indices[5] = 0;
-    
-    uint32_t* expected_va_arg_amounts = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    expected_va_arg_start_indices[2] = 0;
-    expected_va_arg_start_indices[3] = 0;
-    expected_va_arg_start_indices[4] = 0;
-    expected_va_arg_start_indices[5] = 0;
+    uint32_t* expected_format_string_lengths = malloc(expected_number_format_strings * sizeof(uint32_t));
+    expected_format_string_lengths[0] = 0;
+    expected_format_string_lengths[1] = 2;
+    expected_format_string_lengths[2] = 4;
+    expected_format_string_lengths[3] = 0;
 
-    // Get the result value
-
-    const klog_format_split_t result = klog_format_split_strings(input);
-
-    // Check equality
-
-    const int success = do_comparison(
-        "five_consecutive_newlines",
-        &result,
-        expected_number_format_strings,
-        expected_format_strings,
-        expected_format_string_lengths,
-        expected_va_arg_start_indices,
-        expected_va_arg_amounts
-    );
-
-    // Clean up and return
-
-    free_things(&result, expected_format_strings, expected_format_string_lengths, expected_va_arg_start_indices, expected_va_arg_amounts);
-    
-    return success;
-#else
-    return 0;
-#endif
-
-
+    return run_test("first_last", input, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
 }
 
 int many_newlines(void) {
-#ifdef DO_COMPLEX_NEWLINES
-    // Create expected
+    /* "one line"                               */
+    /* "second   "                              */
+    /* " third "                                */
+    /* "fourth"                                 */
+    /* "fifth"                                  */
+    /* ""                                       */
+    /* "seventh"                                */
+    /* ""                                       */
+    /* " 9th"                                   */
 
-    const char* input = "one line\nsecond   \n third \nfourth\nfifth\n\nseventh\n\n 9th";
-    /*                   01234567  012345678  0123456  012345  01234    0123456    0123 */
+    /* Line Count:       1         2          3        4       5      6 7        8 9        */
+    /* Lengths:                                                                             */
+    /*   00 +            12345678  123456789  1234567  123456  12345  0 1234567  0 1234     */
+    char* input = "one line\nsecond   \n third \nfourth\nfifth\n\nseventh\n\n 9th";
+    /* Start Indices:    |         |          |        |       |      | |        | |        */
+    /*   00 +            012345678 9          |        |       |      | |        | |        */
+    /*   10 +                       012345678 9        |       |      | |        | |        */
+    /*   20 +                                  0123456 789     |      | |        | |        */
+    /*   30 +                                             0123 456789 | |        | |        */
+    /*   40 +                                                         0 12345678 9 |        */
+    /*   50 +                                                                      0123     */
 
     uint32_t expected_number_format_strings = 9;
 
-    const char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
+    char** expected_format_strings = malloc(expected_number_format_strings * sizeof(char*));
     expected_format_strings[0] = input;
     expected_format_strings[1] = input + 9;
-    expected_format_strings[2] = input + 20;
-    expected_format_strings[3] = input + 28;
-    expected_format_strings[4] = input + 35;
-    expected_format_strings[5] = input + 41;
-    expected_format_strings[6] = input + 43;
-    expected_format_strings[7] = input + 51;
-    expected_format_strings[8] = input + 52;
+    expected_format_strings[2] = input + 19;
+    expected_format_strings[3] = input + 27;
+    expected_format_strings[4] = input + 34;
+    expected_format_strings[5] = input + 40;
+    expected_format_strings[6] = input + 41;
+    expected_format_strings[7] = input + 49;
+    expected_format_strings[8] = input + 50;
     
     uint32_t* expected_format_string_lengths = malloc(expected_number_format_strings * sizeof(uint32_t));
     expected_format_string_lengths[0] = 8;
@@ -425,66 +331,9 @@ int many_newlines(void) {
     expected_format_string_lengths[6] = 7;
     expected_format_string_lengths[7] = 0;
     expected_format_string_lengths[8] = 4;
-    
-    uint32_t* expected_va_arg_start_indices = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    expected_va_arg_start_indices[2] = 0;
-    expected_va_arg_start_indices[3] = 0;
-    expected_va_arg_start_indices[4] = 0;
-    expected_va_arg_start_indices[5] = 0;
-    expected_va_arg_start_indices[6] = 0;
-    expected_va_arg_start_indices[7] = 0;
-    expected_va_arg_start_indices[8] = 0;
-    
-    uint32_t* expected_va_arg_amounts = malloc(expected_number_format_strings * sizeof(uint32_t));
-    expected_va_arg_start_indices[0] = 0;
-    expected_va_arg_start_indices[1] = 0;
-    expected_va_arg_start_indices[2] = 0;
-    expected_va_arg_start_indices[3] = 0;
-    expected_va_arg_start_indices[4] = 0;
-    expected_va_arg_start_indices[5] = 0;
-    expected_va_arg_start_indices[6] = 0;
-    expected_va_arg_start_indices[7] = 0;
-    expected_va_arg_start_indices[8] = 0;
 
-    // Get the result value
-
-    const klog_format_split_t result = klog_format_split_strings(input);
-
-    // Check equality
-
-    const int success = do_comparison(
-        "single_newline",
-        &result,
-        expected_number_format_strings,
-        expected_format_strings,
-        expected_format_string_lengths,
-        expected_va_arg_start_indices,
-        expected_va_arg_amounts
-    );
-
-    // Clean up and return
-
-    free_things(&result, expected_format_strings, expected_format_string_lengths, expected_va_arg_start_indices, expected_va_arg_amounts);
-    
-    return success;
-#else
-    return 0;
-#endif
+    return run_test("many_newlines", input, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
 }
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------------------------------------------------ */
-/* Args ------------------------------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------------------------------------------------ */
-/* Combined --------------------------------------------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -498,6 +347,10 @@ int main(void) {
     const int result =
         base_case() ||
         single_newline() ||
+        four_lines() ||
+        two_consecutive_newlines() ||
+        first_last() ||
+        many_newlines() ||
         noop()
     ;
 

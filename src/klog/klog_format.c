@@ -20,8 +20,6 @@ const char* klog_format_get_level_string(const klog_format_context_t context, co
 }
 
 klog_format_split_t klog_format_split_strings(const char* full_format) {
-    printf("\n\n\n\n\n\n\n");
-
     const uint32_t input_strlen = strlen(full_format);
 
     uint32_t number_format_strings = 1;
@@ -34,26 +32,27 @@ klog_format_split_t klog_format_split_strings(const char* full_format) {
     }
 
     /* Allocate the resulting buffers */
-    const char** format_strings = malloc(number_format_strings * sizeof(char*));
-    uint32_t* format_string_lengths = malloc(number_format_strings * sizeof(uint32_t));
-    uint32_t* va_arg_start_indices = malloc(number_format_strings * sizeof(uint32_t));
-    uint32_t* va_arg_amount = malloc(number_format_strings * sizeof(uint32_t));
+    const char** const format_strings = malloc(number_format_strings * sizeof(char*));
+    uint32_t* const format_string_lengths = malloc(number_format_strings * sizeof(uint32_t));
 
     /* Initialize the first format string values in case we never reach a newline */
     format_strings[0] = full_format;
     format_string_lengths[0] = input_strlen;
 
     /* Find all of the newlines so we know where the format string pointers should begin */
-    /* Track the current number of % characters, so we can see if the immediately preceeding % count is odd or even */
     uint32_t curr_format_string_start_index = 0;
     uint32_t i_curr_format_string = 0;
-    // uint32_t num_preceeding_percentages = 0;
-    printf("===================================================================\n");
+    printf("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\n");
     printf("Iterating through characters and finding lines\n");
-    printf("  input   = \"%s\"\n", full_format);
+    printf("Input:\n");
+    // printf("  input   = \n\"%s\"\n", full_format);
     printf("  length  = %d\n", input_strlen);
     printf("  address = %p\n", (void*)full_format);
-    printf("-------------------------------------------------------------------\n");
+    printf("\n");
+    printf("Allocated arrays:\n");
+    printf("  strings = %p\n", (void*)format_strings);
+    printf("  lengths = %p\n", (void*)format_string_lengths);
+    printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n");
     for (uint32_t i_char_base = 0; i_char_base < input_strlen; ++i_char_base) {
         if (full_format[i_char_base] == '\n') {
             printf("Char %d = newline\n", i_char_base);
@@ -65,7 +64,7 @@ klog_format_split_t klog_format_split_strings(const char* full_format) {
             /* Update the information for our current format string */
             const uint32_t curr_format_string_length = i_char_base - curr_format_string_start_index;
             format_string_lengths[i_curr_format_string] = curr_format_string_length;
-            if (i_curr_format_string < (number_format_strings-1)) {
+            if (i_curr_format_string < (number_format_strings - 1)) {
                 format_strings[i_curr_format_string+1] = full_format + i_char_base + 1;
             }
 
@@ -73,29 +72,24 @@ klog_format_split_t klog_format_split_strings(const char* full_format) {
             printf("  length      = %d\n", format_string_lengths[i_curr_format_string]);
             printf("  start index = %d\n", i_char_base);
             printf("  address     = %p\n", (void*)format_strings[i_curr_format_string]);
-            
+
             /* Move on to the next format string */
             i_curr_format_string += 1;
-            curr_format_string_start_index = i_char_base + 1; /* +1 s we can skip over the current newline character */
+            curr_format_string_start_index = i_char_base + 1; /* +1 so we can skip over the current newline character */
             continue;
         }
-
-        // if (full_format[i_char_base] == '%') {
-        //     /* Ensure we are not printing a literal `%` character */
-        //     /* This gets tricky, consider trying to print "%42", the format string would be "%%%d" - we can stack % characters infinitely */
-        //     /* We need to backtrack to see if the number of `%` characters, including the current one, is even */
-        //     if (i_char_base > 0 && (num_preceeding_percentages % 2)) {
-        //
-        //     }
-        //
-        //     num_preceeding_percentages += 1;
-        //     continue;
-        // }
-        //
-        // num_preceeding_percentages = 0;
     }
 
-    klog_format_split_t result = {number_format_strings, format_strings, format_string_lengths, va_arg_start_indices, va_arg_amount};
+    const uint32_t final_format_string_length = input_strlen - curr_format_string_start_index;
+
+    printf("Finished iterating while processing line %d\n", i_curr_format_string);
+    printf("  length      = %d\n", final_format_string_length);
+    printf("  start index = %d\n", curr_format_string_start_index);
+    printf("  address     = %p\n", (void*)(full_format + curr_format_string_start_index));
+
+    format_string_lengths[i_curr_format_string] = final_format_string_length;
+    // format_strings[i_curr_format_string+1] = full_format + curr_format_string_start_index;
+    // format_strings[i_curr_format_string] = full_format + curr_format_string_start_index;
     
     printf("\n");
     printf("Lines:\n");
@@ -103,7 +97,8 @@ klog_format_split_t klog_format_split_strings(const char* full_format) {
         printf("  \"%.*s\"\n", format_string_lengths[i_result_line], format_strings[i_result_line]);
     }
 
-    printf("===================================================================\n");
+    klog_format_split_t result = {number_format_strings, format_strings, format_string_lengths};
+
     return result;
 }
 
@@ -139,6 +134,10 @@ char* klog_format(const klog_format_context_t context, const klog_logger_handle_
     char* input_message = malloc(input_message_length);
     vsnprintf(input_message, input_message_length, format, args_copy);
     va_end(args_copy);
+
+    /* Take the newly formatted input, and split it into multiple lines */
+
+    /* For each message, do the following */
 
     /* Create the resultant message, with the klog prefixes inserted at the front */
     const uint32_t prefix_length = 20 + context.logger_name_max_length;

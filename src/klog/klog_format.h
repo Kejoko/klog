@@ -30,19 +30,13 @@ typedef struct {
 
 typedef struct {
     /* The number of resulting format strings */
-    uint32_t  number_format_strings;
+    const uint32_t  number_format_strings;
 
     /* An array of format strings, each index of this points to a format string */
-    const char**    format_strings;
+    const char** const format_strings;
 
     /* An array of lengths, so we know how long each of the format strings are */
-    uint32_t* format_string_lengths;
-
-    /* An array of indices, each representing where in va_args the corresponding format string should begin */
-    uint32_t* va_arg_start_indices;
-
-    /* An array of amount, each representing the amount of va_args the corresponding format string should use */
-    uint32_t* va_arg_amounts;
+    const uint32_t* const format_string_lengths;
 } klog_format_split_t;
 
 pid_t       klog_format_get_current_thread_id(void);
