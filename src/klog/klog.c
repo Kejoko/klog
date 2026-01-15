@@ -8,6 +8,8 @@
 #include <string.h>
 
 #include "./klog_state.h"
+#include "./klog_constants.h"
+#include "./klog_debug_util.h"
 #include "./klog_initialize.h"
 #include "./klog_output.h"
 #include "./klog_format.h"
@@ -21,10 +23,13 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_na
     g_klog_logger_name_max_length = logger_name_max_length;
 
     gp_klog_logger_names = klog_initialize_create_logger_names_buffer(g_klog_max_number_loggers, g_klog_logger_name_max_length);
+    kdprintf("gp_klog_logger_names: %p through %p\n", (void*)gp_klog_logger_names, (void*)(gp_klog_logger_names + (max_number_loggers * logger_name_max_length)));
 
     gp_klog_logger_levels = klog_initialize_create_logger_levels_buffer(g_klog_max_number_loggers);
+    kdprintf("gp_klog_logger_levels: %p through %p\n", (void*)gp_klog_logger_levels, (void*)(gp_klog_logger_levels + g_klog_max_number_loggers));
 
     gp_klog_level_strings = klog_initialize_create_level_strings_buffer();
+    kdprintf("gp_klog_level_strings: %p through %p\n", (void*)gp_klog_level_strings, (void*)(gp_klog_level_strings + (G_klog_level_string_length * G_klog_number_levels)));
 
     g_klog_current_number_loggers_created = 0;
 
@@ -33,6 +38,7 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_na
     g_klog_message_queue_number_elements = 1;
     g_klog_message_max_length = message_max_length;
     gp_klog_message_queue = klog_initialize_create_message_queue(g_klog_message_queue_number_elements, g_klog_message_max_length);
+    kdprintf("gp_klog_message_queue: %p through %p\n", (void*)gp_klog_message_queue, (void*)(gp_klog_message_queue + (g_klog_message_queue_number_elements * g_klog_message_max_length)));
 
     klog_initialize_stdout(p_klog_init_stdout_info);
     klog_initialize_file(p_klog_init_file_info);
@@ -121,37 +127,41 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
         return;
     }
 
-    /**
-     * @todo kjk 2025/12/31 The logic for this function should look like this:
-     *      1. Split the format strings
-     *      2. Create the corresponding messages
-     *      3. For each resultant message:
-     *          If threaded:
-     *              put the message into the message queue
-     *          Else:
-     *              log the message
-     *          Free the message
-     */
+    /* Create the input string with the arguments injected */
+    va_list p_args;
+    va_start(p_args, format);
+    const char* const input_message = klog_format_input_message(format, p_args);
+    va_end(p_args);
 
-    /* Split the format string into multiple format strings */
+    /* Split the input string into multiple input strings based on the newlines */
+    const klog_format_split_t split_messages_info = klog_format_split_strings(input_message);
 
-    /* Iterate over every format string */
-        /* Get the correct args based on the information for the current format string */
-        /* Produce the message for the corresponding format string and args */
+    /* Get the information to create the message header */
+    const pid_t thread_id = klog_format_get_current_thread_id();
+    const char* logger_name = &(gp_klog_logger_names[logger_handle.value * g_klog_logger_name_max_length]);
+    const char* level_string = &(gp_klog_level_strings[G_klog_level_string_length * requested_level]);
 
-    va_list args;
-    va_start(args, format);
-    const klog_format_context_t format_context = {g_klog_logger_name_max_length, gp_klog_logger_names, gp_klog_level_strings};
-    char* total_message = klog_format(format_context, logger_handle, requested_level, format, args); /* @todo kjk 2026/01/13 This is going to return a bunch of strings, we need to print each of them */
-    va_end(args);
+    /* For each input string */
+    const uint32_t prefix_length = 20 + g_klog_logger_name_max_length;
+    for (uint32_t i_message = 0; i_message < split_messages_info.number_format_strings; ++i_message) {
+        /* Message size = header + input string + null terminator */
+        const uint32_t current_message_length = split_messages_info.format_string_lengths[i_message];
+        const uint32_t total_message_length = prefix_length + current_message_length + 1;
+       
+        /* Allocate space for the message and set the null terminator */
+        char* total_message = malloc(total_message_length);
+        total_message[total_message_length - 1] = 0;
+        
+        /* Populate the full message : header + input string + null terminator */
+        sprintf(total_message, "%5d [%.*s] [%.*s] %.*s", thread_id, g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, current_message_length, split_messages_info.format_strings[i_message]);
 
-    if (g_klog_number_backing_threads > 0) {
-        /* @todo kjk 2025/12/31 If multiple threads, put these in the thread queue and return */
+        /* Send the message on its merry way */
+        klog_output_stdout(total_message);
         free(total_message);
-        return;
     }
 
-    klog_output_stdout(total_message);
+    free((char*)input_message);
 
-    free(total_message);
+    free(split_messages_info.format_strings);
+    free((uint32_t*)split_messages_info.format_string_lengths);
 }

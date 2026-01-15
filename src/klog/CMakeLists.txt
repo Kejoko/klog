@@ -11,6 +11,8 @@ add_library(
     klog_state.c
     klog_constants.h
     klog_constants.c
+    klog_debug_util.h
+    klog_debug_util.c
     klog_initialize.h
     klog_initialize.c
     klog_format.h

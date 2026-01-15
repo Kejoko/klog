@@ -54,28 +54,13 @@ int do_comparison(
 
 void free_things(
     klog_format_split_t* const p_result,
-    const uint32_t number_format_strings,
     char** format_strings,
     uint32_t* format_string_lengths
 ) {
-    printf("Freeing result's array of %d pointers to format strings        at %p\n", number_format_strings, (void*)p_result->format_strings);
     free(p_result->format_strings);
-    printf("Freeing result's array of %d pointers to format string lengths at %p\n", number_format_strings, (void*)p_result->format_string_lengths);
     free((uint32_t*)p_result->format_string_lengths);
 
-    printf("Freeing %d format strings\n", number_format_strings);
     free(format_strings);
-    // for (uint32_t i_format_string = 0; i_format_string < number_format_strings; ++i_format_string) {
-    //     const uint32_t curr_length = format_string_lengths[i_format_string];
-    //     if (curr_length > 0) {
-    //         printf("  string %d length is %d - freeing\n", i_format_string, curr_length);
-    //         free(format_strings[i_format_string]);
-    //     } else {
-    //         printf("  string %d length is %d - not freeing\n", i_format_string, curr_length);
-    //     }
-    // }
-    
-    printf("Freeing format string lengths\n");
     free(format_string_lengths);
 }
 
@@ -93,6 +78,7 @@ int run_test(
     // Get the result value
 
     klog_format_split_t result = klog_format_split_strings(input);
+    /* @todo kjk 2026/01/13 Wrap this print statement behind the KLOG_DEBUG macro */
     printf("===================================================================\n");
 
     // Check equality
@@ -108,7 +94,7 @@ int run_test(
 
     // Clean up and return
 
-    free_things(&result, expected_number_format_strings, expected_format_strings, expected_format_string_lengths);
+    free_things(&result, expected_format_strings, expected_format_string_lengths);
     printf("===================================================================\n");
     
     printf("\n\n\n");
@@ -159,8 +145,6 @@ int single_newline(void) {
 }
 
 int four_lines(void) {
-    // Create expected
-
     /* "1"                                      */
     /* "two"                                    */
     /* " 33333 "                                */

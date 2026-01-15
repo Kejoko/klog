@@ -42,8 +42,7 @@ typedef struct {
 pid_t       klog_format_get_current_thread_id(void);
 const char* klog_format_get_level_string(const klog_format_context_t context, const enum klog_level_e requested_level);
 
+const char*         klog_format_input_message(const char* full_format,  va_list args);
 klog_format_split_t klog_format_split_strings(const char* full_format);
-
-char* klog_format(const klog_format_context_t context, const klog_logger_handle_t logger_handle, const enum klog_level_e requested_level, const char* format, va_list args);
 
 #endif /* KLOG_FORMAT_INCLUDED */

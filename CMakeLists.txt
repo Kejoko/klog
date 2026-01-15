@@ -58,6 +58,27 @@ foreach(COMPILE_FLAG ${GNEISS_CMAKE_C_FLAGS})
 endforeach()
 
 # =========================================================================== #
+# Preprocessor Directives                                                     #
+# =========================================================================== #
+
+list(
+    APPEND GNEISS_COMPILE_DEFINITIONS
+    GNEISS_VERSION
+    GNEISS_MAJOR_VERSION=${GNEISS_MAJOR_VERSION}
+    GNEISS_MINOR_VERSION=${GNEISS_MINOR_VERSION}
+    GNEISS_PATCH_VERSION=${GNEISS_PATCH_VERSION}
+)
+
+if (KLOG_DEBUG)
+    list(APPEND GNEISS_COMPILE_DEFINITIONS KLOG_DEBUG)
+endif ()
+
+message(STATUS "Gneiss specific compile definitions:")
+foreach(COMPILE_DEFINITION ${GNEISS_COMPILE_DEFINITIONS})
+    message(STATUS "    ${COMPILE_DEFINITION}")
+endforeach()
+
+# =========================================================================== #
 # Source                                                                      #
 # =========================================================================== #
 
