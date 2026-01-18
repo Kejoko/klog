@@ -8,27 +8,27 @@
 
 bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
     if (klog_is_initialized) {
-        printf("Trying to initialize klog, when it is already initialized\n");
+        kdprintf("Trying to initialize klog, when it is already initialized\n");
         return false;
     }
 
     if (max_number_loggers == 0) {
-        printf("Trying to initialize klog with maximum number of loggers set to 0");
+        kdprintf("Trying to initialize klog with maximum number of loggers set to 0");
         return false;
     }
 
     if (logger_name_max_length == 0) {
-        printf("Trying to initialize klog with maximum length of logger names set to 0");
+        kdprintf("Trying to initialize klog with maximum length of logger names set to 0");
         return false;
     }
 
     if (message_queue_number_elements == 0) {
-        printf("Trying to initialize klog with maximum message queue size set to 0\n");
+        kdprintf("Trying to initialize klog with maximum message queue size set to 0\n");
         return false;
     }
 
     if (message_max_length == 0) {
-        printf("Trying to initialize klog with maximum length of messages set to 0\n");
+        kdprintf("Trying to initialize klog with maximum length of messages set to 0\n");
         return false;
     }
 
@@ -103,14 +103,14 @@ char* klog_initialize_create_message_queue(const uint32_t message_queue_number_e
 
 void klog_initialize_stdout(const klog_init_stdout_info_t* p_klog_init_stdout_info) {
     if (p_klog_init_stdout_info == NULL) {
-        printf("No stdout sink provided\n");
+        kdprintf("No stdout sink provided\n");
         return;
     }
 }
 
 void klog_initialize_file(const klog_init_file_info_t* p_klog_init_file_info) {
     if (p_klog_init_file_info == NULL) {
-        printf("No file sink provided\n");
+        kdprintf("No file sink provided\n");
         return;
     }
 }

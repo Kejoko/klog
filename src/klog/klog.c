@@ -53,7 +53,7 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_na
 
 void klog_deinitialize(void) {
     if (!g_klog_is_initialized) {
-        printf("Trying to de-initialize klog, when it is not yet initialized\n");
+        kdprintf("Trying to de-initialize klog, when it is not yet initialized\n");
         exit(1);
     }
 
@@ -73,12 +73,12 @@ void klog_deinitialize(void) {
 
 klog_logger_handle_t klog_logger_create(const char* logger_name) {
     if (!g_klog_is_initialized) {
-        printf("Trying to create klog logger, but klog is not initialized\n");
+        kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
     }
 
     if (g_klog_current_number_loggers_created >= g_klog_max_number_loggers) {
-        printf("Trying to create klog logger, but klog only allows %d loggers\n", g_klog_max_number_loggers);
+        kdprintf("Trying to create klog logger, but klog only allows %d loggers\n", g_klog_max_number_loggers);
         exit(1);
     }
 
@@ -100,12 +100,12 @@ klog_logger_handle_t klog_logger_create(const char* logger_name) {
 
 void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum klog_level_e updated_level) {
     if (!g_klog_is_initialized) {
-        printf("Trying to create klog logger, but klog is not initialized\n");
+        kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
     }
 
     if (logger_handle.value >= g_klog_current_number_loggers_created) {
-        printf("Trying to set level for logger %d, when only %d loggers exist\n", logger_handle.value, g_klog_current_number_loggers_created);
+        kdprintf("Trying to set level for logger %d, when only %d loggers exist\n", logger_handle.value, g_klog_current_number_loggers_created);
         exit(1);
     }
 
@@ -114,12 +114,12 @@ void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum 
 
 void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requested_level, const char* format, ...) {
     if (!g_klog_is_initialized) {
-        printf("Trying to create klog logger, but klog is not initialized\n");
+        kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
     }
 
     if (logger_handle.value >= g_klog_current_number_loggers_created) {
-        printf("Trying to log with logger %d, when only %d loggers exist\n", logger_handle.value, g_klog_current_number_loggers_created);
+        kdprintf("Trying to log with logger %d, when only %d loggers exist\n", logger_handle.value, g_klog_current_number_loggers_created);
         exit(1);
     }
 

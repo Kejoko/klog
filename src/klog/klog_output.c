@@ -7,6 +7,6 @@ void klog_output_stdout(char* message) {
 }
 
 void klog_output_file(char* message) {
-    printf("In file: %s\n", message);
+    (void)message;
 }
 
