@@ -101,14 +101,14 @@ char* klog_initialize_create_message_queue(const uint32_t message_queue_number_e
     return p_message_queue;
 }
 
-void klog_initialize_stdout(const klog_init_stdout_info_t* p_klog_init_stdout_info) {
+void klog_initialize_stdout(const KlogInitStdoutInfo* p_klog_init_stdout_info) {
     if (p_klog_init_stdout_info == NULL) {
         kdprintf("No stdout sink provided\n");
         return;
     }
 }
 
-void klog_initialize_file(const klog_init_file_info_t* p_klog_init_file_info) {
+void klog_initialize_file(const KlogInitFileInfo* p_klog_init_file_info) {
     if (p_klog_init_file_info == NULL) {
         kdprintf("No file sink provided\n");
         return;

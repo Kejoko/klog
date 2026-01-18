@@ -20,29 +20,20 @@
 #endif
 #endif
 
-#include "klog/klog.h"
-
-typedef struct {
-    const uint32_t logger_name_max_length;
-    const char* p_logger_names;
-    const char* p_level_strings;
-} klog_format_context_t;
-
 typedef struct {
     /* The number of resulting format strings */
-    const uint32_t  number_format_strings;
+    const uint32_t  number_strings;
 
     /* An array of format strings, each index of this points to a format string */
-    const char** const format_strings;
+    const char** const strings;
 
     /* An array of lengths, so we know how long each of the format strings are */
-    const uint32_t* const format_string_lengths;
-} klog_format_split_t;
+    const uint32_t* const string_lengths;
+} KlogFormatSplitInfo;
 
 pid_t       klog_format_get_current_thread_id(void);
-const char* klog_format_get_level_string(const klog_format_context_t context, const enum klog_level_e requested_level);
 
-const char*         klog_format_input_message(const char* full_format,  va_list args);
-klog_format_split_t klog_format_split_strings(const char* full_format);
+const char*         klog_format_input_message(const char* format, va_list args);
+KlogFormatSplitInfo klog_format_split_strings(const char* formatted_input);
 
 #endif /* KLOG_FORMAT_INCLUDED */

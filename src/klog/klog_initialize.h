@@ -13,7 +13,7 @@ uint8_t* klog_initialize_create_logger_levels_buffer(const uint32_t max_number_l
 char*    klog_initialize_create_level_strings_buffer(void);
 char*    klog_initialize_create_message_queue(const uint32_t message_queue_number_elements, const uint32_t message_max_length);
 
-void klog_initialize_stdout(const klog_init_stdout_info_t* p_klog_init_stdout_info);
-void klog_initialize_file(const klog_init_file_info_t* p_klog_init_file_info);
+void klog_initialize_stdout(const KlogInitStdoutInfo* p_klog_init_stdout_info);
+void klog_initialize_file(const KlogInitFileInfo* p_klog_init_file_info);
 
 #endif /* KLOG_INITIALIZE_INCLUDED */

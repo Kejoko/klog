@@ -4,20 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "klog/klog.h"
-#include "./klog_constants.h"
 #include "./klog_debug_util.h"
 #include "./klog_format.h"
 
 pid_t klog_format_get_current_thread_id(void) {
     /* @todo kjk 2025/12/31 Call this once per thread so we can avoid switching into kernel mode repeatedly */
     return syscall(SYS_gettid);
-}
-
-const char* klog_format_get_level_string(const klog_format_context_t context, const enum klog_level_e requested_level) {
-    /* @todo kjk 2025/12/31 Take level string buffer as parameter? Ensure it is correctly sized? */
-    const uint32_t i_level_string = G_klog_level_string_length * requested_level;
-    return &(context.p_level_strings[i_level_string]);
 }
 
 const char* klog_format_input_message(const char* format, va_list p_args) {
@@ -40,39 +32,39 @@ const char* klog_format_input_message(const char* format, va_list p_args) {
     return input_message;
 }
 
-klog_format_split_t klog_format_split_strings(const char* full_format) {
-    const uint32_t input_strlen = strlen(full_format);
+KlogFormatSplitInfo klog_format_split_strings(const char* formatted_input) {
+    const uint32_t input_strlen = strlen(formatted_input);
 
-    uint32_t number_format_strings = 1;
+    uint32_t number_strings = 1;
 
     /* First pass to count how many format strings we will have, so we can allocate our result buffers accordingly */
     for (uint32_t i_char_newline_count = 0; i_char_newline_count < input_strlen; ++i_char_newline_count) {
-        if (full_format[i_char_newline_count] == '\n') {
-            number_format_strings += 1;
+        if (formatted_input[i_char_newline_count] == '\n') {
+            number_strings += 1;
         }
     }
 
     /* Allocate the resulting buffers */
-    const char** const format_strings = malloc(number_format_strings * sizeof(char*));
-    uint32_t* const format_string_lengths = malloc(number_format_strings * sizeof(uint32_t));
+    const char** const strings = malloc(number_strings * sizeof(char*));
+    uint32_t* const string_lengths = malloc(number_strings * sizeof(uint32_t));
 
     /* Initialize the first format string values in case we never reach a newline */
-    format_strings[0] = full_format;
-    format_string_lengths[0] = input_strlen;
+    strings[0] = formatted_input;
+    string_lengths[0] = input_strlen;
 
     /* Find all of the newlines so we know where the format string pointers should begin */
     uint32_t curr_format_string_start_index = 0;
     uint32_t i_curr_format_string = 0;
     for (uint32_t i_char_base = 0; i_char_base < input_strlen; ++i_char_base) {
-        if (full_format[i_char_base] != '\n') {
+        if (formatted_input[i_char_base] != '\n') {
             continue;
         }
 
         /* Update the information for our current format string */
         const uint32_t curr_format_string_length = i_char_base - curr_format_string_start_index;
-        format_string_lengths[i_curr_format_string] = curr_format_string_length;
-        if (i_curr_format_string < (number_format_strings - 1)) {
-            format_strings[i_curr_format_string+1] = full_format + i_char_base + 1;
+        string_lengths[i_curr_format_string] = curr_format_string_length;
+        if (i_curr_format_string < (number_strings - 1)) {
+            strings[i_curr_format_string+1] = formatted_input + i_char_base + 1;
         }
 
         /* Move on to the next format string */
@@ -81,9 +73,9 @@ klog_format_split_t klog_format_split_strings(const char* full_format) {
     }
 
     const uint32_t final_format_string_length = input_strlen - curr_format_string_start_index;
-    format_string_lengths[i_curr_format_string] = final_format_string_length;
+    string_lengths[i_curr_format_string] = final_format_string_length;
 
-    klog_format_split_t result = {number_format_strings, format_strings, format_string_lengths};
+    KlogFormatSplitInfo result = {number_strings, strings, string_lengths};
 
     return result;
 }

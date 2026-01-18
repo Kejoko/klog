@@ -14,7 +14,7 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const klog_init_stdout_info_t* p_klog_init_stdout_info, const klog_init_file_info_t* p_klog_init_file_info) {
+void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info) {
     if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, logger_name_max_length, message_queue_number_elements, message_max_length)) {
         exit(1);
     }
@@ -71,7 +71,7 @@ void klog_deinitialize(void) {
     g_klog_is_initialized = false;
 }
 
-klog_logger_handle_t klog_logger_create(const char* logger_name) {
+KlogLoggerHandle klog_logger_create(const char* logger_name) {
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
@@ -94,11 +94,11 @@ klog_logger_handle_t klog_logger_create(const char* logger_name) {
 
     g_klog_current_number_loggers_created++;
 
-    const klog_logger_handle_t handle = {current_logger_handle};
+    const KlogLoggerHandle handle = {current_logger_handle};
     return handle;
 }
 
-void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum klog_level_e updated_level) {
+void klog_logger_set_level(const KlogLoggerHandle logger_handle, const enum klog_level_e updated_level) {
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
@@ -112,7 +112,7 @@ void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum 
     gp_klog_logger_levels[logger_handle.value] = updated_level;
 }
 
-void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requested_level, const char* format, ...) {
+void klog(const KlogLoggerHandle logger_handle, const enum klog_level_e requested_level, const char* format, ...) {
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
@@ -134,7 +134,7 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
     va_end(p_args);
 
     /* Split the input string into multiple input strings based on the newlines */
-    const klog_format_split_t split_messages_info = klog_format_split_strings(input_message);
+    const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(input_message);
 
     /* Get the information to create the message header */
     const pid_t thread_id = klog_format_get_current_thread_id();
@@ -148,9 +148,9 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
     /* 10+            0123456789           */
     /* 20+                      01234567   */
     const uint32_t prefix_length = 21 + g_klog_logger_name_max_length;
-    for (uint32_t i_message = 0; i_message < split_messages_info.number_format_strings; ++i_message) {
+    for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
         /* Message size = header + input string + null terminator */
-        const uint32_t current_message_length = split_messages_info.format_string_lengths[i_message]; /* Does this contain null terminator? */
+        const uint32_t current_message_length = split_messages_info.string_lengths[i_message]; /* Does this contain null terminator? */
         const uint32_t total_message_length = prefix_length + current_message_length + 1;
        
         /* Allocate space for the message and set the null terminator */
@@ -158,7 +158,7 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
         total_message[total_message_length - 1] = 0;
         
         /* Populate the full message : header + input string + null terminator */
-        sprintf(total_message, "%5d [%.*s] [%.*s] %.*s", thread_id, g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, current_message_length, split_messages_info.format_strings[i_message]);
+        sprintf(total_message, "%5d [%.*s] [%.*s] %.*s", thread_id, g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, current_message_length, split_messages_info.strings[i_message]);
 
         /* Send the message on its merry way */
         klog_output_stdout(total_message);
@@ -167,6 +167,6 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
 
     free((char*)input_message);
 
-    free(split_messages_info.format_strings);
-    free((uint32_t*)split_messages_info.format_string_lengths);
+    free(split_messages_info.strings);
+    free((uint32_t*)split_messages_info.string_lengths);
 }

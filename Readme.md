@@ -36,11 +36,10 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 # Tech Debt
 
 ## Build System
-- [ ] move scratch executables out of test/ directory
 - [ ] cmake flag to prevent building all tests
 - [ ] Cmake flag to prevent building scratch executables
 ## Source
-- [ ] Rename the klog_format_split_t struct members to omit the "format" word
 - [ ] Helper tool to free klog_format_split_t
+- [ ] Hide the implementation of the klog handle, return a pointer to the handle
 - [ ] Unit test the rest of klog's implementation
 - [ ] Ensure const correctness everywhere

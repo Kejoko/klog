@@ -10,21 +10,21 @@
 #include <stdint.h>
 
 /**
- * @struct klog_logger_handle_t The handle to a klog logger
+ * @struct KlogLoggerHandle The handle to a klog logger
  */
 typedef struct {
     uint32_t value;
-} klog_logger_handle_t;
+} KlogLoggerHandle;
 
 typedef struct {
     uint8_t max_level;
     bool use_color;
-} klog_init_stdout_info_t;
+} KlogInitStdoutInfo;
 
 typedef struct {
     uint8_t max_level;
     const char* filename_prefix;
-} klog_init_file_info_t;
+} KlogInitFileInfo;
 
 /**
  * @enum klog_level_e The different levels of verbosity
@@ -53,7 +53,7 @@ enum klog_level_e {
  * @param p_stdout_init_info
  * @param p_file_init_info
  */
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const klog_init_stdout_info_t* p_klog_init_stdout_info, const klog_init_file_info_t* p_klog_init_file_info);
+void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info);
 
 /**
  * @fn klog_deinitialize
@@ -85,10 +85,10 @@ void klog_deinitialize(void);
  * @pre There exists fewer than KLOG_MAX_NUMBER_LOGGERS, if a logger for the
  *      given name does not exist.
  * @param logger_name The name of the logger to create
- * @returns klog_logger_handle_t The newly created handle if logger_name did
+ * @returns KlogLoggerHandle The newly created handle if logger_name did
  *      not already exist, or the retrieved handle if logger_name did exist
  */
-klog_logger_handle_t klog_logger_create(const char* logger_name);
+KlogLoggerHandle klog_logger_create(const char* logger_name);
 
 /**
  * @fn klog_logger_set_level
@@ -103,7 +103,7 @@ klog_logger_handle_t klog_logger_create(const char* logger_name);
  * @param logger_handle The handle to the logger
  * @param updated_level The desired level of verbosity
  */
-void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum klog_level_e updated_level);
+void klog_logger_set_level(const KlogLoggerHandle logger_handle, const enum klog_level_e updated_level);
 
 /**
  * @fn klog
@@ -116,6 +116,6 @@ void klog_logger_set_level(const klog_logger_handle_t logger_handle, const enum 
  * @param format
  * @param ...
  */
-void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requested_level, const char* format, ...);
+void klog(const KlogLoggerHandle logger_handle, const enum klog_level_e requested_level, const char* format, ...);
 
 #endif /* KLOG_INCLUDED */
