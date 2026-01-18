@@ -91,8 +91,7 @@ add_subdirectory("${GNEISS_SOURCE_DIR}/klog")
 # Tests                                                                       #
 # =========================================================================== #
 
-set(GNEISS_TEST_DIR "${PROJECT_SOURCE_DIR}/test")
-add_subdirectory("${GNEISS_TEST_DIR}/scratch")
+add_subdirectory("${PROJECT_SOURCE_DIR}/scratch")
 
 # =========================================================================== #
 # Examples                                                                    #
