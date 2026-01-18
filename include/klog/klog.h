@@ -12,9 +12,7 @@
 /**
  * @struct KlogLoggerHandle The handle to a klog logger
  */
-typedef struct {
-    uint32_t value;
-} KlogLoggerHandle;
+typedef struct KlogLoggerHandle KlogLoggerHandle;
 
 typedef struct {
     uint8_t max_level;

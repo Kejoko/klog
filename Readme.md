@@ -39,6 +39,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] cmake flag to prevent building all tests
 - [ ] Cmake flag to prevent building scratch executables
 ## Source
+- [ ] Move all of the global state into one place
 - [ ] Be consistent with allocating full arrays, or arrays of pointers
 - [ ] Be consistent with hungarian prefixes (for arrays, pointers, etc)
     - Exs for KlogLoggerHandle

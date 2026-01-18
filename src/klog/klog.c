@@ -14,6 +14,10 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
+struct KlogLoggerHandle {
+    uint32_t value;
+};
+
 KlogLoggerHandle* ga_klog_logger_handles = NULL;
 
 void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info) {
@@ -105,6 +109,7 @@ KlogLoggerHandle* klog_logger_create(const char* logger_name) {
 
     gp_klog_logger_levels[current_logger_index] = KLOG_LEVEL_OFF;
 
+    /* We have to do this weird casting stuff to prevent valgrind from exploding */
     KlogLoggerHandle* p_logger_handle = &(((KlogLoggerHandle*)ga_klog_logger_handles)[current_logger_index]);
     p_logger_handle->value = current_logger_index;
 
