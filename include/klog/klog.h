@@ -88,7 +88,7 @@ void klog_deinitialize(void);
  * @returns KlogLoggerHandle The newly created handle if logger_name did
  *      not already exist, or the retrieved handle if logger_name did exist
  */
-KlogLoggerHandle klog_logger_create(const char* logger_name);
+KlogLoggerHandle* klog_logger_create(const char* logger_name);
 
 /**
  * @fn klog_logger_set_level
@@ -103,7 +103,7 @@ KlogLoggerHandle klog_logger_create(const char* logger_name);
  * @param logger_handle The handle to the logger
  * @param updated_level The desired level of verbosity
  */
-void klog_logger_set_level(const KlogLoggerHandle logger_handle, const enum klog_level_e updated_level);
+void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e updated_level);
 
 /**
  * @fn klog
@@ -116,6 +116,6 @@ void klog_logger_set_level(const KlogLoggerHandle logger_handle, const enum klog
  * @param format
  * @param ...
  */
-void klog(const KlogLoggerHandle logger_handle, const enum klog_level_e requested_level, const char* format, ...);
+void klog(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e requested_level, const char* format, ...);
 
 #endif /* KLOG_INCLUDED */

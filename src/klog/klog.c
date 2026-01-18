@@ -14,6 +14,8 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
+KlogLoggerHandle* ga_klog_logger_handles = NULL;
+
 void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info) {
     if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, logger_name_max_length, message_queue_number_elements, message_max_length)) {
         exit(1);
@@ -32,6 +34,16 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_na
     kdprintf("gp_klog_level_strings: %p through %p\n", (void*)gp_klog_level_strings, (void*)(gp_klog_level_strings + (G_klog_level_string_length * G_klog_number_levels)));
 
     g_klog_current_number_loggers_created = 0;
+
+    /* @todo Move this into the klog initialization function */
+    ga_klog_logger_handles = malloc(g_klog_max_number_loggers * sizeof(KlogLoggerHandle));
+    kdprintf("Created logger handle array\n");
+    kdprintf("  num  : %d\n", g_klog_max_number_loggers);
+    kdprintf("  size : %d\n", sizeof(KlogLoggerHandle));
+    kdprintf("  start: %p\n", (void*)ga_klog_logger_handles);
+    kdprintf("  end  : %p\n", (void*)(ga_klog_logger_handles + (g_klog_max_number_loggers * sizeof(KlogLoggerHandle))));
+    kdprintf("  size : %d\n", g_klog_max_number_loggers * sizeof(KlogLoggerHandle));
+    kdprintf("ga_klog_logger_handles: %p through %p\n", (void*)ga_klog_logger_handles, (void*)(ga_klog_logger_handles + (g_klog_max_number_loggers * sizeof(KlogLoggerHandle))));
 
     /* @todo kjk 2025/12/30 If we have no backing threads, then the queue size is 1, because it doesn't make sense to have mutliple items in the queue when we are blocking anyways */
     /* g_klog_message_queue_number_elements = message_queue_number_elements; */
@@ -64,6 +76,7 @@ void klog_deinitialize(void) {
     g_klog_message_max_length = 0;
 
     g_klog_current_number_loggers_created = 0;
+    free(ga_klog_logger_handles);
     free(gp_klog_logger_names);
     free(gp_klog_logger_levels);
     free(gp_klog_level_strings);
@@ -71,7 +84,7 @@ void klog_deinitialize(void) {
     g_klog_is_initialized = false;
 }
 
-KlogLoggerHandle klog_logger_create(const char* logger_name) {
+KlogLoggerHandle* klog_logger_create(const char* logger_name) {
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
@@ -82,48 +95,50 @@ KlogLoggerHandle klog_logger_create(const char* logger_name) {
         exit(1);
     }
 
-    const uint32_t current_logger_handle = g_klog_current_number_loggers_created;
+    const uint32_t current_logger_index = g_klog_current_number_loggers_created;
 
-    const uint32_t logger_name_start_index = current_logger_handle * g_klog_logger_name_max_length;
+    const uint32_t logger_name_start_index = current_logger_index * g_klog_logger_name_max_length;
     const uint32_t number_chars_to_copy = strlen(logger_name) >= g_klog_logger_name_max_length ?
         g_klog_logger_name_max_length : /* copy as much as we can fit */
         strlen(logger_name);            /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
     memcpy(&gp_klog_logger_names[logger_name_start_index], logger_name, number_chars_to_copy);
 
-    gp_klog_logger_levels[current_logger_handle] = KLOG_LEVEL_OFF;
+    gp_klog_logger_levels[current_logger_index] = KLOG_LEVEL_OFF;
+
+    KlogLoggerHandle* p_logger_handle = &(((KlogLoggerHandle*)ga_klog_logger_handles)[current_logger_index]);
+    p_logger_handle->value = current_logger_index;
 
     g_klog_current_number_loggers_created++;
 
-    const KlogLoggerHandle handle = {current_logger_handle};
-    return handle;
+    return p_logger_handle;
 }
 
-void klog_logger_set_level(const KlogLoggerHandle logger_handle, const enum klog_level_e updated_level) {
+void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e updated_level) {
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
     }
 
-    if (logger_handle.value >= g_klog_current_number_loggers_created) {
-        kdprintf("Trying to set level for logger %d, when only %d loggers exist\n", logger_handle.value, g_klog_current_number_loggers_created);
+    if (p_logger_handle->value >= g_klog_current_number_loggers_created) {
+        kdprintf("Trying to set level for logger %d, when only %d loggers exist\n", p_logger_handle->value, g_klog_current_number_loggers_created);
         exit(1);
     }
 
-    gp_klog_logger_levels[logger_handle.value] = updated_level;
+    gp_klog_logger_levels[p_logger_handle->value] = updated_level;
 }
 
-void klog(const KlogLoggerHandle logger_handle, const enum klog_level_e requested_level, const char* format, ...) {
+void klog(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e requested_level, const char* format, ...) {
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
     }
 
-    if (logger_handle.value >= g_klog_current_number_loggers_created) {
-        kdprintf("Trying to log with logger %d, when only %d loggers exist\n", logger_handle.value, g_klog_current_number_loggers_created);
+    if (p_logger_handle->value >= g_klog_current_number_loggers_created) {
+        kdprintf("Trying to log with logger %d, when only %d loggers exist\n", p_logger_handle->value, g_klog_current_number_loggers_created);
         exit(1);
     }
 
-    if (requested_level > gp_klog_logger_levels[logger_handle.value]) {
+    if (requested_level > gp_klog_logger_levels[p_logger_handle->value]) {
         return;
     }
 
@@ -138,7 +153,7 @@ void klog(const KlogLoggerHandle logger_handle, const enum klog_level_e requeste
 
     /* Get the information to create the message header */
     const pid_t thread_id = klog_format_get_current_thread_id();
-    const char* logger_name = &(gp_klog_logger_names[logger_handle.value * g_klog_logger_name_max_length]);
+    const char* logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_logger_name_max_length]);
     const char* level_string = &(gp_klog_level_strings[G_klog_level_string_length * requested_level]);
 
     /* For each input string:              */

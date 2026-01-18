@@ -39,7 +39,17 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] cmake flag to prevent building all tests
 - [ ] Cmake flag to prevent building scratch executables
 ## Source
+- [ ] Be consistent with allocating full arrays, or arrays of pointers
+- [ ] Be consistent with hungarian prefixes (for arrays, pointers, etc)
+    - Exs for KlogLoggerHandle
+        - single instance: klog_logger_handle
+        - global: g_klog_logger_handle
+        - array: a_klog_logger_handles
+        - pointer: p_klog_logger_handle
+        - list (array of pointers): l_klog_logger_handle
+- [ ] Be consistent with hungarian prefixes for strings
 - [ ] Helper tool to free klog_format_split_t
 - [ ] Hide the implementation of the klog handle, return a pointer to the handle
 - [ ] Unit test the rest of klog's implementation
 - [ ] Ensure const correctness everywhere
+- [ ] Do away with ++ and += (and -- and -= etc) unless in loop variants
