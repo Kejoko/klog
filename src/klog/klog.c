@@ -141,11 +141,16 @@ void klog(const klog_logger_handle_t logger_handle, const enum klog_level_e requ
     const char* logger_name = &(gp_klog_logger_names[logger_handle.value * g_klog_logger_name_max_length]);
     const char* level_string = &(gp_klog_level_strings[G_klog_level_string_length * requested_level]);
 
-    /* For each input string */
-    const uint32_t prefix_length = 20 + g_klog_logger_name_max_length;
+    /* For each input string:              */
+    /* (using logger name of 6 characters) */
+    /*      "123456 [ABCDEF] [12345678] "  */
+    /* 00+   123456789                     */
+    /* 10+            0123456789           */
+    /* 20+                      01234567   */
+    const uint32_t prefix_length = 21 + g_klog_logger_name_max_length;
     for (uint32_t i_message = 0; i_message < split_messages_info.number_format_strings; ++i_message) {
         /* Message size = header + input string + null terminator */
-        const uint32_t current_message_length = split_messages_info.format_string_lengths[i_message];
+        const uint32_t current_message_length = split_messages_info.format_string_lengths[i_message]; /* Does this contain null terminator? */
         const uint32_t total_message_length = prefix_length + current_message_length + 1;
        
         /* Allocate space for the message and set the null terminator */

@@ -53,7 +53,8 @@ F_EP="${FGRED}FAILED (should pass)${NORMAL}"
 
 exit_code=0
 
-# Do the thing (execute all tests)
+# Do the thing (execute all tests, and take note of failed commands)
+failed_commands=()
 for test_command in "${all_tests_to_run[@]}"; do
     test_name=$(basename "$test_command")
 
@@ -74,10 +75,10 @@ for test_command in "${all_tests_to_run[@]}"; do
     if [[ " ${expected_failure_list[*]} " =~ " ${test_name} " ]]; then # If we should have failed
         if [ "$status" -eq 0 ]; then
             result_message=$P_EF
-            exit_code=1
+            failed_commands+=$command_to_run
         elif [ "$status" -eq 54 ]; then
             result_message=$ME_EF
-            exit_code=1
+            failed_commands+=$command_to_run
         else
             result_message=$F_EF
         fi
@@ -86,14 +87,26 @@ for test_command in "${all_tests_to_run[@]}"; do
             result_message=$P_EP
         elif [ "$status" -eq 54 ]; then
             result_message=$ME_EP
-            exit_code=1
+            failed_commands+=$command_to_run
         else
             result_message=$F_EP
-            exit_code=1
+            failed_commands+=$command_to_run
         fi
     fi
 
     echo "$result_message : $test_name"
 done
 
-exit $exit_code
+echo ""
+
+if [ "${#failed_commands[@]}" -eq 0 ]; then
+    echo "${FGGREEN}All tests pass!${NORMAL}"
+    exit 0
+fi
+
+echo "${FGRED}Failed${NORMAL} commands:"
+for failed_command in "${failed_commands[@]}"; do
+    echo "  $failed_command"
+done
+
+exit 1
