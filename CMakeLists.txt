@@ -10,12 +10,12 @@ include(GneissVersion)
 
 cmake_minimum_required(VERSION 3.20)
 
-project(${PROJECT_NAME} VERSION ${GNEISS_MAJOR_VERSION}.${GNEISS_MINOR_VERSION}.${GNEISS_PATCH_VERSION} LANGUAGES C)
+project(${PROJECT_NAME} VERSION ${GNEISS_VERSION_MAJOR}.${GNEISS_VERSION_MINOR}.${GNEISS_VERSION_PATCH} LANGUAGES C)
 
 include(CTest)
 enable_testing()
 
-include(CreateUnitTest)
+include(CreateTest)
 
 # =========================================================================== #
 # Project config                                                              #
@@ -64,9 +64,9 @@ endforeach()
 list(
     APPEND GNEISS_COMPILE_DEFINITIONS
     GNEISS_VERSION
-    GNEISS_MAJOR_VERSION=${GNEISS_MAJOR_VERSION}
-    GNEISS_MINOR_VERSION=${GNEISS_MINOR_VERSION}
-    GNEISS_PATCH_VERSION=${GNEISS_PATCH_VERSION}
+    GNEISS_VERSION_MAJOR=${GNEISS_VERSION_MAJOR}
+    GNEISS_VERSION_MINOR=${GNEISS_VERSION_MINOR}
+    GNEISS_VERSION_PATCH=${GNEISS_VERSION_PATCH}
 )
 
 if (KLOG_DEBUG)
