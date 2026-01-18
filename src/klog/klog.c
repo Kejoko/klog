@@ -14,12 +14,6 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
-struct KlogLoggerHandle {
-    uint32_t value;
-};
-
-KlogLoggerHandle* ga_klog_logger_handles = NULL;
-
 void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info) {
     if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, logger_name_max_length, message_queue_number_elements, message_max_length)) {
         exit(1);
