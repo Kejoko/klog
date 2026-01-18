@@ -35,16 +35,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 
-## Test Suite
-- [x] Update test creation function to denote whether or not it should fail, and whether or not the memory should be valid
-    - [x] Expect fail = false default
-    - [x] Expect memory errors = false default
-- [x] Update test creation function to populate text files containing names of expected failing tests and expected memory issue tests
-- [ ] Script to run all tests
-    - [ ] Output name of test, with pass or fail information
-    - [ ] Execute test and check return code
-    - [ ] Run with valgrind
-- [ ] CMake copy/link test runner script to binary directory
 ## Build System
 - [ ] move scratch executables out of test/ directory
 - [ ] cmake flag to prevent building all tests

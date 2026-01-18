@@ -8,7 +8,19 @@
 
 set_property(GLOBAL PROPERTY EXPECT_FAILURE_FILE_ALREADY_SETUP FALSE)
 set_property(GLOBAL PROPERTY IGNORE_MEMORY_FILE_ALREADY_SETUP FALSE)
-set(TEST_SCRIPT_LINK_ALREADY_SETUP FALSE)
+set_property(GLOBAL PROPERTY TEST_SCRIPT_COPY_ALREADY_SETUP FALSE)
+
+function(setup_test_script_copy)
+    get_property(test_script_copied_already GLOBAL PROPERTY TEST_SCRIPT_COPY_ALREADY_SETUP)
+    if (${test_script_copied_already})
+        message(STATUS "Test script already made")
+        return()
+    endif ()
+    message(STATUS "Creating test script copy")
+    # Using configure_file automatically creates a new copy (upon running ninja or make) every single time the script is modified
+    configure_file(${PROJECT_SOURCE_DIR}/scripts/run_all_tests.sh ${CMAKE_BINARY_DIR}/run_all_tests.sh COPYONLY)
+    set_property(GLOBAL PROPERTY TEST_SCRIPT_COPY_ALREADY_SETUP TRUE)
+endfunction()
 
 function(update_expect_failure_list_file test_name)
     set(expect_failure_list_file_path ${CMAKE_BINARY_DIR}/tests_expected_failure_list.txt)
@@ -31,6 +43,7 @@ function(update_ignore_memory_list_file test_name)
 endfunction()
 
 function(create_test main_file runtime_output_directory)
+    setup_test_script_copy()
     get_filename_component(test_name ${main_file} NAME_WE)
     add_executable(${test_name} ${main_file})
 

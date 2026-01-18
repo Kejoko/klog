@@ -1,43 +1,62 @@
 #!/bin/bash
 
-# This script is intended to be run from within the build directory
-# such that the tests are located ./bin/ut and ./bin/ft
+########################################################################################################################
+# This script is intended to be run from within the build directory                                                    #
+# such that the tests are located ./bin/ut and ./bin/ft                                                                #
+########################################################################################################################
+
+# Tput color codes
+FGRED=$(tput setaf 1)
+FGGREEN=$(tput setaf 2)
+FGYELLOW=$(tput setaf 3)
+FGMAGENTA=$(tput setaf 5)
+BGRED=$(tput setab 1)
+BGGREEN=$(tput setab 2)
+BGYELLOW=$(tput setab 3)
+BGMAGENTA=$(tput setab 5)
+NORMAL=$(tput sgr0) # Resets all attributes
+
+# -------------------------------------------------------------------------------------------------------------------- #
+# Determine which tests should fail, and for which tests we should ignore the valgrind information                     #
+# -------------------------------------------------------------------------------------------------------------------- #
 
 # Get list of all tests which are expected to fail
 expected_failure_list=()
 expected_failure_list_file="tests_expected_failure_list.txt"
 if [ -f "$expected_failure_list_file" ]; then
-    echo "$expected_failure_list_file exists"
-
     mapfile -t expected_failure_list < "$expected_failure_list_file"
 fi
-echo "Expected tests to fail:"
-for test_name in "${expected_failure_list[@]}"; do
-    echo "  $test_name"
-done
 
 # Get list of all tests which should ignore memory failures
 ignore_memory_list=()
 ignore_memory_list_file="tests_ignore_memory_list.txt"
 if [ -f "$ignore_memory_list_file" ]; then
-    echo "$ignore_memory_list_file exists"
-
     mapfile -t ignore_memory_list < "$ignore_memory_list_file"
 fi
-echo "Ignoring memory for tests:"
-for test_name in "${ignore_memory_list[@]}"; do
-    echo "  $test_name"
-done
+
+# -------------------------------------------------------------------------------------------------------------------- #
+# Determine which tests to run, and run them all, making note of which ones failed and in what fashion                 #
+# -------------------------------------------------------------------------------------------------------------------- #
 
 # Create list of all tests from the ft and ut directories
 uts_to_run=(./bin/ut/*)
 fts_to_run=(./bin/ft/*)
 all_tests_to_run=("${uts_to_run[@]}" "${fts_to_run[@]}")
-failed_tests=()
-echo "Running tests:"
+
+# These look bad when declared here but they are all aligned for nicely printing
+P_EF="${FGRED}PASSED (should fail)${NORMAL}"
+ME_EF="${FGYELLOW}MEMERR (should fail)${NORMAL}"
+F_EF="failed (should fail)${NORMAL}"
+P_EP="passed (should pass)${NORMAL}"
+ME_EP="${FGYELLOW}MEMERR (should pass)${NORMAL}"
+F_EP="${FGRED}FAILED (should pass)${NORMAL}"
+
+exit_code=0
+
+# Do the thing (execute all tests)
 for test_command in "${all_tests_to_run[@]}"; do
     test_name=$(basename "$test_command")
-    
+
     if [[ "$test_name" == "*" ]]; then
         continue
     fi
@@ -50,31 +69,31 @@ for test_command in "${all_tests_to_run[@]}"; do
 
     $command_to_run > /dev/null 2>&1
     status=$?
-    
+
+    result_message="PASSED"
     if [[ " ${expected_failure_list[*]} " =~ " ${test_name} " ]]; then # If we should have failed
-        # The error code should not be the valgrind code
         if [ "$status" -eq 0 ]; then
-            echo "    Expected failure - but got pass           ($status) - $test_name"
+            result_message=$P_EF
+            exit_code=1
         elif [ "$status" -eq 54 ]; then
-            echo "    Expected failure - got memory error       ($status) - $test_name"
+            result_message=$ME_EF
+            exit_code=1
         else
-            echo "    Expected failure - correct                ($status) - $test_name"
+            result_message=$F_EF
         fi
     else # Else (we should have succeeded)
-        # The error code should be 0
         if [ "$status" -eq 0 ]; then
-            echo "    Expected pass    - correct                ($status) - $test_name"
-        elif [ "$status" -eq 30305 ]; then
-            echo "    Expected pass    - but got memory error   ($status) - $test_name"
+            result_message=$P_EP
+        elif [ "$status" -eq 54 ]; then
+            result_message=$ME_EP
+            exit_code=1
         else
-            echo "    Expected pass    - but got failure        ($status) - $test_name"
+            result_message=$F_EP
+            exit_code=1
         fi
     fi
+
+    echo "$result_message : $test_name"
 done
 
-# Create empty list of failed tests
-
-# For each test
-    # Run the test and output information
-
-# Output all failed tests
+exit $exit_code
