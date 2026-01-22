@@ -7,7 +7,7 @@
 #include "./klog_debug_util.h"
 #include "./klog_initialize.h"
 
-bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
+bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_max_length) {
     if (klog_is_initialized) {
         kdprintf("Trying to initialize klog, when it is already initialized\n");
         return false;
@@ -20,11 +20,6 @@ bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const 
 
     if (logger_name_max_length == 0) {
         kdprintf("Trying to initialize klog with maximum length of logger names set to 0");
-        return false;
-    }
-
-    if (message_queue_number_elements == 0) {
-        kdprintf("Trying to initialize klog with maximum message queue size set to 0\n");
         return false;
     }
 

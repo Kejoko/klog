@@ -71,7 +71,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Planned Features
 
-- [ ] stdout logging with color based on level (if enabled)
+- [ ] stdout logging with color based on level (if enabled) - Using ANSI escapes as explained [in this SO response](https://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c)
 - [ ] log to file, whose file name prefix is determined by user
 - [ ] log the time, if enabled by user
 - [ ] log the source location (file, line), if enabled by user
@@ -82,3 +82,5 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 ## Source
 - [ ] Move everything (name, level) within the handle?
 - [ ] Ensure const correctness everywhere
+- [ ] Write unit tests for the top level klog functions, validating the global state
+

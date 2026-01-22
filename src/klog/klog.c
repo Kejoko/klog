@@ -15,16 +15,18 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info) {
-    if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, logger_name_max_length, message_queue_number_elements, message_max_length)) {
+void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo p_klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info) {
+    if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, p_klog_format_info.logger_name_max_length, p_klog_format_info.message_max_length)) {
         exit(1);
     }
 
+    /* @todo kjk 2026/01/21 Validate async parameters */
+
     g_klog_max_number_loggers = max_number_loggers;
-    g_klog_logger_name_max_length = logger_name_max_length;
+    g_klog_logger_name_max_length = p_klog_format_info.logger_name_max_length;
 
     gp_klog_logger_names = klog_initialize_logger_names_buffer(g_klog_max_number_loggers, g_klog_logger_name_max_length);
-    kdprintf("gp_klog_logger_names: %p through %p\n", (void*)gp_klog_logger_names, (void*)(gp_klog_logger_names + (max_number_loggers * logger_name_max_length)));
+    kdprintf("gp_klog_logger_names: %p through %p\n", (void*)gp_klog_logger_names, (void*)(gp_klog_logger_names + (max_number_loggers * p_klog_format_info.logger_name_max_length)));
 
     ga_klog_logger_levels = klog_initialize_logger_levels_array(g_klog_max_number_loggers);
     kdprintf("ga_klog_logger_levels: %p through %p\n", (void*)ga_klog_logger_levels, (void*)(ga_klog_logger_levels + g_klog_max_number_loggers));
@@ -38,20 +40,21 @@ void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_na
     ga_klog_logger_handles = klog_initialize_logger_handle_array(g_klog_max_number_loggers);
     kdprintf("ga_klog_logger_handles: %p through %p\n", (void*)ga_klog_logger_handles, (void*)(ga_klog_logger_handles + (g_klog_max_number_loggers * sizeof(KlogLoggerHandle))));
 
+    g_klog_message_max_length = p_klog_format_info.message_max_length;
+
     /* @todo kjk 2025/12/30 If we have no backing threads, then the queue size is 1, because it doesn't make sense to have mutliple items in the queue when we are blocking anyways */
-    /* g_klog_message_queue_number_elements = message_queue_number_elements; */
-    g_klog_message_queue_number_elements = 1;
-    g_klog_message_max_length = message_max_length;
-    gb_klog_message_queue = klog_initialize_message_queue(g_klog_message_queue_number_elements, g_klog_message_max_length);
-    kdprintf("gb_klog_message_queue: %p through %p\n", (void*)gb_klog_message_queue, (void*)(gb_klog_message_queue + (g_klog_message_queue_number_elements * g_klog_message_max_length)));
+    /* @todo kjk 2025/12/20 Create threads */
+    g_klog_number_backing_threads = 0;
+    g_klog_message_queue_number_elements = 0;
+    if (p_klog_async_info) {
+        g_klog_number_backing_threads = p_klog_async_info->number_backing_threads;
+
+        gb_klog_message_queue = klog_initialize_message_queue(g_klog_message_queue_number_elements, g_klog_message_max_length);
+        kdprintf("gb_klog_message_queue: %p through %p\n", (void*)gb_klog_message_queue, (void*)(gb_klog_message_queue + (g_klog_message_queue_number_elements * g_klog_message_max_length)));
+    }
 
     klog_initialize_stdout(p_klog_init_stdout_info);
     klog_initialize_file(p_klog_init_file_info);
-
-    /* @todo kjk 2025/12/20 Create threads */
-    /*  create backing threads accordingly. 0 is valid, meaning we always do IO in this thread */
-    g_klog_number_backing_threads = number_backing_threads;
-    g_klog_number_backing_threads = 0;
 
     g_klog_is_initialized = true;
 }
@@ -161,11 +164,11 @@ void klog(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e reque
         /* Message size = header + input string + null terminator */
         const uint32_t current_message_length = split_messages_info.string_lengths[i_message]; /* Does this contain null terminator? */
         const uint32_t total_message_length = prefix_length + current_message_length + 1;
-       
+
         /* Allocate space for the message and set the null terminator */
         char* total_message = malloc(total_message_length);
         total_message[total_message_length - 1] = 0;
-        
+
         /* Populate the full message : header + input string + null terminator */
         sprintf(total_message, "%5d [%.*s] [%.*s] %.*s", thread_id, g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, current_message_length, split_messages_info.strings[i_message]);
 

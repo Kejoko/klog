@@ -15,6 +15,18 @@
 typedef struct KlogLoggerHandle KlogLoggerHandle;
 
 typedef struct {
+    uint32_t logger_name_max_length;
+    uint32_t message_max_length;
+    bool use_timestamp;
+    bool use_source_location;
+} KlogFormatInfo;
+
+typedef struct {
+    uint32_t message_queue_number_elements;
+    uint32_t number_backing_threads;
+} KlogAsyncInfo;
+
+typedef struct {
     uint8_t max_level;
     bool use_color;
 } KlogInitStdoutInfo;
@@ -51,7 +63,7 @@ enum klog_level_e {
  * @param p_stdout_init_info
  * @param p_file_init_info
  */
-void klog_initialize(const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_queue_number_elements, const uint32_t message_max_length, const uint32_t number_backing_threads, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info);
+void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo p_klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info);
 
 /**
  * @fn klog_deinitialize
