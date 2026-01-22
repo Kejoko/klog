@@ -10,6 +10,7 @@ add_library(
   klog_state.c
   klog_constants.h
   klog_constants.c
+  klog_handle.h
   klog_debug_util.h
   klog_debug_util.c
   klog_initialize.h
@@ -23,7 +24,11 @@ target_include_directories(klog PUBLIC ${GNEISS_INCLUDE_DIR})
 target_compile_options(klog PUBLIC ${GNEISS_CMAKE_C_FLAGS})
 target_compile_definitions(klog PUBLIC ${GNEISS_COMPILE_DEFINITIONS})
 
-create_unit_test_plain(ut/ut-klog_format_split_strings.c klog)
-create_functional_test(ft/ft-klog_basic.c klog)
-create_functional_test(ft/ft-klog_fail_uninitialized.c klog EXPECT_FAILURE)
-create_functional_test(ft/ft-klog_fail_logger_limit.c klog EXPECT_FAILURE)
+if (KLOG_BUILD_TESTS)
+    create_unit_test_plain(ut/ut-klog_format_split_strings.c klog)
+    create_unit_test_plain(ut/ut-klog_initialize_parameters_are_valid.c klog)
+    create_unit_test_plain(ut/ut-klog_initialize_level_strings_buffer.c klog)
+    create_functional_test(ft/ft-klog_basic.c klog)
+    create_functional_test(ft/ft-klog_fail_uninitialized.c klog EXPECT_FAILURE)
+    create_functional_test(ft/ft-klog_fail_logger_limit.c klog EXPECT_FAILURE)
+endif ()

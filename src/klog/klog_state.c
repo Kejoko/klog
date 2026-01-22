@@ -28,11 +28,11 @@ struct KlogLoggerHandle* ga_klog_logger_handles = NULL;
 
 char*                    gp_klog_logger_names = NULL;
 
-uint8_t*                 gp_klog_logger_levels = NULL;
+uint8_t*                 ga_klog_logger_levels = NULL;
 
-char*                    gp_klog_level_strings = NULL;
+char*                    gb_klog_level_strings = NULL;
 
-char*                    gp_klog_message_queue = NULL;
+char*                    gb_klog_message_queue = NULL;
 
 bool                     g_klog_is_initialized = false;
 

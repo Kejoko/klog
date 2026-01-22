@@ -10,10 +10,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-struct KlogLoggerHandle {
-    uint32_t value;
-};
-
 /* ================================================================================================================== */
 /* Klog globals                                                                                                       */
 /* ================================================================================================================== */
@@ -47,13 +43,13 @@ extern struct KlogLoggerHandle* ga_klog_logger_handles;
 extern char*                    gp_klog_logger_names;
 
 /* Array of uint8_t for the current allowed level for each logger */
-extern uint8_t*                 gp_klog_logger_levels;
+extern uint8_t*                 ga_klog_logger_levels;
 
 /* Array of the logging levels stringified in a nicely printable format, all fixed width. Non-null terminated */
-extern char*                    gp_klog_level_strings;
+extern char*                    gb_klog_level_strings;
 
 /* The queue of messages */
-extern char*                    gp_klog_message_queue;
+extern char*                    gb_klog_message_queue;
 
 /* Whether or not klog has been initialized */
 extern bool                     g_klog_is_initialized;

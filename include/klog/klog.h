@@ -28,11 +28,11 @@ typedef struct {
  * @enum klog_level_e The different levels of verbosity
  */
 enum klog_level_e {
-    KLOG_LEVEL_OFF = 0,
-    KLOG_LEVEL_CRITICAL = 1,
+    KLOG_LEVEL_OFF   = 0,
+    KLOG_LEVEL_FATAL = 1,
     KLOG_LEVEL_ERROR = 2,
-    KLOG_LEVEL_WARNING = 3,
-    KLOG_LEVEL_INFO = 4,
+    KLOG_LEVEL_WARN  = 3,
+    KLOG_LEVEL_INFO  = 4,
     KLOG_LEVEL_DEBUG = 5,
     KLOG_LEVEL_TRACE = 6
 };
