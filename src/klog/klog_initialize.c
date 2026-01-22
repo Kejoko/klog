@@ -7,7 +7,7 @@
 #include "./klog_debug_util.h"
 #include "./klog_initialize.h"
 
-bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const uint32_t logger_name_max_length, const uint32_t message_max_length) {
+bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogStdoutInfo* p_klog_init_stdout_info, const KlogFileInfo* p_klog_init_file_info) {
     if (klog_is_initialized) {
         kdprintf("Trying to initialize klog, when it is already initialized\n");
         return false;
@@ -18,15 +18,27 @@ bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const 
         return false;
     }
 
-    if (logger_name_max_length == 0) {
+    if (klog_format_info.logger_name_max_length == 0) {
         kdprintf("Trying to initialize klog with maximum length of logger names set to 0");
         return false;
     }
 
-    if (message_max_length == 0) {
+    if (klog_format_info.message_max_length == 0) {
         kdprintf("Trying to initialize klog with maximum length of messages set to 0\n");
         return false;
     }
+
+    if (p_klog_async_info) {
+        /* @todo kjk 2026/01/21 Validate async info */
+    }
+
+    if (p_klog_init_file_info) {
+        /* @todo kjk 2026/01/21 Validate file info */
+        /* Make sure filename prefix is valid */
+    }
+
+    /* @todo kjk 2026/01/21 This is currently unused */
+    (void)p_klog_init_stdout_info;
 
     return true;
 }
@@ -108,17 +120,31 @@ char* klog_initialize_message_queue(const uint32_t message_queue_number_elements
     return b_message_queue;
 }
 
-void klog_initialize_stdout(const KlogInitStdoutInfo* p_klog_init_stdout_info) {
-    if (p_klog_init_stdout_info == NULL) {
-        kdprintf("No stdout sink provided\n");
-        return;
-    }
-}
-
-void klog_initialize_file(const KlogInitFileInfo* p_klog_init_file_info) {
+FILE* klog_initialize_file(const KlogFileInfo* p_klog_init_file_info) {
     if (p_klog_init_file_info == NULL) {
-        kdprintf("No file sink provided\n");
-        return;
+        kdprintf("Not initializing output file\n");
+        return NULL;
     }
+
+    /* @todo kjk 2026/01/21 Use the current time in the creation of the filename */
+
+    /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS.log */
+    /* Extra chars                  : 00+     123456789            */
+    /*                                10+              0123456789  */
+    /*                                20+                        0 */
+    const uint32_t prefix_length = strlen(p_klog_init_file_info->filename_prefix);
+    const uint32_t full_filename_length = prefix_length + 20 + 1; /* +1 for null terminator */
+    char* full_filename = malloc(full_filename_length);
+    sprintf(full_filename, "%s_YYYYMMDD_HHMMSS.log", p_klog_init_file_info->filename_prefix);
+
+    FILE* p_file = fopen(full_filename, "w");
+    if (!p_file) {
+        kdprintf("Failed to create log file at %s\n", full_filename);
+        exit(1);
+    }
+    kdprintf("Created output file pointer at %p\n", (void*)p_file);
+
+    free(full_filename);
+    return p_file;
 }
 

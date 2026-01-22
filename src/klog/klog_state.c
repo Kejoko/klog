@@ -34,5 +34,6 @@ char*                    gb_klog_level_strings = NULL;
 
 char*                    gb_klog_message_queue = NULL;
 
-bool                     g_klog_is_initialized = false;
+FILE*                    gp_klog_output_file = NULL;
 
+bool                     g_klog_is_initialized = false;

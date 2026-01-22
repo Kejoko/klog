@@ -80,7 +80,9 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
+- [ ] Create the logging prefix using a function
+    - pass this prefix to stdout and file logging functions
+        - log prefix, COLOR (if stdout), level, COLOR_RESET (if stdout), actual message
 - [ ] Move everything (name, level) within the handle?
 - [ ] Ensure const correctness everywhere
-- [ ] Write unit tests for the top level klog functions, validating the global state
 

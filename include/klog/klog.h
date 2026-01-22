@@ -1,11 +1,6 @@
 #ifndef KLOG_INCLUDED
 #define KLOG_INCLUDED
 
-/**
- * @todo kjk 2025/12/30 Document everything with Doxygen
- * @todo kjk 2025/12/30 Separate helper functions into their own header file so we can test them
- */
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -29,12 +24,12 @@ typedef struct {
 typedef struct {
     uint8_t max_level;
     bool use_color;
-} KlogInitStdoutInfo;
+} KlogStdoutInfo;
 
 typedef struct {
     uint8_t max_level;
     const char* filename_prefix;
-} KlogInitFileInfo;
+} KlogFileInfo;
 
 /**
  * @enum klog_level_e The different levels of verbosity
@@ -63,7 +58,7 @@ enum klog_level_e {
  * @param p_stdout_init_info
  * @param p_file_init_info
  */
-void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo p_klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info);
+void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogStdoutInfo* p_klog_init_stdout_info, const KlogFileInfo* p_klog_init_file_info);
 
 /**
  * @fn klog_deinitialize

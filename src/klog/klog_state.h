@@ -9,6 +9,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 
 /* ================================================================================================================== */
 /* Klog globals                                                                                                       */
@@ -50,6 +51,9 @@ extern char*                    gb_klog_level_strings;
 
 /* The queue of messages */
 extern char*                    gb_klog_message_queue;
+
+/* The file we are outputting to */
+extern FILE*                    gp_klog_output_file;
 
 /* Whether or not klog has been initialized */
 extern bool                     g_klog_is_initialized;

@@ -15,18 +15,18 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
-void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo p_klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogInitStdoutInfo* p_klog_init_stdout_info, const KlogInitFileInfo* p_klog_init_file_info) {
-    if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, p_klog_format_info.logger_name_max_length, p_klog_format_info.message_max_length)) {
+void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogStdoutInfo* p_klog_init_stdout_info, const KlogFileInfo* p_klog_init_file_info) {
+    if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, klog_format_info, p_klog_async_info, p_klog_init_stdout_info, p_klog_init_file_info)) {
         exit(1);
     }
 
     /* @todo kjk 2026/01/21 Validate async parameters */
 
     g_klog_max_number_loggers = max_number_loggers;
-    g_klog_logger_name_max_length = p_klog_format_info.logger_name_max_length;
+    g_klog_logger_name_max_length = klog_format_info.logger_name_max_length;
 
     gp_klog_logger_names = klog_initialize_logger_names_buffer(g_klog_max_number_loggers, g_klog_logger_name_max_length);
-    kdprintf("gp_klog_logger_names: %p through %p\n", (void*)gp_klog_logger_names, (void*)(gp_klog_logger_names + (max_number_loggers * p_klog_format_info.logger_name_max_length)));
+    kdprintf("gp_klog_logger_names: %p through %p\n", (void*)gp_klog_logger_names, (void*)(gp_klog_logger_names + (max_number_loggers * klog_format_info.logger_name_max_length)));
 
     ga_klog_logger_levels = klog_initialize_logger_levels_array(g_klog_max_number_loggers);
     kdprintf("ga_klog_logger_levels: %p through %p\n", (void*)ga_klog_logger_levels, (void*)(ga_klog_logger_levels + g_klog_max_number_loggers));
@@ -40,7 +40,7 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo p_k
     ga_klog_logger_handles = klog_initialize_logger_handle_array(g_klog_max_number_loggers);
     kdprintf("ga_klog_logger_handles: %p through %p\n", (void*)ga_klog_logger_handles, (void*)(ga_klog_logger_handles + (g_klog_max_number_loggers * sizeof(KlogLoggerHandle))));
 
-    g_klog_message_max_length = p_klog_format_info.message_max_length;
+    g_klog_message_max_length = klog_format_info.message_max_length;
 
     /* @todo kjk 2025/12/30 If we have no backing threads, then the queue size is 1, because it doesn't make sense to have mutliple items in the queue when we are blocking anyways */
     /* @todo kjk 2025/12/20 Create threads */
@@ -53,8 +53,9 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo p_k
         kdprintf("gb_klog_message_queue: %p through %p\n", (void*)gb_klog_message_queue, (void*)(gb_klog_message_queue + (g_klog_message_queue_number_elements * g_klog_message_max_length)));
     }
 
-    klog_initialize_stdout(p_klog_init_stdout_info);
-    klog_initialize_file(p_klog_init_file_info);
+    /* @todo kjk 2026/01/21 Save and enforce the logging levels for each of the sinks */
+    gp_klog_output_file = klog_initialize_file(p_klog_init_file_info);
+    kdprintf("gp_klog_output_file: %p\n", (void*)gp_klog_output_file);
 
     g_klog_is_initialized = true;
 }
@@ -77,6 +78,11 @@ void klog_deinitialize(void) {
     free(ga_klog_logger_levels);
     free(gb_klog_level_strings);
     free(gb_klog_message_queue);
+   
+    if (gp_klog_output_file) {
+        fclose(gp_klog_output_file);
+    }
+    
     g_klog_is_initialized = false;
 }
 
@@ -169,11 +175,14 @@ void klog(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e reque
         char* total_message = malloc(total_message_length);
         total_message[total_message_length - 1] = 0;
 
+        /* @todo kjk 2026/01/21 If we are outputting color to stdout, we need to make an message for stdout and file, because file can't have ansi escapes */
+
         /* Populate the full message : header + input string + null terminator */
         sprintf(total_message, "%5d [%.*s] [%.*s] %.*s", thread_id, g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, current_message_length, split_messages_info.strings[i_message]);
 
         /* Send the message on its merry way */
         klog_output_stdout(total_message);
+        klog_output_file(gp_klog_output_file, total_message);
         free(total_message);
     }
 
