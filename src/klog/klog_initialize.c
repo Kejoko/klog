@@ -149,12 +149,12 @@ FILE* klog_initialize_file(const KlogFileInfo* p_klog_init_file_info) {
     const int32_t second = p_broken_down_now->tm_sec;
     const uint32_t millisecond = tv.tv_usec / 1000;
 
-    /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS.log */
-    /* Extra chars                  : 00+     123456789            */
-    /*                                10+              0123456789  */
-    /*                                20+                        0 */
+    /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS_SSSS.log */
+    /* Extra chars                  : 00+     123456789                 */
+    /*                                10+              0123456789       */
+    /*                                20+                        012345 */
     const uint32_t prefix_length = strlen(p_klog_init_file_info->filename_prefix);
-    const uint32_t full_filename_length = prefix_length + 20 + 1; /* +1 for null terminator */
+    const uint32_t full_filename_length = prefix_length + 25 + 1; /* +1 for null terminator */
     char* full_filename = malloc(full_filename_length);
     sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_init_file_info->filename_prefix, year, month, day, hour, minute, second, millisecond);
 
