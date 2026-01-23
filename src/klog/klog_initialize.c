@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+
+#ifdef  __linux__
+#include <time.h>     /* For time(), localtime() */
+#else
+#error "Only supporting linux"
+#endif
 
 #include "./klog_constants.h"
 #include "./klog_handle.h"
@@ -127,6 +134,20 @@ FILE* klog_initialize_file(const KlogFileInfo* p_klog_init_file_info) {
     }
 
     /* @todo kjk 2026/01/21 Use the current time in the creation of the filename */
+    const time_t now = time(NULL);
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL)) {
+        kdprintf("Failure when invoking gettimeofday() for creation of filename\n");
+        exit(1);
+    }
+    struct tm* p_broken_down_now = localtime(&now);
+    const int32_t year = p_broken_down_now->tm_year + 1900;
+    const int32_t month = p_broken_down_now->tm_mon;
+    const int32_t day = p_broken_down_now->tm_mday;
+    const int32_t hour = p_broken_down_now->tm_hour;
+    const int32_t minute = p_broken_down_now->tm_min;
+    const int32_t second = p_broken_down_now->tm_sec;
+    const uint32_t millisecond = tv.tv_usec / 1000;
 
     /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS.log */
     /* Extra chars                  : 00+     123456789            */
@@ -135,7 +156,7 @@ FILE* klog_initialize_file(const KlogFileInfo* p_klog_init_file_info) {
     const uint32_t prefix_length = strlen(p_klog_init_file_info->filename_prefix);
     const uint32_t full_filename_length = prefix_length + 20 + 1; /* +1 for null terminator */
     char* full_filename = malloc(full_filename_length);
-    sprintf(full_filename, "%s_YYYYMMDD_HHMMSS.log", p_klog_init_file_info->filename_prefix);
+    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_init_file_info->filename_prefix, year, month, day, hour, minute, second, millisecond);
 
     FILE* p_file = fopen(full_filename, "w");
     if (!p_file) {

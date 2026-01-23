@@ -4,6 +4,26 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#error "Klog does not support Windows"
+#endif
+
+#ifdef __APPLE__
+#error "Klog does not support MacOS"
+#endif
+
+#ifdef  __linux__
+
+#include <unistd.h>      /* For pid_t */
+#include <sys/syscall.h> /* For syscall() */
+// #include <time.h>        /* For gettimeofday() */
+
+#ifndef SYS_gettid
+#error "SYS_gettid is unavailable on this system"
+#endif
+
+#endif
+
 #include "./klog_debug_util.h"
 #include "./klog_format.h"
 
