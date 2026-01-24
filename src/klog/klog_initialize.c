@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
 
 #ifdef  __linux__
-#include <time.h>     /* For time(), localtime() */
+#include <time.h>        /* For time(), localtime(), gettimeofday() */
+#include <sys/time.h>
 #else
 #error "Only supporting linux"
 #endif
@@ -133,7 +133,6 @@ FILE* klog_initialize_file(const KlogFileInfo* p_klog_init_file_info) {
         return NULL;
     }
 
-    /* @todo kjk 2026/01/21 Use the current time in the creation of the filename */
     const time_t now = time(NULL);
     struct timeval tv;
     if (gettimeofday(&tv, NULL)) {

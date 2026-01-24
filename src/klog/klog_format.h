@@ -9,6 +9,11 @@
 #endif
 
 typedef struct {
+    uint32_t length;
+    const char* s;
+} KlogString;
+
+typedef struct {
     /* The number of resulting format strings */
     const uint32_t  number_strings;
 
@@ -23,5 +28,6 @@ pid_t klog_format_get_current_thread_id(void);
 
 const char*         klog_format_input_message(const char* format, va_list args);
 KlogFormatSplitInfo klog_format_split_strings(const char* formatted_input);
+KlogString          klog_format_time(void);
 
 #endif /* KLOG_FORMAT_INCLUDED */

@@ -29,6 +29,12 @@ extern uint32_t g_klog_number_backing_threads;
 /* The number of messages in the message queue */
 extern uint32_t g_klog_message_queue_number_elements;
 
+/* Whether or not to print a timestamp */
+extern bool     g_klog_print_timestamp;
+
+/* Whether or not to print the source location */
+extern bool     g_klog_print_source_location;
+
 /* The length of messages in the queue */
 extern uint32_t g_klog_message_max_length;
 

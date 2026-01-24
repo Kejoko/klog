@@ -57,6 +57,9 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
     gp_klog_output_file = klog_initialize_file(p_klog_init_file_info);
     kdprintf("gp_klog_output_file: %p\n", (void*)gp_klog_output_file);
 
+    g_klog_print_timestamp = klog_format_info.use_timestamp;
+    g_klog_print_source_location = klog_format_info.use_source_location;
+
     g_klog_is_initialized = true;
 }
 
@@ -70,6 +73,8 @@ void klog_deinitialize(void) {
     g_klog_logger_name_max_length = 0;
     g_klog_number_backing_threads = 0;
     g_klog_message_queue_number_elements = 0;
+    g_klog_print_timestamp = false;
+    g_klog_print_source_location = false;
     g_klog_message_max_length = 0;
 
     g_klog_current_number_loggers_created = 0;
@@ -145,6 +150,14 @@ void klog(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e reque
         return;
     }
 
+    /* We are getting the time first, so it's closest to the actual point of invocation */
+    KlogString packed_time;
+    KlogString* p_packed_time = NULL;
+    if (g_klog_print_timestamp) {
+        packed_time = klog_format_time();
+        p_packed_time = &packed_time;
+    }
+
     /* Create the input string with the arguments injected */
     va_list p_args;
     va_start(p_args, format);
@@ -156,38 +169,41 @@ void klog(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e reque
 
     /* Get the information to create the message header */
     const pid_t thread_id = klog_format_get_current_thread_id();
-    const char* logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_logger_name_max_length]);
-    const char* level_string = &(gb_klog_level_strings[G_klog_level_string_length * requested_level]);
+    const char* s_logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_logger_name_max_length]);
+    const char* s_level = &(gb_klog_level_strings[G_klog_level_string_length * requested_level]);
 
-    /* For each input string:              */
-    /* (using logger name of 6 characters) */
-    /*      "123456 [ABCDEF] [12345678] "  */
-    /* 00+   123456789                     */
-    /* 10+            0123456789           */
-    /* 20+                      01234567   */
-    const uint32_t prefix_length = 21 + g_klog_logger_name_max_length;
+    KlogString packed_name = {g_klog_logger_name_max_length, s_logger_name};
+    KlogString packed_level = {G_klog_level_string_length, s_level};
+
+    KlogString packed_source_location;
+    KlogString* p_packed_source_location = NULL;
+    if (g_klog_print_source_location) {
+        /* @todo Create the source location string */
+        p_packed_source_location = &packed_source_location;
+    }
+
+    /* Thread ID prefix: "123456 " */
+    /* Time prefix:      "DDD.HH:MM:SS:SSSS " */
+    /* Name prefix:      "[ABCDEF] "*/
+    /* Level prefix:     "[ABCDE] " */
+    /* Source prefix:    "[abcdefghijklmnopqrst:XXXX] " */
     for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
-        /* Message size = header + input string + null terminator */
-        const uint32_t current_message_length = split_messages_info.string_lengths[i_message]; /* Does this contain null terminator? */
-        const uint32_t total_message_length = prefix_length + current_message_length + 1;
+        KlogString packed_message = {split_messages_info.string_lengths[i_message], split_messages_info.strings[i_message]};
 
-        /* Allocate space for the message and set the null terminator */
-        char* total_message = malloc(total_message_length);
-        total_message[total_message_length - 1] = 0;
-
-        /* @todo kjk 2026/01/21 If we are outputting color to stdout, we need to make an message for stdout and file, because file can't have ansi escapes */
-
-        /* Populate the full message : header + input string + null terminator */
-        sprintf(total_message, "%5d [%.*s] [%.*s] %.*s", thread_id, g_klog_logger_name_max_length, logger_name, G_klog_level_string_length, level_string, current_message_length, split_messages_info.strings[i_message]);
-
-        /* Send the message on its merry way */
-        klog_output_stdout(total_message);
-        klog_output_file(gp_klog_output_file, total_message);
-        free(total_message);
+        klog_output_stdout(thread_id, p_packed_time, &packed_name, &packed_level, p_packed_source_location, &packed_message);
+        klog_output_file(gp_klog_output_file, thread_id, p_packed_time, &packed_name, &packed_level, p_packed_source_location, &packed_message);
     }
 
     free((char*)input_message);
 
     free(split_messages_info.strings);
     free((uint32_t*)split_messages_info.string_lengths);
+
+    if (g_klog_print_timestamp) {
+        free((char*)packed_time.s);
+    }
+
+    if (g_klog_print_source_location) {
+        free((char*)packed_source_location.s);
+    }
 }

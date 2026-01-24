@@ -4,7 +4,7 @@
 
 /* This is testing klog with max loggers set to 4, and name length set to 6 */
 int main(void) {
-    KlogFormatInfo format_info = {6, 100, false, false};
+    KlogFormatInfo format_info = {6, 100, true, false};
     KlogFileInfo file_info = {KLOG_LEVEL_TRACE, "BASICPREFIX"};
     klog_initialize(4, format_info, NULL, NULL, &file_info);
 

@@ -41,7 +41,8 @@ enum klog_level_e {
     KLOG_LEVEL_WARN  = 3,
     KLOG_LEVEL_INFO  = 4,
     KLOG_LEVEL_DEBUG = 5,
-    KLOG_LEVEL_TRACE = 6
+    KLOG_LEVEL_TRACE = 6,
+    KLOG_LEVEL_COUNT = 7
 };
 
 /**

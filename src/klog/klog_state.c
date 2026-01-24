@@ -18,6 +18,10 @@ uint32_t g_klog_number_backing_threads = 0;
 
 uint32_t g_klog_message_queue_number_elements = 0;
 
+bool     g_klog_print_timestamp = false;
+
+bool     g_klog_print_source_location = false;
+
 uint32_t g_klog_message_max_length = 0;
 
 /* Internal state --------------------------------------------------------------------------------------------------- */

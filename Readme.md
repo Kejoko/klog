@@ -71,7 +71,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Planned Features
 
-- [ ] log to file, whose file name prefix is determined by user and contains timestamp
 - [ ] stdout logging with color based on level (if enabled) - Using ANSI escapes as explained [in this SO response](https://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c)
 - [ ] log the time, if enabled by user
 - [ ] log the source location (file, line), if enabled by user
@@ -80,6 +79,8 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
+- [ ] Pull out light platform layer
+- [ ] Make the KlogFormatSplitInto contain an array of KlogString
 - [ ] Create the logging prefix using a function
     - pass this prefix to stdout and file logging functions
         - log prefix, COLOR (if stdout), level, COLOR_RESET (if stdout), actual message

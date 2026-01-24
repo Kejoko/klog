@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef  __linux__
+#else
+#error "Only supporting linux"
+#endif
+
 #ifdef _WIN32
 #error "Klog does not support Windows"
 #endif
@@ -16,7 +21,8 @@
 
 #include <unistd.h>      /* For pid_t */
 #include <sys/syscall.h> /* For syscall() */
-// #include <time.h>        /* For gettimeofday() */
+#include <time.h>        /* For time(), localtime(), gettimeofday() */
+#include <sys/time.h>
 
 #ifndef SYS_gettid
 #error "SYS_gettid is unavailable on this system"
@@ -100,3 +106,28 @@ KlogFormatSplitInfo klog_format_split_strings(const char* formatted_input) {
     return result;
 }
 
+KlogString klog_format_time(void) {
+    const time_t now = time(NULL);
+    struct timeval tv;
+    if (gettimeofday(&tv, NULL)) {
+        kdprintf("Failure when invoking gettimeofday() for creation of filename\n");
+        exit(1);
+    }
+    struct tm* p_broken_down_now = localtime(&now);
+    const int32_t day = p_broken_down_now->tm_yday;
+    const int32_t hour = p_broken_down_now->tm_hour;
+    const int32_t minute = p_broken_down_now->tm_min;
+    const int32_t second = p_broken_down_now->tm_sec;
+    const uint32_t microsecond = tv.tv_usec;
+
+    /* Time prefix: DDD.HH:MM:SS:SSSSSS  */
+    /* Length: 00+  123456789            */
+    /*         10+           0123456789  */
+    /*         20+                     0 */
+    const uint32_t time_prefix_size = 19 + 1; /* +1 for null termination */
+    char* s_time = malloc(time_prefix_size);
+    sprintf(s_time, "%.3d:%.2d:%.2d:%.2d:%.6d", day, hour, minute, second, microsecond);
+
+    KlogString packed_time = { time_prefix_size, s_time };
+    return packed_time;
+}
