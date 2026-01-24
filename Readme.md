@@ -79,6 +79,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
+- [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure
 - [ ] Pull out light platform layer
 - [ ] Make the KlogFormatSplitInto contain an array of KlogString
 - [ ] Create the logging prefix using a function
@@ -87,3 +88,8 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Move everything (name, level) within the handle?
 - [ ] Ensure const correctness everywhere
 
+# Tests to write
+- [ ] Lots of loggers and lots of log statements (hundreds and thousands)
+- [ ] Log to stdout but not to file works as expected
+- [ ] Log to file but not to stdout works as expected
+- [ ] Formatting prefix strings correctly

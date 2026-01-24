@@ -191,7 +191,9 @@ void klog(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e reque
         KlogString packed_message = {split_messages_info.string_lengths[i_message], split_messages_info.strings[i_message]};
 
         klog_output_stdout(thread_id, p_packed_time, &packed_name, &packed_level, p_packed_source_location, &packed_message);
-        klog_output_file(gp_klog_output_file, thread_id, p_packed_time, &packed_name, &packed_level, p_packed_source_location, &packed_message);
+        if (gp_klog_output_file) {
+            klog_output_file(gp_klog_output_file, thread_id, p_packed_time, &packed_name, &packed_level, p_packed_source_location, &packed_message);
+        }
     }
 
     free((char*)input_message);
