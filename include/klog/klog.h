@@ -32,9 +32,9 @@ typedef struct {
 } KlogFileInfo;
 
 /**
- * @enum klog_level_e The different levels of verbosity
+ * @enum KlogLevel The different levels of verbosity
  */
-enum klog_level_e {
+enum KlogLevel {
     KLOG_LEVEL_OFF   = 0,
     KLOG_LEVEL_FATAL = 1,
     KLOG_LEVEL_ERROR = 2,
@@ -109,7 +109,7 @@ KlogLoggerHandle* klog_logger_create(const char* logger_name);
  * @param logger_handle The handle to the logger
  * @param updated_level The desired level of verbosity
  */
-void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e updated_level);
+void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel updated_level);
 
 /**
  * @fn klog
@@ -122,6 +122,6 @@ void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum k
  * @param format
  * @param ...
  */
-void klog(const KlogLoggerHandle* p_logger_handle, const enum klog_level_e requested_level, const char* format, ...);
+void klog(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* format, ...);
 
 #endif /* KLOG_INCLUDED */

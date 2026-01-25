@@ -114,6 +114,32 @@ char* klog_initialize_level_strings_buffer(void) {
     return b_level_strings;
 }
 
+char* klog_initialize_colored_level_strings_buffer(void) {
+    const uint32_t colored_level_string_array_total_bytes = G_klog_colored_level_string_length * G_klog_number_levels; 
+    char* b_colored_level_strings = malloc(colored_level_string_array_total_bytes);
+    const char off_string[]      = "\x1b[37moff  \x1b[0m"; /* white  */
+    const char fatal_string[]    = "\x1b[41mFATAL\x1b[0m"; /* red BG */
+    const char error_string[]    = "\x1b[31mERROR\x1b[0m"; /* red    */
+    const char warn_string[]     = "\x1b[33mWARN \x1b[0m"; /* yellow */
+    const char info_string[]     = "\x1b[32minfo \x1b[0m"; /* green  */
+    const char debug_string[]    = "\x1b[36mdebug\x1b[0m"; /* cyan   */
+    const char trace_string[]    = "\x1b[37mtrace\x1b[0m"; /* white  */
+    memcpy(&b_colored_level_strings[KLOG_LEVEL_OFF      * G_klog_colored_level_string_length], off_string, strlen(off_string));
+    memcpy(&b_colored_level_strings[KLOG_LEVEL_FATAL    * G_klog_colored_level_string_length], fatal_string, strlen(fatal_string));
+    memcpy(&b_colored_level_strings[KLOG_LEVEL_ERROR    * G_klog_colored_level_string_length], error_string, strlen(error_string));
+    memcpy(&b_colored_level_strings[KLOG_LEVEL_WARN     * G_klog_colored_level_string_length], warn_string, strlen(warn_string));
+    memcpy(&b_colored_level_strings[KLOG_LEVEL_INFO     * G_klog_colored_level_string_length], info_string, strlen(info_string));
+    memcpy(&b_colored_level_strings[KLOG_LEVEL_DEBUG    * G_klog_colored_level_string_length], debug_string, strlen(debug_string));
+    memcpy(&b_colored_level_strings[KLOG_LEVEL_TRACE    * G_klog_colored_level_string_length], trace_string, strlen(trace_string));
+    
+    kdprintf("Created colored logger level strings array\n");
+    kdprintf("  start: %p\n", (void*)b_colored_level_strings);
+    kdprintf("  end  : %p\n", (void*)(b_colored_level_strings + colored_level_string_array_total_bytes));
+    kdprintf("  size : %d\n", colored_level_string_array_total_bytes);
+    
+    return b_colored_level_strings;
+}
+
 char* klog_initialize_message_queue(const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
     const uint32_t message_queue_size_bytes = message_queue_number_elements * message_max_length;
     char* b_message_queue = malloc(message_queue_size_bytes);

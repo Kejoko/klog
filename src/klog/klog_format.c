@@ -131,3 +131,4 @@ KlogString klog_format_time(void) {
     KlogString packed_time = { time_prefix_size, s_time };
     return packed_time;
 }
+

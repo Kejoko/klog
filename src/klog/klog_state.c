@@ -36,6 +36,8 @@ uint8_t*                 ga_klog_logger_levels = NULL;
 
 char*                    gb_klog_level_strings = NULL;
 
+char*                    gb_klog_colored_level_strings = NULL;
+
 char*                    gb_klog_message_queue = NULL;
 
 FILE*                    gp_klog_output_file = NULL;

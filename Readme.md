@@ -71,15 +71,17 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Planned Features
 
-- [ ] stdout logging with color based on level (if enabled) - Using ANSI escapes as explained [in this SO response](https://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c)
-- [ ] log the time, if enabled by user
 - [ ] log the source location (file, line), if enabled by user
 - [ ] async logging, with number of backing threads determined by user (using the message queue for consumers/producers design)
 - [ ] windows support
 
 # Tech Debt
 ## Source
+- [ ] Be consistent with "string" and prefixes in names and order of words in names
+    - Ex: "colored_level" vs "level_colored"
+- [ ] Don't print to stdout if no stdout info is provided
 - [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure
+- [ ] run_all_tests.sh script should output failed commands on newlines
 - [ ] Pull out light platform layer
 - [ ] Make the KlogFormatSplitInto contain an array of KlogString
 - [ ] Create the logging prefix using a function

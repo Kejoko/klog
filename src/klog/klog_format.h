@@ -8,6 +8,8 @@
 #include <unistd.h>
 #endif
 
+#include "klog/klog.h"
+
 typedef struct {
     uint32_t length;
     const char* s;

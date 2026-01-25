@@ -55,6 +55,9 @@ extern uint8_t*                 ga_klog_logger_levels;
 /* Array of the logging levels stringified in a nicely printable format, all fixed width. Non-null terminated */
 extern char*                    gb_klog_level_strings;
 
+/* Array of the logging levels (with color) stringified in a nicely printable format, all fixed width. Non-null terminated */
+extern char*                    gb_klog_colored_level_strings;
+
 /* The queue of messages */
 extern char*                    gb_klog_message_queue;
 
