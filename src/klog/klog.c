@@ -39,7 +39,6 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
 
     g_klog_current_number_loggers_created = 0;
 
-    /* @todo Move this into the klog initialization function */
     ga_klog_logger_handles = klog_initialize_logger_handle_array(g_klog_max_number_loggers);
     kdprintf("ga_klog_logger_handles: %p through %p\n", (void*)ga_klog_logger_handles, (void*)(ga_klog_logger_handles + (g_klog_max_number_loggers * sizeof(KlogLoggerHandle))));
 
@@ -56,9 +55,17 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
         kdprintf("gb_klog_message_queue: %p through %p\n", (void*)gb_klog_message_queue, (void*)(gb_klog_message_queue + (g_klog_message_queue_number_elements * g_klog_message_max_length)));
     }
 
-    /* @todo kjk 2026/01/21 Save and enforce the logging levels for each of the sinks */
-    gp_klog_output_file = klog_initialize_file(p_klog_init_file_info);
-    kdprintf("gp_klog_output_file: %p\n", (void*)gp_klog_output_file);
+    if (p_klog_init_stdout_info) {
+        g_klog_stdout_level = p_klog_init_stdout_info->max_level;
+        g_klog_stdout_use_color = p_klog_init_stdout_info->use_color;
+    }
+
+    gp_klog_file = klog_initialize_file(p_klog_init_file_info);
+    kdprintf("gp_klog_file: %p\n", (void*)gp_klog_file);
+    if (p_klog_init_file_info) {
+        g_klog_file_level = p_klog_init_file_info->max_level;
+    }
+    kdprintf("File max verbosity: %d\n", g_klog_file_level);
 
     g_klog_print_timestamp = klog_format_info.use_timestamp;
     g_klog_print_thread_id = klog_format_info.use_thread_id;
@@ -90,8 +97,8 @@ void klog_deinitialize(void) {
     free(gb_klog_colored_level_strings);
     free(gb_klog_message_queue);
    
-    if (gp_klog_output_file) {
-        fclose(gp_klog_output_file);
+    if (gp_klog_file) {
+        fclose(gp_klog_file);
     }
     
     g_klog_is_initialized = false;
@@ -183,8 +190,9 @@ void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requ
 
     const uint32_t* p_thread_id = g_klog_print_thread_id ? &thread_id : NULL;
     KlogString packed_name = {g_klog_logger_name_max_length, s_logger_name};
-    KlogString packed_level_stdout = {G_klog_colored_level_string_length, s_level_colored};
+    KlogString packed_level_color = {G_klog_colored_level_string_length, s_level_colored};
     KlogString packed_level_file = {G_klog_level_string_length, s_level};
+    KlogString* p_packed_level_stdout = g_klog_stdout_use_color ? &packed_level_color : &packed_level_file;
 
     KlogString packed_source_location;
     KlogString* p_packed_source_location = NULL;
@@ -197,9 +205,11 @@ void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requ
     for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
         KlogString packed_message = {split_messages_info.string_lengths[i_message], split_messages_info.strings[i_message]};
 
-        klog_output_stdout(p_thread_id, p_packed_time, &packed_name, &packed_level_stdout, p_packed_source_location, &packed_message);
-        if (gp_klog_output_file) {
-            klog_output_file(gp_klog_output_file, p_thread_id, p_packed_time, &packed_name, &packed_level_file, p_packed_source_location, &packed_message);
+        if (requested_level <= g_klog_stdout_level) {
+            klog_output_stdout(p_thread_id, p_packed_time, &packed_name, p_packed_level_stdout, p_packed_source_location, &packed_message);
+        }
+        if (gp_klog_file && requested_level <= g_klog_file_level) {
+            klog_output_file(gp_klog_file, p_thread_id, p_packed_time, &packed_name, &packed_level_file, p_packed_source_location, &packed_message);
         }
     }
 

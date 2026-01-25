@@ -41,6 +41,18 @@ extern uint32_t g_klog_source_location_filename_max_length;
 /* The length of messages in the queue */
 extern uint32_t g_klog_message_max_length;
 
+/* The maximum verbosity for stdout */
+extern uint32_t g_klog_stdout_level;
+
+/* Whether or not to print color for stdout */
+extern bool     g_klog_stdout_use_color;
+
+/* The maximum verbosity for file */
+extern uint32_t g_klog_file_level;
+
+/* The file we are outputting to */
+extern FILE*    gp_klog_file;
+
 /* Internal state --------------------------------------------------------------------------------------------------- */
 
 /* The current number of loggers which actually exist */
@@ -63,9 +75,6 @@ extern char*                    gb_klog_colored_level_strings;
 
 /* The queue of messages */
 extern char*                    gb_klog_message_queue;
-
-/* The file we are outputting to */
-extern FILE*                    gp_klog_output_file;
 
 /* Whether or not klog has been initialized */
 extern bool                     g_klog_is_initialized;

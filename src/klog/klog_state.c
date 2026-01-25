@@ -26,6 +26,14 @@ uint32_t g_klog_source_location_filename_max_length = 0;
 
 uint32_t g_klog_message_max_length = 0;
 
+uint32_t g_klog_stdout_level = 0;
+
+bool     g_klog_stdout_use_color = false;
+
+uint32_t g_klog_file_level = 0;
+
+FILE*    gp_klog_file = NULL;
+
 /* Internal state --------------------------------------------------------------------------------------------------- */
 
 uint32_t                 g_klog_current_number_loggers_created = 0;
@@ -41,7 +49,5 @@ char*                    gb_klog_level_strings = NULL;
 char*                    gb_klog_colored_level_strings = NULL;
 
 char*                    gb_klog_message_queue = NULL;
-
-FILE*                    gp_klog_output_file = NULL;
 
 bool                     g_klog_is_initialized = false;

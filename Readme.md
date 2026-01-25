@@ -95,6 +95,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Update all argument names to use prefixes and const correctly
 - [ ] Update all function names to adhere to correct formatting
 - [ ] Ensure we are cmaking the package correctly
+- [ ] Clean up / organize / reorder klog_state
 
 # Tests to write
 - [ ] Lots of loggers and lots of log statements (hundreds and thousands)
