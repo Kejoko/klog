@@ -73,6 +73,10 @@ if (KLOG_DEBUG)
     list(APPEND GNEISS_COMPILE_DEFINITIONS KLOG_DEBUG)
 endif ()
 
+if (KLOG_OFF)
+    list(APPEND GNEISS_COMPILE_DEFINITIONS KLOG_OFF)
+endif ()
+
 message(STATUS "Gneiss specific compile definitions:")
 foreach(COMPILE_DEFINITION ${GNEISS_COMPILE_DEFINITIONS})
     message(STATUS "    ${COMPILE_DEFINITION}")

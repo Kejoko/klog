@@ -71,8 +71,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Planned Features
 
-- [ ] Enforce minimum levels set by user for file and stdout
-- [ ] Preprocessor to turn all of Klog off (`KLOG_OFF`, `cmake .. -DKLOG_OFF=true`), which compiles out all things in klog.c
 - [ ] async logging, with number of backing threads determined by user (using the message queue for consumers/producers design)
 - [ ] windows support
 

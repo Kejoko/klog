@@ -16,6 +16,13 @@
 #include "./klog_format.h"
 
 void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogStdoutInfo* p_klog_init_stdout_info, const KlogFileInfo* p_klog_init_file_info) {
+#ifdef KLOG_OFF
+    (void)max_number_loggers;
+    (void)klog_format_info;
+    (void)p_klog_async_info;
+    (void)p_klog_init_stdout_info;
+    (void)p_klog_init_file_info;
+#else
     if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, klog_format_info, p_klog_async_info, p_klog_init_stdout_info, p_klog_init_file_info)) {
         exit(1);
     }
@@ -72,9 +79,12 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
     g_klog_source_location_filename_max_length = klog_format_info.source_location_filename_max_length;
 
     g_klog_is_initialized = true;
+#endif
 }
 
 void klog_deinitialize(void) {
+#ifdef KLOG_OFF
+#else
     if (!g_klog_is_initialized) {
         kdprintf("Trying to de-initialize klog, when it is not yet initialized\n");
         exit(1);
@@ -96,15 +106,20 @@ void klog_deinitialize(void) {
     free(gb_klog_level_strings);
     free(gb_klog_colored_level_strings);
     free(gb_klog_message_queue);
-   
+
     if (gp_klog_file) {
         fclose(gp_klog_file);
     }
     
     g_klog_is_initialized = false;
+#endif
 }
 
 KlogLoggerHandle* klog_logger_create(const char* logger_name) {
+#ifdef KLOG_OFF
+    (void)logger_name;
+    return NULL;
+#else
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
@@ -132,9 +147,14 @@ KlogLoggerHandle* klog_logger_create(const char* logger_name) {
     g_klog_current_number_loggers_created++;
 
     return p_logger_handle;
+#endif
 }
 
 void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel updated_level) {
+#ifdef KLOG_OFF
+    (void)p_logger_handle;
+    (void)updated_level;
+#else
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
@@ -146,11 +166,17 @@ void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum K
     }
 
     ga_klog_logger_levels[p_logger_handle->value] = updated_level;
+#endif
 }
 
 void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* file, const uint32_t line, const char* format, ...) {
+#ifdef KLOG_OFF
+    (void)p_logger_handle;
+    (void)requested_level;
     (void)file;
     (void)line;
+    (void)format;
+#else
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
@@ -225,4 +251,5 @@ void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requ
     if (g_klog_source_location_filename_max_length) {
         free((char*)packed_source_location.s);
     }
+#endif
 }
