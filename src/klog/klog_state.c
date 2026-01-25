@@ -20,6 +20,8 @@ uint32_t g_klog_message_queue_number_elements = 0;
 
 bool     g_klog_print_timestamp = false;
 
+bool     g_klog_print_thread_id = false;
+
 uint32_t g_klog_source_location_filename_max_length = 0;
 
 uint32_t g_klog_message_max_length = 0;

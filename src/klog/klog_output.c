@@ -4,8 +4,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void klog_output_stdout(uint32_t thread_id, KlogString* p_time, KlogString* p_name, KlogString* p_level, KlogString* p_source_location, KlogString* p_message) {
-    printf("%.7d ", thread_id);
+void klog_output_stdout(const uint32_t* p_thread_id, KlogString* p_time, KlogString* p_name, KlogString* p_level, KlogString* p_source_location, KlogString* p_message) {
+    if (p_thread_id) {
+        printf("%.7d ", *p_thread_id);
+    }
     if (p_time) {
         printf("%.*s ", p_time->length, p_time->s);
     }
@@ -24,8 +26,10 @@ void klog_output_stdout(uint32_t thread_id, KlogString* p_time, KlogString* p_na
     printf("\n");
 }
 
-void klog_output_file(FILE* p_file, uint32_t thread_id, KlogString* p_time, KlogString* p_name, KlogString* p_level, KlogString* p_source_location, KlogString* p_message) {
-    fprintf(p_file, "%.7d ", thread_id);
+void klog_output_file(FILE* p_file, const uint32_t* p_thread_id, KlogString* p_time, KlogString* p_name, KlogString* p_level, KlogString* p_source_location, KlogString* p_message) {
+    if (p_thread_id) {
+        fprintf(p_file, "%.7d ", *p_thread_id);
+    }
     if (p_time) {
         fprintf(p_file, "%.*s ", p_time->length, p_time->s);
     }

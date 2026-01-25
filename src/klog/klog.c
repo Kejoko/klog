@@ -61,6 +61,7 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
     kdprintf("gp_klog_output_file: %p\n", (void*)gp_klog_output_file);
 
     g_klog_print_timestamp = klog_format_info.use_timestamp;
+    g_klog_print_thread_id = klog_format_info.use_thread_id;
     g_klog_source_location_filename_max_length = klog_format_info.source_location_filename_max_length;
 
     g_klog_is_initialized = true;
@@ -77,6 +78,7 @@ void klog_deinitialize(void) {
     g_klog_number_backing_threads = 0;
     g_klog_message_queue_number_elements = 0;
     g_klog_print_timestamp = false;
+    g_klog_print_thread_id = false;
     g_klog_source_location_filename_max_length = 0;
     g_klog_message_max_length = 0;
 
@@ -174,11 +176,12 @@ void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requ
     const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(input_message);
 
     /* Get the information to create the message header */
-    const pid_t thread_id = klog_format_get_current_thread_id();
+    const uint32_t thread_id = (uint32_t)klog_format_get_current_thread_id();
     const char* s_logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_logger_name_max_length]);
     const char* s_level = &(gb_klog_level_strings[G_klog_level_string_length * requested_level]);
     const char* s_level_colored = &(gb_klog_colored_level_strings[G_klog_colored_level_string_length * requested_level]);
 
+    const uint32_t* p_thread_id = g_klog_print_thread_id ? &thread_id : NULL;
     KlogString packed_name = {g_klog_logger_name_max_length, s_logger_name};
     KlogString packed_level_stdout = {G_klog_colored_level_string_length, s_level_colored};
     KlogString packed_level_file = {G_klog_level_string_length, s_level};
@@ -194,9 +197,9 @@ void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requ
     for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
         KlogString packed_message = {split_messages_info.string_lengths[i_message], split_messages_info.strings[i_message]};
 
-        klog_output_stdout(thread_id, p_packed_time, &packed_name, &packed_level_stdout, p_packed_source_location, &packed_message);
+        klog_output_stdout(p_thread_id, p_packed_time, &packed_name, &packed_level_stdout, p_packed_source_location, &packed_message);
         if (gp_klog_output_file) {
-            klog_output_file(gp_klog_output_file, thread_id, p_packed_time, &packed_name, &packed_level_file, p_packed_source_location, &packed_message);
+            klog_output_file(gp_klog_output_file, p_thread_id, p_packed_time, &packed_name, &packed_level_file, p_packed_source_location, &packed_message);
         }
     }
 

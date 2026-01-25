@@ -32,6 +32,9 @@ extern uint32_t g_klog_message_queue_number_elements;
 /* Whether or not to print a timestamp */
 extern bool     g_klog_print_timestamp;
 
+/* Whether or not to print a thread id */
+extern bool     g_klog_print_thread_id;
+
 /* How the long the filename should be when printing source location. If 0, then source location is not printed */
 extern uint32_t g_klog_source_location_filename_max_length;
 

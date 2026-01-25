@@ -13,6 +13,7 @@ typedef struct {
     uint32_t logger_name_max_length;
     uint32_t message_max_length;
     uint32_t source_location_filename_max_length;
+    bool use_thread_id;
     bool use_timestamp;
 } KlogFormatInfo;
 

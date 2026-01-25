@@ -71,8 +71,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Planned Features
 
-- [ ] log the source location (file, line), if enabled by user
-    - [ ] enable user to specify length of logged filename
 - [ ] Enforce minimum levels set by user for file and stdout
 - [ ] Preprocessor to turn all of Klog off (`KLOG_OFF`, `cmake .. -DKLOG_OFF=true`), which compiles out all things in klog.c
 - [ ] async logging, with number of backing threads determined by user (using the message queue for consumers/producers design)
@@ -105,6 +103,8 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Log to stdout with colors
 - [ ] Log to stdout without colors
 - [ ] Formatting prefix strings correctly
+- [ ] With thread id
+- [ ] Without thread id
 - [ ] Source location string formatting
     - [ ] Longer filenames than allowed
     - [ ] Shorter filenames than allowed

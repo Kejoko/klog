@@ -6,7 +6,7 @@
 
 /* This is testing klog with max loggers set to 2, and name length set to 6 */
 int main(void) {
-    KlogFormatInfo format_info = {6, 100, 20, false};
+    KlogFormatInfo format_info = {6, 100, 20, true, false};
     klog_initialize(2, format_info, NULL, NULL, NULL);
 
     const KlogLoggerHandle* handle_1 = klog_logger_create("MyLogger");
