@@ -19,6 +19,7 @@
 
 #ifdef  __linux__
 
+#include <libgen.h>      /* For basename() */
 #include <unistd.h>      /* For pid_t */
 #include <sys/syscall.h> /* For syscall() */
 #include <time.h>        /* For time(), localtime(), gettimeofday() */
@@ -132,3 +133,24 @@ KlogString klog_format_time(void) {
     return packed_time;
 }
 
+KlogString klog_format_source_location(const uint32_t filename_size_max, const char* s_filepath, const uint32_t line) {
+    /* filename, +1 for colon, +4 for line, +1 for null terminator */
+    const uint32_t total_size = filename_size_max + 1 + 4 + 1; 
+    char* s_formatted = malloc(total_size);
+
+    /* Initialize with spaces, so the filename is padded correctly */
+    memset(s_formatted, ' ', total_size); 
+
+    char* s_filename = basename((char*)s_filepath);
+    const uint32_t filename_size_original = strlen(s_filename);
+
+    const uint32_t filename_size_copy = filename_size_max < filename_size_original ? filename_size_max : filename_size_original;
+    memcpy(s_formatted, s_filename, filename_size_copy);
+
+    /* Format the remainder after the filename has been populated */
+    sprintf(s_formatted + filename_size_max, ":%4d", line);
+    
+    KlogString packed_source_location = { total_size, s_formatted };
+
+    return packed_source_location;
+}

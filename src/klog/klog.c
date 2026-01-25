@@ -61,7 +61,7 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
     kdprintf("gp_klog_output_file: %p\n", (void*)gp_klog_output_file);
 
     g_klog_print_timestamp = klog_format_info.use_timestamp;
-    g_klog_print_source_location = klog_format_info.use_source_location;
+    g_klog_source_location_filename_max_length = klog_format_info.source_location_filename_max_length;
 
     g_klog_is_initialized = true;
 }
@@ -77,7 +77,7 @@ void klog_deinitialize(void) {
     g_klog_number_backing_threads = 0;
     g_klog_message_queue_number_elements = 0;
     g_klog_print_timestamp = false;
-    g_klog_print_source_location = false;
+    g_klog_source_location_filename_max_length = 0;
     g_klog_message_max_length = 0;
 
     g_klog_current_number_loggers_created = 0;
@@ -139,7 +139,9 @@ void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum K
     ga_klog_logger_levels[p_logger_handle->value] = updated_level;
 }
 
-void klog(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* format, ...) {
+void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* file, const uint32_t line, const char* format, ...) {
+    (void)file;
+    (void)line;
     if (!g_klog_is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(1);
@@ -183,16 +185,12 @@ void klog(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requeste
 
     KlogString packed_source_location;
     KlogString* p_packed_source_location = NULL;
-    if (g_klog_print_source_location) {
+    if (g_klog_source_location_filename_max_length && file) {
         /* @todo Create the source location string */
+        packed_source_location = klog_format_source_location(g_klog_source_location_filename_max_length, file, line);
         p_packed_source_location = &packed_source_location;
     }
 
-    /* Thread ID prefix: "123456 " */
-    /* Time prefix:      "DDD.HH:MM:SS:SSSS " */
-    /* Name prefix:      "[ABCDEF] "*/
-    /* Level prefix:     "[ABCDE] " */
-    /* Source prefix:    "[abcdefghijklmnopqrst:XXXX] " */
     for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
         KlogString packed_message = {split_messages_info.string_lengths[i_message], split_messages_info.strings[i_message]};
 
@@ -211,7 +209,7 @@ void klog(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requeste
         free((char*)packed_time.s);
     }
 
-    if (g_klog_print_source_location) {
+    if (g_klog_source_location_filename_max_length) {
         free((char*)packed_source_location.s);
     }
 }

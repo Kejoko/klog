@@ -72,26 +72,44 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 # Planned Features
 
 - [ ] log the source location (file, line), if enabled by user
+    - [ ] enable user to specify length of logged filename
+- [ ] Enforce minimum levels set by user for file and stdout
+- [ ] Preprocessor to turn all of Klog off (`KLOG_OFF`, `cmake .. -DKLOG_OFF=true`), which compiles out all things in klog.c
 - [ ] async logging, with number of backing threads determined by user (using the message queue for consumers/producers design)
 - [ ] windows support
 
 # Tech Debt
 ## Source
+- [ ] Document all preconditions
 - [ ] Be consistent with "string" and prefixes in names and order of words in names
     - Ex: "colored_level" vs "level_colored"
 - [ ] Don't print to stdout if no stdout info is provided
 - [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure
 - [ ] run_all_tests.sh script should output failed commands on newlines
 - [ ] Pull out light platform layer
+    - [ ] Enforce that the version is at least c99
 - [ ] Make the KlogFormatSplitInto contain an array of KlogString
 - [ ] Create the logging prefix using a function
     - pass this prefix to stdout and file logging functions
         - log prefix, COLOR (if stdout), level, COLOR_RESET (if stdout), actual message
 - [ ] Move everything (name, level) within the handle?
 - [ ] Ensure const correctness everywhere
+- [ ] Update all argument names to use prefixes and const correctly
+- [ ] Update all function names to adhere to correct formatting
+- [ ] Ensure we are cmaking the package correctly
 
 # Tests to write
 - [ ] Lots of loggers and lots of log statements (hundreds and thousands)
 - [ ] Log to stdout but not to file works as expected
 - [ ] Log to file but not to stdout works as expected
+- [ ] Log to stdout with colors
+- [ ] Log to stdout without colors
 - [ ] Formatting prefix strings correctly
+- [ ] Source location string formatting
+    - [ ] Longer filenames than allowed
+    - [ ] Shorter filenames than allowed
+
+# Notes
+
+- it'd be ideal if we can provide default arguments to the klog function which default to __FILE__ and __LINE__
+    - but I think those would evaluate in situ in the declaration instead of evaluating at the invocation

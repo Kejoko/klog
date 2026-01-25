@@ -12,8 +12,8 @@ typedef struct KlogLoggerHandle KlogLoggerHandle;
 typedef struct {
     uint32_t logger_name_max_length;
     uint32_t message_max_length;
+    uint32_t source_location_filename_max_length;
     bool use_timestamp;
-    bool use_source_location;
 } KlogFormatInfo;
 
 typedef struct {
@@ -122,6 +122,14 @@ void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum K
  * @param format
  * @param ...
  */
-void klog(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* format, ...);
+void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* file, const uint32_t line, const char* format, ...);
+
+#define klog(p_logger_handle, requested_level, ...) klog_log(p_logger_handle, requested_level, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_trace(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_debug(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_info( p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_INFO,  __FILE__, __LINE__, __VA_ARGS__)
+#define klog_warn( p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_WARN,  __FILE__, __LINE__, __VA_ARGS__)
+#define klog_error(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_fatal(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
 #endif /* KLOG_INCLUDED */
