@@ -10,4 +10,5 @@ endfunction()
 
 # ----- Major Version 0 ----- #
 
-set_gneiss_versions(0 0 0)
+# set_gneiss_versions(0 0 0)
+set_gneiss_versions(0 0 7) # Logging to stdout and files according to user configuration

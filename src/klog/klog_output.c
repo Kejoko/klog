@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void klog_output_stdout(const uint32_t* p_thread_id, KlogString* p_time, KlogString* p_name, KlogString* p_level, KlogString* p_source_location, KlogString* p_message) {
+void klog_output_stdout(const uint32_t* const p_thread_id, const KlogString* const p_time, const KlogString* const p_name, const KlogString* const p_level, const KlogString* const p_source_location, const KlogString* const p_message) {
     if (p_thread_id) {
         printf("%.7d ", *p_thread_id);
     }
@@ -26,7 +26,7 @@ void klog_output_stdout(const uint32_t* p_thread_id, KlogString* p_time, KlogStr
     printf("\n");
 }
 
-void klog_output_file(FILE* p_file, const uint32_t* p_thread_id, KlogString* p_time, KlogString* p_name, KlogString* p_level, KlogString* p_source_location, KlogString* p_message) {
+void klog_output_file(FILE* const p_file, const uint32_t* const p_thread_id, const KlogString* const p_time, const KlogString* const p_name, const KlogString* const p_level, const KlogString* const p_source_location, const KlogString* const p_message) {
     if (p_thread_id) {
         fprintf(p_file, "%.7d ", *p_thread_id);
     }

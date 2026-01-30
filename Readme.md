@@ -31,9 +31,9 @@ Example: `cmake .. -DCMAKE_BUILD_TYPE=Release -DKLOG_DEBUG=true -DKLOG_BUILD_TES
         - pointer (KlogLoggerHandle*): p_klog_logger_handle
         - list (array of pointers, KlogLoggerHandle**): l_klog_logger_handle
 - Be consistent with hungarian prefixes for strings
-    - single string (char*): <name> - don't need a prefix
+    - single string (char*): s_<name> or <name> depending on what the variable represents
     - list of strings (char**:) ls_<name>
-    - single string char[]: <name>
+    - single string char[]: same as char*
     - buffer (one malloc for many strings, packed together char*) b_<name>
 
 ## Testing
@@ -69,6 +69,18 @@ The compiled executables are output to the `bin/ft` directory.
 You can either run tests via the `ctest` command, via the `run_all_tests.sh` script, or run an individual test manually.
 The `run_all_tests.sh` script is the preferred way to run tests, because in addition to checking for correctness, it will also check for memory issues.
 
+# Release Questions
+- [ ] Is everything documented correctly?
+    - [ ] Structs
+    - [ ] Functions
+        - [ ] Prefixes
+        - [ ] Parameters
+        - [ ] How it uses the state which is exposed to the user
+- [ ] Is the version incremented accordingly
+- [ ] Is all of the state deinitialized correctly?
+- [ ] Do all of your names adhere to the naming conventions?
+- [ ] Is everything as const as possible?
+
 # Planned Features
 
 - [ ] async logging, with number of backing threads determined by user (using the message queue for consumers/producers design)
@@ -76,26 +88,26 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
-- [ ] Document all preconditions
-- [ ] Be consistent with "string" and prefixes in names and order of words in names
-    - Ex: "colored_level" vs "level_colored"
-- [ ] Don't print to stdout if no stdout info is provided
-- [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure
-- [ ] run_all_tests.sh script should output failed commands on newlines
 - [ ] Pull out light platform layer
     - [ ] Enforce that the version is at least c99
 - [ ] Make the KlogFormatSplitInto contain an array of KlogString
-- [ ] Create the logging prefix using a function
-    - pass this prefix to stdout and file logging functions
-        - log prefix, COLOR (if stdout), level, COLOR_RESET (if stdout), actual message
+- [ ] Clean up / organize / reorder klog_state
 - [ ] Move everything (name, level) within the handle?
-- [ ] Ensure const correctness everywhere
+- [ ] Make sure we are consistent with klog includes after libc and std includes (even for implementations)
+
+## Utility
+- [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure
+- [ ] run_all_tests.sh script should output failed commands on newlines
+- [ ] Ensure we are cmaking the package correctly
+
+## Documentation
+- [ ] Document all preconditions
+- [ ] Be consistent with "string" and prefixes in names and order of words in names
+    - Ex: "colored_level" vs "level_colored"
 - [ ] Update all argument names to use prefixes and const correctly
 - [ ] Update all function names to adhere to correct formatting
-- [ ] Ensure we are cmaking the package correctly
-- [ ] Clean up / organize / reorder klog_state
 
-# Tests to write
+## Tests to write
 - [ ] Lots of loggers and lots of log statements (hundreds and thousands)
 - [ ] Log to stdout but not to file works as expected
 - [ ] Log to file but not to stdout works as expected

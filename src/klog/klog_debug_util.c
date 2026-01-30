@@ -3,13 +3,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-void kdprintf(const char* format, ...) {
+void kdprintf(const char* const s_format, ...) {
 #ifdef KLOG_DEBUG
     va_list p_args;
     va_start(p_args, format);
-    vprintf(format, p_args);
+    vprintf(s_format, p_args);
     va_end(p_args);
 #else
-    (void)format;
+    (void)s_format;
 #endif
 }

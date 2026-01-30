@@ -4,9 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-/**
- * @struct KlogLoggerHandle The handle to a klog logger
- */
 typedef struct KlogLoggerHandle KlogLoggerHandle;
 
 typedef struct {
@@ -46,28 +43,8 @@ enum KlogLevel {
     KLOG_LEVEL_COUNT = 7
 };
 
-/**
- * @fn klog_initialize
- * @brief
- * @details
- * @pre klog has not been initialized.
- * @param max_number_loggers The maximum number of loggers able to be created
- * @param logger_name_max_length The maximum length of a logger's name. This
- *      also determines the width of the logger names when printing. A max
- *      length of 8 will print 8 characters for each logger name, where it
- *      will be left-justified and filled with spaces if the name is not long
- *      enough to fill all characters.
- * @param p_stdout_init_info
- * @param p_file_init_info
- */
 void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogStdoutInfo* p_klog_init_stdout_info, const KlogFileInfo* p_klog_init_file_info);
 
-/**
- * @fn klog_deinitialize
- * @brief Deinitialize klog
- * @details
- * @pre klog has been initialized.
- */
 void klog_deinitialize(void);
 
 /**
@@ -95,7 +72,7 @@ void klog_deinitialize(void);
  * @returns KlogLoggerHandle The newly created handle if logger_name did
  *      not already exist, or the retrieved handle if logger_name did exist
  */
-KlogLoggerHandle* klog_logger_create(const char* logger_name);
+const KlogLoggerHandle* klog_logger_create(const char* logger_name);
 
 /**
  * @fn klog_logger_set_level
@@ -112,17 +89,6 @@ KlogLoggerHandle* klog_logger_create(const char* logger_name);
  */
 void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel updated_level);
 
-/**
- * @fn klog
- * @brief
- * @details
- * @pre klog has been initialized.
- * @pre logger_handle is valid.
- * @param logger_handle
- * @param requested_level 
- * @param format
- * @param ...
- */
 void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* file, const uint32_t line, const char* format, ...);
 
 #define klog(p_logger_handle, requested_level, ...) klog_log(p_logger_handle, requested_level, __FILE__, __LINE__, __VA_ARGS__)

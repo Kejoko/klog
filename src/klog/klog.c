@@ -15,7 +15,7 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
-void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogStdoutInfo* p_klog_init_stdout_info, const KlogFileInfo* p_klog_init_file_info) {
+void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogStdoutInfo* const p_klog_init_stdout_info, const KlogFileInfo* const p_klog_init_file_info) {
 #ifdef KLOG_OFF
     (void)max_number_loggers;
     (void)klog_format_info;
@@ -110,12 +110,12 @@ void klog_deinitialize(void) {
     if (gp_klog_file) {
         fclose(gp_klog_file);
     }
-    
+
     g_klog_is_initialized = false;
 #endif
 }
 
-KlogLoggerHandle* klog_logger_create(const char* logger_name) {
+const KlogLoggerHandle* klog_logger_create(const char* logger_name) {
 #ifdef KLOG_OFF
     (void)logger_name;
     return NULL;
@@ -141,7 +141,7 @@ KlogLoggerHandle* klog_logger_create(const char* logger_name) {
     ga_klog_logger_levels[current_logger_index] = KLOG_LEVEL_OFF;
 
     /* We have to do this weird casting stuff to prevent valgrind from exploding */
-    KlogLoggerHandle* p_logger_handle = &(((KlogLoggerHandle*)ga_klog_logger_handles)[current_logger_index]);
+    KlogLoggerHandle* const p_logger_handle = &(((KlogLoggerHandle*)ga_klog_logger_handles)[current_logger_index]);
     p_logger_handle->value = current_logger_index;
 
     g_klog_current_number_loggers_created++;
@@ -150,7 +150,7 @@ KlogLoggerHandle* klog_logger_create(const char* logger_name) {
 #endif
 }
 
-void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel updated_level) {
+void klog_logger_set_level(const KlogLoggerHandle* const p_logger_handle, const enum KlogLevel updated_level) {
 #ifdef KLOG_OFF
     (void)p_logger_handle;
     (void)updated_level;
@@ -169,7 +169,7 @@ void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum K
 #endif
 }
 
-void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* file, const uint32_t line, const char* format, ...) {
+void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLevel requested_level, const char* const s_file, const uint32_t line, const char* const s_format, ...) {
 #ifdef KLOG_OFF
     (void)p_logger_handle;
     (void)requested_level;
@@ -192,6 +192,7 @@ void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requ
     }
 
     /* We are getting the time first, so it's closest to the actual point of invocation */
+    /* @todo kjk 2026/01/30 Use ternary expression here for const initialization */
     KlogString packed_time;
     KlogString* p_packed_time = NULL;
     if (g_klog_print_timestamp) {
@@ -201,35 +202,36 @@ void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requ
 
     /* Create the input string with the arguments injected */
     va_list p_args;
-    va_start(p_args, format);
-    const char* const input_message = klog_format_input_message(format, p_args);
+    va_start(p_args, s_format);
+    const char* const s_input_message = klog_format_input_message(s_format, p_args);
     va_end(p_args);
 
     /* Split the input string into multiple input strings based on the newlines */
-    const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(input_message);
+    const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(s_input_message);
 
     /* Get the information to create the message header */
     const uint32_t thread_id = (uint32_t)klog_format_get_current_thread_id();
-    const char* s_logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_logger_name_max_length]);
-    const char* s_level = &(gb_klog_level_strings[G_klog_level_string_length * requested_level]);
-    const char* s_level_colored = &(gb_klog_colored_level_strings[G_klog_colored_level_string_length * requested_level]);
+    const char* const s_logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_logger_name_max_length]);
+    const char* const s_level = &(gb_klog_level_strings[G_klog_level_string_length * requested_level]);
+    const char* const s_level_colored = &(gb_klog_colored_level_strings[G_klog_colored_level_string_length * requested_level]);
 
-    const uint32_t* p_thread_id = g_klog_print_thread_id ? &thread_id : NULL;
+    const uint32_t* const p_thread_id = g_klog_print_thread_id ? &thread_id : NULL;
     KlogString packed_name = {g_klog_logger_name_max_length, s_logger_name};
     KlogString packed_level_color = {G_klog_colored_level_string_length, s_level_colored};
     KlogString packed_level_file = {G_klog_level_string_length, s_level};
-    KlogString* p_packed_level_stdout = g_klog_stdout_use_color ? &packed_level_color : &packed_level_file;
+    const KlogString* const p_packed_level_stdout = g_klog_stdout_use_color ? &packed_level_color : &packed_level_file;
 
+    /* @todo kjk 2026/01/30 Use ternary expression here for const initialization */
     KlogString packed_source_location;
     KlogString* p_packed_source_location = NULL;
-    if (g_klog_source_location_filename_max_length && file) {
+    if (g_klog_source_location_filename_max_length && s_file) {
         /* @todo Create the source location string */
-        packed_source_location = klog_format_source_location(g_klog_source_location_filename_max_length, file, line);
+        packed_source_location = klog_format_source_location(g_klog_source_location_filename_max_length, s_file, line);
         p_packed_source_location = &packed_source_location;
     }
 
     for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
-        KlogString packed_message = {split_messages_info.string_lengths[i_message], split_messages_info.strings[i_message]};
+        const KlogString packed_message = {split_messages_info.a_string_lengths[i_message], split_messages_info.ls_strings[i_message]};
 
         if (requested_level <= g_klog_stdout_level) {
             klog_output_stdout(p_thread_id, p_packed_time, &packed_name, p_packed_level_stdout, p_packed_source_location, &packed_message);
@@ -239,10 +241,10 @@ void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requ
         }
     }
 
-    free((char*)input_message);
+    free((char*)s_input_message);
 
-    free(split_messages_info.strings);
-    free((uint32_t*)split_messages_info.string_lengths);
+    free(split_messages_info.ls_strings);
+    free((uint32_t*)split_messages_info.a_string_lengths);
 
     if (g_klog_print_timestamp) {
         free((char*)packed_time.s);

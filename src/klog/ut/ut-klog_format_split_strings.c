@@ -25,27 +25,27 @@ int do_comparison(
 
     for (uint32_t i_format_string = 0; i_format_string < expected_number_format_strings; ++i_format_string) {
         // Ensure format string is valid
-        if (p_result->strings[i_format_string] == NULL) {
+        if (p_result->ls_strings[i_format_string] == NULL) {
             printf("[%s] format string %d is invalid\n", test_name, i_format_string);
             return 1;
         }
         
         // Ensure result char* == expected char*
-        if (p_result->strings[i_format_string] != expected_format_strings[i_format_string]) {
-            printf("[%s] format string %d address (%p) != expected (%p)\n", test_name, i_format_string, (void*)p_result->strings[i_format_string], (void*)expected_format_strings[i_format_string]);
+        if (p_result->ls_strings[i_format_string] != expected_format_strings[i_format_string]) {
+            printf("[%s] format string %d address (%p) != expected (%p)\n", test_name, i_format_string, (void*)p_result->ls_strings[i_format_string], (void*)expected_format_strings[i_format_string]);
             return 1;
         }
 
         // Ensure result length == expected length
-        if (p_result->string_lengths[i_format_string] != expected_format_string_lengths[i_format_string]) {
-            printf("[%s] format string %d length (%d) != expected (%d)\n", test_name, i_format_string, p_result->string_lengths[i_format_string], expected_format_string_lengths[i_format_string]);
+        if (p_result->a_string_lengths[i_format_string] != expected_format_string_lengths[i_format_string]) {
+            printf("[%s] format string %d length (%d) != expected (%d)\n", test_name, i_format_string, p_result->a_string_lengths[i_format_string], expected_format_string_lengths[i_format_string]);
             return 1;
         }
 
         // Ensure string equality between result and expected
         // We might need to consider strcmp > 1 because we won't have null terminated characters
-        if (strcmp(p_result->strings[i_format_string], expected_format_strings[i_format_string]) < 0) {
-            printf("[%s] format string %d (\"%.*s\") != expected (\"%.*s\")\n", test_name, i_format_string, expected_format_string_lengths[i_format_string], p_result->strings[i_format_string], expected_format_string_lengths[i_format_string], expected_format_strings[i_format_string]);
+        if (strcmp(p_result->ls_strings[i_format_string], expected_format_strings[i_format_string]) < 0) {
+            printf("[%s] format string %d (\"%.*s\") != expected (\"%.*s\")\n", test_name, i_format_string, expected_format_string_lengths[i_format_string], p_result->ls_strings[i_format_string], expected_format_string_lengths[i_format_string], expected_format_strings[i_format_string]);
             return 1;
         }
     }
@@ -57,8 +57,8 @@ void free_things(
     char** format_strings,
     uint32_t* format_string_lengths
 ) {
-    free(p_result->strings);
-    free((uint32_t*)p_result->string_lengths);
+    free(p_result->ls_strings);
+    free((uint32_t*)p_result->a_string_lengths);
 
     free(format_strings);
     free(format_string_lengths);

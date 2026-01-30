@@ -14,7 +14,7 @@
 #include "./klog_debug_util.h"
 #include "./klog_initialize.h"
 
-bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogStdoutInfo* p_klog_init_stdout_info, const KlogFileInfo* p_klog_init_file_info) {
+bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogStdoutInfo* const p_klog_init_stdout_info, const KlogFileInfo* const p_klog_init_file_info) {
     if (klog_is_initialized) {
         kdprintf("Trying to initialize klog, when it is already initialized\n");
         return false;
@@ -52,7 +52,7 @@ bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const 
 
 KlogLoggerHandle* klog_initialize_logger_handle_array(const uint32_t max_number_loggers) {
     const uint32_t total_handle_array_size = max_number_loggers * sizeof(KlogLoggerHandle);
-    KlogLoggerHandle* a_logger_handles = malloc(total_handle_array_size);
+    KlogLoggerHandle* const a_logger_handles = malloc(total_handle_array_size);
     kdprintf("Created logger handle array\n");
     kdprintf("  start: %p\n", (void*)a_logger_handles);
     kdprintf("  end  : %p\n", (void*)(a_logger_handles + total_handle_array_size));
@@ -64,7 +64,7 @@ KlogLoggerHandle* klog_initialize_logger_handle_array(const uint32_t max_number_
 char* klog_initialize_logger_names_buffer(const uint32_t max_number_loggers, const uint32_t logger_name_max_length) {
     /* set all characters to space (' ') by default, so we can auto pad the end of the names if they are too short */
     const uint32_t total_logger_names_array_size_bytes = max_number_loggers * logger_name_max_length;
-    char* b_logger_names = malloc(total_logger_names_array_size_bytes);
+    char* const b_logger_names = malloc(total_logger_names_array_size_bytes);
     memset(b_logger_names, ' ', total_logger_names_array_size_bytes);
 
     kdprintf("Created logger names array\n");
@@ -77,7 +77,7 @@ char* klog_initialize_logger_names_buffer(const uint32_t max_number_loggers, con
 
 uint8_t* klog_initialize_logger_levels_array(const uint32_t max_number_loggers) {
     const uint32_t logger_levels_array_size_bytes = max_number_loggers * sizeof(uint8_t*);
-    uint8_t* a_logger_levels = malloc(logger_levels_array_size_bytes);
+    uint8_t* const a_logger_levels = malloc(logger_levels_array_size_bytes);
     memset(a_logger_levels, 0, logger_levels_array_size_bytes);
     
     kdprintf("Created logger levels array\n");
@@ -90,7 +90,7 @@ uint8_t* klog_initialize_logger_levels_array(const uint32_t max_number_loggers) 
 
 char* klog_initialize_level_strings_buffer(void) {
     const uint32_t level_string_array_total_bytes = G_klog_level_string_length * G_klog_number_levels; 
-    char* b_level_strings = malloc(level_string_array_total_bytes);
+    char* const b_level_strings = malloc(level_string_array_total_bytes);
     const char off_string[]      = "off  ";
     const char fatal_string[]    = "FATAL";
     const char error_string[]    = "ERROR";
@@ -116,7 +116,7 @@ char* klog_initialize_level_strings_buffer(void) {
 
 char* klog_initialize_colored_level_strings_buffer(void) {
     const uint32_t colored_level_string_array_total_bytes = G_klog_colored_level_string_length * G_klog_number_levels; 
-    char* b_colored_level_strings = malloc(colored_level_string_array_total_bytes);
+    char* const b_colored_level_strings = malloc(colored_level_string_array_total_bytes);
     const char off_string[]      = "\x1b[37moff  \x1b[0m"; /* white  */
     const char fatal_string[]    = "\x1b[41mFATAL\x1b[0m"; /* red BG */
     const char error_string[]    = "\x1b[31mERROR\x1b[0m"; /* red    */
@@ -142,7 +142,7 @@ char* klog_initialize_colored_level_strings_buffer(void) {
 
 char* klog_initialize_message_queue(const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
     const uint32_t message_queue_size_bytes = message_queue_number_elements * message_max_length;
-    char* b_message_queue = malloc(message_queue_size_bytes);
+    char* const b_message_queue = malloc(message_queue_size_bytes);
     memset(b_message_queue, 0, message_queue_size_bytes);
     
     kdprintf("Created logger level strings array\n");
@@ -153,7 +153,7 @@ char* klog_initialize_message_queue(const uint32_t message_queue_number_elements
     return b_message_queue;
 }
 
-FILE* klog_initialize_file(const KlogFileInfo* p_klog_init_file_info) {
+FILE* klog_initialize_file(const KlogFileInfo* const p_klog_init_file_info) {
     if (p_klog_init_file_info == NULL) {
         kdprintf("Not initializing output file\n");
         return NULL;
@@ -165,7 +165,7 @@ FILE* klog_initialize_file(const KlogFileInfo* p_klog_init_file_info) {
         kdprintf("Failure when invoking gettimeofday() for creation of filename\n");
         exit(1);
     }
-    struct tm* p_broken_down_now = localtime(&now);
+    const struct tm* const p_broken_down_now = localtime(&now);
     const int32_t year = p_broken_down_now->tm_year + 1900;
     const int32_t month = p_broken_down_now->tm_mon;
     const int32_t day = p_broken_down_now->tm_mday;
@@ -180,10 +180,10 @@ FILE* klog_initialize_file(const KlogFileInfo* p_klog_init_file_info) {
     /*                                20+                        012345 */
     const uint32_t prefix_length = strlen(p_klog_init_file_info->filename_prefix);
     const uint32_t full_filename_length = prefix_length + 25 + 1; /* +1 for null terminator */
-    char* full_filename = malloc(full_filename_length);
+    char* const full_filename = malloc(full_filename_length);
     sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_init_file_info->filename_prefix, year, month, day, hour, minute, second, millisecond);
 
-    FILE* p_file = fopen(full_filename, "w");
+    FILE* const p_file = fopen(full_filename, "w");
     if (!p_file) {
         kdprintf("Failed to create log file at %s\n", full_filename);
         exit(1);
