@@ -1,7 +1,8 @@
+#include "./klog_constants.h"
+
 #include <stdint.h>
 
 #include "klog/klog.h" /* For KLOG_LEVEL_COUNT value */
-#include "./klog_constants.h"
 
 /* ================================================================================================================== */
 /* Constants                                                                                                          */

@@ -1,8 +1,8 @@
+#include "./klog_state.h"
+
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "./klog_state.h"
 
 /* ================================================================================================================== */
 /* Klog globals                                                                                                       */

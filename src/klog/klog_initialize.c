@@ -1,9 +1,11 @@
+#include "./klog_initialize.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef  __linux__
-#include <time.h>        /* For time(), localtime(), gettimeofday() */
+#include <time.h> /* For time(), localtime(), gettimeofday() */
 #include <sys/time.h>
 #else
 #error "Only supporting linux"
@@ -12,7 +14,6 @@
 #include "./klog_constants.h"
 #include "./klog_handle.h"
 #include "./klog_debug_util.h"
-#include "./klog_initialize.h"
 
 bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogStdoutInfo* const p_klog_init_stdout_info, const KlogFileInfo* const p_klog_init_file_info) {
     if (klog_is_initialized) {
@@ -178,10 +179,10 @@ FILE* klog_initialize_file(const KlogFileInfo* const p_klog_init_file_info) {
     /* Extra chars                  : 00+     123456789                 */
     /*                                10+              0123456789       */
     /*                                20+                        012345 */
-    const uint32_t prefix_length = strlen(p_klog_init_file_info->filename_prefix);
+    const uint32_t prefix_length = strlen(p_klog_init_file_info->s_filename_prefix);
     const uint32_t full_filename_length = prefix_length + 25 + 1; /* +1 for null terminator */
     char* const full_filename = malloc(full_filename_length);
-    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_init_file_info->filename_prefix, year, month, day, hour, minute, second, millisecond);
+    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_init_file_info->s_filename_prefix, year, month, day, hour, minute, second, millisecond);
 
     FILE* const p_file = fopen(full_filename, "w");
     if (!p_file) {

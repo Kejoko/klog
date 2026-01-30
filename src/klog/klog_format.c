@@ -1,3 +1,5 @@
+#include "./klog_format.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -32,7 +34,6 @@
 #endif
 
 #include "./klog_debug_util.h"
-#include "./klog_format.h"
 
 pid_t klog_format_get_current_thread_id(void) {
     /* @todo kjk 2025/12/31 Call this once per thread so we can avoid switching into kernel mode repeatedly */
@@ -133,8 +134,8 @@ KlogString klog_format_time(void) {
     return packed_time;
 }
 
-KlogString klog_format_source_location(const uint32_t filename_size_max, const char* const s_filepath, const uint32_t line) {
-    /* filename, +1 for colon, +4 for line, +1 for null terminator */
+KlogString klog_format_source_location(const uint32_t filename_size_max, const char* const s_filepath, const uint32_t line_number) {
+    /* filename, +1 for colon, +4 for line_number, +1 for null terminator */
     const uint32_t total_size = filename_size_max + 1 + 4 + 1; 
     char* const s_formatted = malloc(total_size);
 
@@ -148,7 +149,7 @@ KlogString klog_format_source_location(const uint32_t filename_size_max, const c
     memcpy(s_formatted, s_filename, filename_size_copy);
 
     /* Format the remainder after the filename has been populated */
-    sprintf(s_formatted + filename_size_max, ":%4d", line);
+    sprintf(s_formatted + filename_size_max, ":%4d", line_number);
     
     const KlogString packed_source_location = { total_size, s_formatted };
 

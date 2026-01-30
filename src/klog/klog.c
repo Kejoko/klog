@@ -115,7 +115,7 @@ void klog_deinitialize(void) {
 #endif
 }
 
-const KlogLoggerHandle* klog_logger_create(const char* logger_name) {
+const KlogLoggerHandle* klog_logger_create(const char* const s_logger_name) {
 #ifdef KLOG_OFF
     (void)logger_name;
     return NULL;
@@ -133,10 +133,10 @@ const KlogLoggerHandle* klog_logger_create(const char* logger_name) {
     const uint32_t current_logger_index = g_klog_current_number_loggers_created;
 
     const uint32_t logger_name_start_index = current_logger_index * g_klog_logger_name_max_length;
-    const uint32_t number_chars_to_copy = strlen(logger_name) >= g_klog_logger_name_max_length ?
+    const uint32_t number_chars_to_copy = strlen(s_logger_name) >= g_klog_logger_name_max_length ?
         g_klog_logger_name_max_length : /* copy as much as we can fit */
-        strlen(logger_name);            /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
-    memcpy(&gp_klog_logger_names[logger_name_start_index], logger_name, number_chars_to_copy);
+        strlen(s_logger_name);            /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
+    memcpy(&gp_klog_logger_names[logger_name_start_index], s_logger_name, number_chars_to_copy);
 
     ga_klog_logger_levels[current_logger_index] = KLOG_LEVEL_OFF;
 
@@ -169,12 +169,12 @@ void klog_logger_set_level(const KlogLoggerHandle* const p_logger_handle, const 
 #endif
 }
 
-void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLevel requested_level, const char* const s_file, const uint32_t line, const char* const s_format, ...) {
+void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLevel requested_level, const char* const s_filename, const uint32_t line_number, const char* const s_format, ...) {
 #ifdef KLOG_OFF
     (void)p_logger_handle;
     (void)requested_level;
     (void)file;
-    (void)line;
+    (void)line_number;
     (void)format;
 #else
     if (!g_klog_is_initialized) {
@@ -192,13 +192,8 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
     }
 
     /* We are getting the time first, so it's closest to the actual point of invocation */
-    /* @todo kjk 2026/01/30 Use ternary expression here for const initialization */
-    KlogString packed_time;
-    KlogString* p_packed_time = NULL;
-    if (g_klog_print_timestamp) {
-        packed_time = klog_format_time();
-        p_packed_time = &packed_time;
-    }
+    const KlogString packed_time = g_klog_print_timestamp ? klog_format_time() : (KlogString){0, NULL};
+    const KlogString* const p_packed_time = g_klog_print_timestamp ? &packed_time : NULL;
 
     /* Create the input string with the arguments injected */
     va_list p_args;
@@ -216,19 +211,15 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
     const char* const s_level_colored = &(gb_klog_colored_level_strings[G_klog_colored_level_string_length * requested_level]);
 
     const uint32_t* const p_thread_id = g_klog_print_thread_id ? &thread_id : NULL;
-    KlogString packed_name = {g_klog_logger_name_max_length, s_logger_name};
-    KlogString packed_level_color = {G_klog_colored_level_string_length, s_level_colored};
-    KlogString packed_level_file = {G_klog_level_string_length, s_level};
+    const KlogString packed_name = {g_klog_logger_name_max_length, s_logger_name};
+    const KlogString packed_level_color = {G_klog_colored_level_string_length, s_level_colored};
+    const KlogString packed_level_file = {G_klog_level_string_length, s_level};
     const KlogString* const p_packed_level_stdout = g_klog_stdout_use_color ? &packed_level_color : &packed_level_file;
 
-    /* @todo kjk 2026/01/30 Use ternary expression here for const initialization */
-    KlogString packed_source_location;
-    KlogString* p_packed_source_location = NULL;
-    if (g_klog_source_location_filename_max_length && s_file) {
-        /* @todo Create the source location string */
-        packed_source_location = klog_format_source_location(g_klog_source_location_filename_max_length, s_file, line);
-        p_packed_source_location = &packed_source_location;
-    }
+    const KlogString packed_source_location = (g_klog_source_location_filename_max_length && s_filename) ?
+        klog_format_source_location(g_klog_source_location_filename_max_length, s_filename, line_number) :
+        (KlogString){0, NULL};
+    const KlogString* const p_packed_source_location = (g_klog_source_location_filename_max_length && s_filename) ? & packed_source_location : NULL;
 
     for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
         const KlogString packed_message = {split_messages_info.a_string_lengths[i_message], split_messages_info.ls_strings[i_message]};

@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct {
     uint8_t max_level;
-    const char* filename_prefix;
+    const char* const s_filename_prefix;
 } KlogFileInfo;
 
 /**
@@ -40,6 +40,8 @@ enum KlogLevel {
     KLOG_LEVEL_INFO  = 4,
     KLOG_LEVEL_DEBUG = 5,
     KLOG_LEVEL_TRACE = 6,
+
+    /* For ease of determining how many levels we have */
     KLOG_LEVEL_COUNT = 7
 };
 
@@ -72,7 +74,7 @@ void klog_deinitialize(void);
  * @returns KlogLoggerHandle The newly created handle if logger_name did
  *      not already exist, or the retrieved handle if logger_name did exist
  */
-const KlogLoggerHandle* klog_logger_create(const char* logger_name);
+const KlogLoggerHandle* klog_logger_create(const char* s_logger_name);
 
 /**
  * @fn klog_logger_set_level
@@ -89,7 +91,7 @@ const KlogLoggerHandle* klog_logger_create(const char* logger_name);
  */
 void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel updated_level);
 
-void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* file, const uint32_t line, const char* format, ...);
+void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* s_filename, const uint32_t line_number, const char* s_format, ...);
 
 #define klog(p_logger_handle, requested_level, ...) klog_log(p_logger_handle, requested_level, __FILE__, __LINE__, __VA_ARGS__)
 #define klog_trace(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
