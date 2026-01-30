@@ -13,6 +13,8 @@ add_library(
     klog_handle.h
     klog_debug_util.h
     klog_debug_util.c
+    klog_platform.h
+    klog_platform.c
     klog_initialize.h
     klog_initialize.c
     klog_format.h

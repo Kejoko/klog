@@ -10,6 +10,7 @@
 #include "./klog_state.h"
 #include "./klog_constants.h"
 #include "./klog_handle.h"
+#include "./klog_platform.h"
 #include "./klog_debug_util.h"
 #include "./klog_initialize.h"
 #include "./klog_output.h"
@@ -205,7 +206,7 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
     const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(s_input_message);
 
     /* Get the information to create the message header */
-    const uint32_t thread_id = (uint32_t)klog_format_get_current_thread_id();
+    const uint32_t thread_id = (uint32_t)klog_platform_get_current_thread_id();
     const char* const s_logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_logger_name_max_length]);
     const char* const s_level = &(gb_klog_level_strings[G_klog_level_string_length * requested_level]);
     const char* const s_level_colored = &(gb_klog_colored_level_strings[G_klog_colored_level_string_length * requested_level]);

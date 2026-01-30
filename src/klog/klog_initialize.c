@@ -4,16 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef  __linux__
-#include <time.h> /* For time(), localtime(), gettimeofday() */
-#include <sys/time.h>
-#else
-#error "Only supporting linux"
-#endif
-
 #include "./klog_constants.h"
 #include "./klog_handle.h"
 #include "./klog_debug_util.h"
+#include "./klog_platform.h"
 
 bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogStdoutInfo* const p_klog_init_stdout_info, const KlogFileInfo* const p_klog_init_file_info) {
     if (klog_is_initialized) {
@@ -160,20 +154,7 @@ FILE* klog_initialize_file(const KlogFileInfo* const p_klog_init_file_info) {
         return NULL;
     }
 
-    const time_t now = time(NULL);
-    struct timeval tv;
-    if (gettimeofday(&tv, NULL)) {
-        kdprintf("Failure when invoking gettimeofday() for creation of filename\n");
-        exit(1);
-    }
-    const struct tm* const p_broken_down_now = localtime(&now);
-    const int32_t year = p_broken_down_now->tm_year + 1900;
-    const int32_t month = p_broken_down_now->tm_mon;
-    const int32_t day = p_broken_down_now->tm_mday;
-    const int32_t hour = p_broken_down_now->tm_hour;
-    const int32_t minute = p_broken_down_now->tm_min;
-    const int32_t second = p_broken_down_now->tm_sec;
-    const uint32_t millisecond = tv.tv_usec / 1000;
+    const timepoint_t timepoint = klog_platform_get_current_timepoint();
 
     /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS_SSSS.log */
     /* Extra chars                  : 00+     123456789                 */
@@ -182,7 +163,7 @@ FILE* klog_initialize_file(const KlogFileInfo* const p_klog_init_file_info) {
     const uint32_t prefix_length = strlen(p_klog_init_file_info->s_filename_prefix);
     const uint32_t full_filename_length = prefix_length + 25 + 1; /* +1 for null terminator */
     char* const full_filename = malloc(full_filename_length);
-    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_init_file_info->s_filename_prefix, year, month, day, hour, minute, second, millisecond);
+    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_init_file_info->s_filename_prefix, timepoint.year, timepoint.month, timepoint.day_month, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond/1000);
 
     FILE* const p_file = fopen(full_filename, "w");
     if (!p_file) {

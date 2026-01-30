@@ -1,4 +1,5 @@
 #include "./klog_format.h"
+#include "klog_platform.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -6,39 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef  __linux__
-#else
-#error "Only supporting linux"
-#endif
-
-#ifdef _WIN32
-#error "Klog does not support Windows"
-#endif
-
-#ifdef __APPLE__
-#error "Klog does not support MacOS"
-#endif
-
-#ifdef  __linux__
-
-#include <libgen.h>      /* For basename() */
-#include <unistd.h>      /* For pid_t */
-#include <sys/syscall.h> /* For syscall() */
-#include <time.h>        /* For time(), localtime(), gettimeofday() */
-#include <sys/time.h>
-
-#ifndef SYS_gettid
-#error "SYS_gettid is unavailable on this system"
-#endif
-
-#endif
-
 #include "./klog_debug_util.h"
-
-pid_t klog_format_get_current_thread_id(void) {
-    /* @todo kjk 2025/12/31 Call this once per thread so we can avoid switching into kernel mode repeatedly */
-    return syscall(SYS_gettid);
-}
+#include "./klog_platform.h"
 
 const char* klog_format_input_message(const char* const s_format, va_list p_args) {
     /* We need to make a copy of the args (for the second vsnprintf call) before we consume them with the first vsnprintf call */
@@ -109,18 +79,7 @@ KlogFormatSplitInfo klog_format_split_strings(const char* const s_message) {
 }
 
 KlogString klog_format_time(void) {
-    const time_t now = time(NULL);
-    struct timeval tv;
-    if (gettimeofday(&tv, NULL)) {
-        kdprintf("Failure when invoking gettimeofday() for creation of filename\n");
-        exit(1);
-    }
-    const struct tm* const p_broken_down_now = localtime(&now);
-    const int32_t day = p_broken_down_now->tm_yday;
-    const int32_t hour = p_broken_down_now->tm_hour;
-    const int32_t minute = p_broken_down_now->tm_min;
-    const int32_t second = p_broken_down_now->tm_sec;
-    const uint32_t microsecond = tv.tv_usec;
+    const timepoint_t timepoint = klog_platform_get_current_timepoint();
 
     /* Time prefix: DDD.HH:MM:SS:SSSSSS  */
     /* Length: 00+  123456789            */
@@ -128,7 +87,7 @@ KlogString klog_format_time(void) {
     /*         20+                     0 */
     const uint32_t time_prefix_size = 19 + 1; /* +1 for null termination */
     char* const s_time = malloc(time_prefix_size);
-    sprintf(s_time, "%.3d:%.2d:%.2d:%.2d:%.6d", day, hour, minute, second, microsecond);
+    sprintf(s_time, "%.3d:%.2d:%.2d:%.2d:%.6d", timepoint.day_year, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond);
 
     KlogString packed_time = { time_prefix_size, s_time };
     return packed_time;
@@ -142,7 +101,7 @@ KlogString klog_format_source_location(const uint32_t filename_size_max, const c
     /* Initialize with spaces, so the filename is padded correctly */
     memset(s_formatted, ' ', total_size); 
 
-    char* const s_filename = basename((char*)s_filepath);
+    const char* const s_filename = klog_platform_get_basename(s_filepath);
     const uint32_t filename_size_original = strlen(s_filename);
 
     const uint32_t filename_size_copy = filename_size_max < filename_size_original ? filename_size_max : filename_size_original;

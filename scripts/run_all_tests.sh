@@ -100,7 +100,7 @@ done
 echo ""
 
 if [ "${#failed_commands[@]}" -eq 0 ]; then
-    echo "${FGGREEN}All tests pass!${NORMAL}"
+    echo "${FGGREEN}All tests behaved expectedly!${NORMAL}"
     exit 0
 fi
 

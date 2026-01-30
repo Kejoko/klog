@@ -88,12 +88,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
-- [ ] Pull out light platform layer
-    - [ ] Enforce that the version is at least c99
-- [ ] Make the KlogFormatSplitInto contain an array of KlogString
-- [ ] Clean up / organize / reorder klog_state
-- [ ] Move everything (name, level) within the handle?
-- [ ] Make sure we are consistent with klog includes after libc and std includes (even for implementations)
+- [ ] Enforce that the version is at least c99 (in the platform layer)
 
 ## Utility
 - [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure

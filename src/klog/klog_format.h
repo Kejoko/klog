@@ -4,10 +4,6 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-#ifdef  __linux__
-#include <unistd.h>
-#endif
-
 typedef struct {
     uint32_t length;
     const char* const s;
@@ -23,8 +19,6 @@ typedef struct {
     /* An array of lengths, so we know how long each of the format strings are */
     const uint32_t* const a_string_lengths;
 } KlogFormatSplitInfo;
-
-pid_t klog_format_get_current_thread_id(void);
 
 const char*         klog_format_input_message(const char* s_format, va_list args);
 KlogFormatSplitInfo klog_format_split_strings(const char* s_message);
