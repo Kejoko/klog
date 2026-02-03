@@ -9,7 +9,7 @@
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
 
-bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogStdoutInfo* const p_klog_init_stdout_info, const KlogFileInfo* const p_klog_init_file_info) {
+bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogConsoleInfo* const p_klog_console_info, const KlogFileInfo* const p_klog_file_info) {
     if (klog_is_initialized) {
         kdprintf("Trying to initialize klog, when it is already initialized\n");
         return false;
@@ -34,13 +34,13 @@ bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const 
         /* @todo kjk 2026/01/21 Validate async info */
     }
 
-    if (p_klog_init_file_info) {
+    if (p_klog_file_info) {
         /* @todo kjk 2026/01/21 Validate file info */
         /* Make sure filename prefix is valid */
     }
 
     /* @todo kjk 2026/01/21 This is currently unused */
-    (void)p_klog_init_stdout_info;
+    (void)p_klog_console_info;
 
     return true;
 }
@@ -148,8 +148,8 @@ char* klog_initialize_message_queue(const uint32_t message_queue_number_elements
     return b_message_queue;
 }
 
-FILE* klog_initialize_file(const KlogFileInfo* const p_klog_init_file_info) {
-    if (p_klog_init_file_info == NULL) {
+FILE* klog_initialize_file(const KlogFileInfo* const p_klog_file_info) {
+    if (p_klog_file_info == NULL) {
         kdprintf("Not initializing output file\n");
         return NULL;
     }
@@ -160,10 +160,10 @@ FILE* klog_initialize_file(const KlogFileInfo* const p_klog_init_file_info) {
     /* Extra chars                  : 00+     123456789                 */
     /*                                10+              0123456789       */
     /*                                20+                        012345 */
-    const uint32_t prefix_length = strlen(p_klog_init_file_info->s_filename_prefix);
+    const uint32_t prefix_length = strlen(p_klog_file_info->s_filename_prefix);
     const uint32_t full_filename_length = prefix_length + 25 + 1; /* +1 for null terminator */
     char* const full_filename = malloc(full_filename_length);
-    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_init_file_info->s_filename_prefix, timepoint.year, timepoint.month, timepoint.day_month, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond/1000);
+    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_file_info->s_filename_prefix, timepoint.year, timepoint.month, timepoint.day_month, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond/1000);
 
     FILE* const p_file = fopen(full_filename, "w");
     if (!p_file) {

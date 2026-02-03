@@ -22,7 +22,7 @@ typedef struct {
 typedef struct {
     uint8_t max_level;
     bool use_color;
-} KlogStdoutInfo;
+} KlogConsoleInfo;
 
 typedef struct {
     uint8_t max_level;
@@ -45,7 +45,7 @@ enum KlogLevel {
     KLOG_LEVEL_COUNT = 7
 };
 
-void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogStdoutInfo* p_klog_init_stdout_info, const KlogFileInfo* p_klog_init_file_info);
+void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogConsoleInfo* p_klog_console_info, const KlogFileInfo* p_klog_file_info);
 
 void klog_deinitialize(void);
 

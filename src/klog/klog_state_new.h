@@ -14,10 +14,10 @@
 #include "klog/klog.h"
 
 extern struct KlogConfig {
-    KlogFormatInfo format_info;
-    KlogAsyncInfo  async_info;
-    KlogStdoutInfo stdout_info;
-    KlogFileInfo   file_info;
+    KlogFormatInfo  format;
+    KlogAsyncInfo   async;
+    KlogConsoleInfo console;
+    KlogFileInfo    file;
 } g_klog_config;
 
 extern struct KlogState {
