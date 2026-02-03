@@ -11,72 +11,26 @@
 #include <stdint.h>
 #include <stdio.h>
 
-/* ================================================================================================================== */
-/* Klog globals                                                                                                       */
-/* ================================================================================================================== */
+#include "klog/klog.h"
 
-/* Set by the user -------------------------------------------------------------------------------------------------- */
+extern struct KlogConfig {
+    KlogFormatInfo  format;
+    KlogAsyncInfo   async;
+    KlogConsoleInfo console;
+    KlogFileInfo    file;
+} g_klog_config;
 
-/*  The maximum number of loggers allowed */
-extern uint32_t g_klog_max_number_loggers;
-
-// /* The maximum length allowed for a logger's name */
-// extern uint32_t g_klog_logger_name_max_length;
-// 
-// /* The number of backing logging threads we have */
-// extern uint32_t g_klog_number_backing_threads;
-// 
-// /* The number of messages in the message queue */
-// extern uint32_t g_klog_message_queue_number_elements;
-// 
-// /* Whether or not to print a timestamp */
-// extern bool     g_klog_print_timestamp;
-// 
-// /* Whether or not to print a thread id */
-// extern bool     g_klog_print_thread_id;
-// 
-// /* How the long the filename should be when printing source location. If 0, then source location is not printed */
-// extern uint32_t g_klog_source_location_filename_max_length;
-// 
-// /* The length of messages in the queue */
-// extern uint32_t g_klog_message_max_length;
-// 
-// /* The maximum verbosity for stdout */
-// extern uint32_t g_klog_stdout_level;
-// 
-// /* Whether or not to print color for stdout */
-// extern bool     g_klog_stdout_use_color;
-// 
-// /* The maximum verbosity for file */
-// extern uint32_t g_klog_file_level;
-
-/* The file we are outputting to */
-extern FILE*    gp_klog_file;
-
-/* Internal state --------------------------------------------------------------------------------------------------- */
-
-/* The current number of loggers which actually exist */
-extern uint32_t                 g_klog_current_number_loggers_created;
-
-/* The actual logger handles */
-extern struct KlogLoggerHandle* ga_klog_logger_handles;
-
-/* Array of logger names, non-null terminated */
-extern char*                    gp_klog_logger_names;
-
-/* Array of uint8_t for the current allowed level for each logger */
-extern uint8_t*                 ga_klog_logger_levels;
-
-/* Array of the logging levels stringified in a nicely printable format, all fixed width. Non-null terminated */
-extern char*                    gb_klog_level_strings;
-
-/* Array of the logging levels (with color) stringified in a nicely printable format, all fixed width. Non-null terminated */
-extern char*                    gb_klog_colored_level_strings;
-
-/* The queue of messages */
-extern char*                    gb_klog_message_queue;
-
-/* Whether or not klog has been initialized */
-extern bool                     g_klog_is_initialized;
+extern struct KlogState {
+    uint32_t                 number_loggers_max;
+    uint32_t                 number_loggers_created;
+    struct KlogLoggerHandle* a_logger_handles;
+    char*                    b_logger_names;
+    uint8_t*                 a_logger_levels;
+    char*                    b_level_strings;
+    char*                    b_level_strings_colored;
+    char*                    b_message_queue;
+    FILE*                    p_file;
+    bool                     is_initialized;
+} g_klog_state;
 
 #endif /* KLOG_STATE_INCLUDED */

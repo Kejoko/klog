@@ -88,7 +88,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
-- [ ] Clean up klog state
 
 ## Utility
 - [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure
@@ -108,12 +107,13 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Log to file but not to stdout works as expected
 - [ ] Log to stdout with colors
 - [ ] Log to stdout without colors
-- [ ] Formatting prefix strings correctly
+- [ ] Formatting prefix strings correctly (for all possible combinations)
 - [ ] With thread id
 - [ ] Without thread id
 - [ ] Source location string formatting
     - [ ] Longer filenames than allowed
     - [ ] Shorter filenames than allowed
+- [ ] Undefine and redefine KLOG_OFF and other macros before tests
 
 # Notes
 
