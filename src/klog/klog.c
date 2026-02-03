@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "./klog_state.h"
+#include "./klog_state_new.h"
 #include "./klog_constants.h"
 #include "./klog_handle.h"
 #include "./klog_platform.h"
@@ -16,24 +17,32 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
-void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogStdoutInfo* const p_klog_init_stdout_info, const KlogFileInfo* const p_klog_init_file_info) {
+void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogStdoutInfo* const p_klog_stdout_info, const KlogFileInfo* const p_klog_file_info) {
 #ifdef KLOG_OFF
     (void)max_number_loggers;
     (void)klog_format_info;
     (void)p_klog_async_info;
-    (void)p_klog_init_stdout_info;
-    (void)p_klog_init_file_info;
+    (void)p_klog_stdout_info;
+    (void)p_klog_file_info;
 #else
-    if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, klog_format_info, p_klog_async_info, p_klog_init_stdout_info, p_klog_init_file_info)) {
+    if (!klog_initialize_are_parameters_valid(g_klog_is_initialized, max_number_loggers, klog_format_info, p_klog_async_info, p_klog_stdout_info, p_klog_file_info)) {
         exit(1);
     }
 
-    /* @todo kjk 2026/01/21 Validate async parameters */
+    g_klog_config.format_info = klog_format_info;
+    if (p_klog_async_info) {
+        g_klog_config.async_info = *p_klog_async_info;
+    }
+    if (p_klog_stdout_info) {
+        g_klog_config.stdout_info = *p_klog_stdout_info;
+    }
+    if (p_klog_file_info) {
+        g_klog_config.file_info = *p_klog_file_info;
+    }
 
     g_klog_max_number_loggers = max_number_loggers;
-    g_klog_logger_name_max_length = klog_format_info.logger_name_max_length;
 
-    gp_klog_logger_names = klog_initialize_logger_names_buffer(g_klog_max_number_loggers, g_klog_logger_name_max_length);
+    gp_klog_logger_names = klog_initialize_logger_names_buffer(g_klog_max_number_loggers, g_klog_config.format_info.logger_name_max_length);
     kdprintf("gp_klog_logger_names: %p through %p\n", (void*)gp_klog_logger_names, (void*)(gp_klog_logger_names + (max_number_loggers * klog_format_info.logger_name_max_length)));
 
     ga_klog_logger_levels = klog_initialize_logger_levels_array(g_klog_max_number_loggers);
@@ -50,34 +59,16 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
     ga_klog_logger_handles = klog_initialize_logger_handle_array(g_klog_max_number_loggers);
     kdprintf("ga_klog_logger_handles: %p through %p\n", (void*)ga_klog_logger_handles, (void*)(ga_klog_logger_handles + (g_klog_max_number_loggers * sizeof(KlogLoggerHandle))));
 
-    g_klog_message_max_length = klog_format_info.message_max_length;
-
     /* @todo kjk 2025/12/30 If we have no backing threads, then the queue size is 1, because it doesn't make sense to have mutliple items in the queue when we are blocking anyways */
     /* @todo kjk 2025/12/20 Create threads */
-    g_klog_number_backing_threads = 0;
-    g_klog_message_queue_number_elements = 0;
     if (p_klog_async_info) {
-        g_klog_number_backing_threads = p_klog_async_info->number_backing_threads;
-
-        gb_klog_message_queue = klog_initialize_message_queue(g_klog_message_queue_number_elements, g_klog_message_max_length);
-        kdprintf("gb_klog_message_queue: %p through %p\n", (void*)gb_klog_message_queue, (void*)(gb_klog_message_queue + (g_klog_message_queue_number_elements * g_klog_message_max_length)));
+        gb_klog_message_queue = klog_initialize_message_queue(g_klog_config.async_info.message_queue_number_elements, g_klog_config.format_info.message_max_length);
+        kdprintf("gb_klog_message_queue: %p through %p\n", (void*)gb_klog_message_queue, (void*)(gb_klog_message_queue + (g_klog_config.async_info.message_queue_number_elements * g_klog_config.format_info.message_max_length)));
     }
 
-    if (p_klog_init_stdout_info) {
-        g_klog_stdout_level = p_klog_init_stdout_info->max_level;
-        g_klog_stdout_use_color = p_klog_init_stdout_info->use_color;
-    }
-
-    gp_klog_file = klog_initialize_file(p_klog_init_file_info);
+    gp_klog_file = klog_initialize_file(p_klog_file_info);
     kdprintf("gp_klog_file: %p\n", (void*)gp_klog_file);
-    if (p_klog_init_file_info) {
-        g_klog_file_level = p_klog_init_file_info->max_level;
-    }
-    kdprintf("File max verbosity: %d\n", g_klog_file_level);
-
-    g_klog_print_timestamp = klog_format_info.use_timestamp;
-    g_klog_print_thread_id = klog_format_info.use_thread_id;
-    g_klog_source_location_filename_max_length = klog_format_info.source_location_filename_max_length;
+    kdprintf("File max verbosity: %d\n", g_klog_config.file_info.max_level);
 
     g_klog_is_initialized = true;
 #endif
@@ -91,14 +82,9 @@ void klog_deinitialize(void) {
         exit(1);
     }
 
+    g_klog_config = (struct KlogConfig){ 0 };
+
     g_klog_max_number_loggers = 0;
-    g_klog_logger_name_max_length = 0;
-    g_klog_number_backing_threads = 0;
-    g_klog_message_queue_number_elements = 0;
-    g_klog_print_timestamp = false;
-    g_klog_print_thread_id = false;
-    g_klog_source_location_filename_max_length = 0;
-    g_klog_message_max_length = 0;
 
     g_klog_current_number_loggers_created = 0;
     free(ga_klog_logger_handles);
@@ -133,10 +119,10 @@ const KlogLoggerHandle* klog_logger_create(const char* const s_logger_name) {
 
     const uint32_t current_logger_index = g_klog_current_number_loggers_created;
 
-    const uint32_t logger_name_start_index = current_logger_index * g_klog_logger_name_max_length;
-    const uint32_t number_chars_to_copy = strlen(s_logger_name) >= g_klog_logger_name_max_length ?
-        g_klog_logger_name_max_length : /* copy as much as we can fit */
-        strlen(s_logger_name);            /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
+    const uint32_t logger_name_start_index = current_logger_index * g_klog_config.format_info.logger_name_max_length;
+    const uint32_t number_chars_to_copy = strlen(s_logger_name) >= g_klog_config.format_info.logger_name_max_length ?
+        g_klog_config.format_info.logger_name_max_length : /* copy as much as we can fit */
+        strlen(s_logger_name);                             /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
     memcpy(&gp_klog_logger_names[logger_name_start_index], s_logger_name, number_chars_to_copy);
 
     ga_klog_logger_levels[current_logger_index] = KLOG_LEVEL_OFF;
@@ -193,8 +179,8 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
     }
 
     /* We are getting the time first, so it's closest to the actual point of invocation */
-    const KlogString packed_time = g_klog_print_timestamp ? klog_format_time() : (KlogString){0, NULL};
-    const KlogString* const p_packed_time = g_klog_print_timestamp ? &packed_time : NULL;
+    const KlogString packed_time = g_klog_config.format_info.use_timestamp ? klog_format_time() : (KlogString){0, NULL};
+    const KlogString* const p_packed_time = g_klog_config.format_info.use_timestamp ? &packed_time : NULL;
 
     /* Create the input string with the arguments injected */
     va_list p_args;
@@ -207,28 +193,28 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
 
     /* Get the information to create the message header */
     const uint32_t thread_id = (uint32_t)klog_platform_get_current_thread_id();
-    const char* const s_logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_logger_name_max_length]);
+    const char* const s_logger_name = &(gp_klog_logger_names[p_logger_handle->value * g_klog_config.format_info.logger_name_max_length]);
     const char* const s_level = &(gb_klog_level_strings[G_klog_level_string_length * requested_level]);
     const char* const s_level_colored = &(gb_klog_colored_level_strings[G_klog_colored_level_string_length * requested_level]);
 
-    const uint32_t* const p_thread_id = g_klog_print_thread_id ? &thread_id : NULL;
-    const KlogString packed_name = {g_klog_logger_name_max_length, s_logger_name};
+    const uint32_t* const p_thread_id = g_klog_config.format_info.use_thread_id ? &thread_id : NULL;
+    const KlogString packed_name = {g_klog_config.format_info.logger_name_max_length, s_logger_name};
     const KlogString packed_level_color = {G_klog_colored_level_string_length, s_level_colored};
     const KlogString packed_level_file = {G_klog_level_string_length, s_level};
-    const KlogString* const p_packed_level_stdout = g_klog_stdout_use_color ? &packed_level_color : &packed_level_file;
+    const KlogString* const p_packed_level_stdout = g_klog_config.stdout_info.use_color ? &packed_level_color : &packed_level_file;
 
-    const KlogString packed_source_location = (g_klog_source_location_filename_max_length && s_filename) ?
-        klog_format_source_location(g_klog_source_location_filename_max_length, s_filename, line_number) :
+    const KlogString packed_source_location = (g_klog_config.format_info.source_location_filename_max_length && s_filename) ?
+        klog_format_source_location(g_klog_config.format_info.source_location_filename_max_length, s_filename, line_number) :
         (KlogString){0, NULL};
-    const KlogString* const p_packed_source_location = (g_klog_source_location_filename_max_length && s_filename) ? & packed_source_location : NULL;
+    const KlogString* const p_packed_source_location = (g_klog_config.format_info.source_location_filename_max_length && s_filename) ? & packed_source_location : NULL;
 
     for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
         const KlogString packed_message = {split_messages_info.a_string_lengths[i_message], split_messages_info.ls_strings[i_message]};
 
-        if (requested_level <= g_klog_stdout_level) {
+        if (requested_level <= g_klog_config.stdout_info.max_level) {
             klog_output_stdout(p_thread_id, p_packed_time, &packed_name, p_packed_level_stdout, p_packed_source_location, &packed_message);
         }
-        if (gp_klog_file && requested_level <= g_klog_file_level) {
+        if (gp_klog_file && requested_level <= g_klog_config.file_info.max_level) {
             klog_output_file(gp_klog_file, p_thread_id, p_packed_time, &packed_name, &packed_level_file, p_packed_source_location, &packed_message);
         }
     }
@@ -238,11 +224,11 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
     free(split_messages_info.ls_strings);
     free((uint32_t*)split_messages_info.a_string_lengths);
 
-    if (g_klog_print_timestamp) {
+    if (g_klog_config.format_info.use_timestamp) {
         free((char*)packed_time.s);
     }
 
-    if (g_klog_source_location_filename_max_length) {
+    if (g_klog_config.format_info.source_location_filename_max_length) {
         free((char*)packed_source_location.s);
     }
 #endif

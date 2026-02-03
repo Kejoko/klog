@@ -2,7 +2,7 @@
 
 ## Building
 
-Prerequisites are cmake and ninja, and a c compiler of your choice.
+Prerequisites are cmake and ninja, and a c compiler of your choice with the ability to compile c99 source.
 You also need valgrind if you wish to run all of the tests.
 
 1. create a build directory
@@ -15,7 +15,7 @@ You also need valgrind if you wish to run all of the tests.
 - `KLOG_DEBUG` for verbose debugging print information, for debugging Klog itself
 - `KLOG_BUILD_TESTS` to build Klog's tests
 - `KLOG_BUILD_EXAMPLES` to build Klog's examples
-- `KLOG_BUILD_SCRATCH` to build Klog's scratch executables (you should not use this)
+- `KLOG_BUILD_SCRATCH` to build Klog's scratch executables (you should not use this, these executables are for prototyping and exploring features)
 
 Example: `cmake .. -DCMAKE_BUILD_TYPE=Release -DKLOG_DEBUG=true -DKLOG_BUILD_TESTS=true -DKLOG_BUILD_EXAMPLES=true -DKLOG_BUILD_SCRATCH=true`
 
@@ -88,7 +88,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
-- [ ] Enforce that the version is at least c99 (in the platform layer)
+- [ ] Clean up klog state
 
 ## Utility
 - [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure

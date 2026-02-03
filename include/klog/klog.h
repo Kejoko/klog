@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct {
     uint8_t max_level;
-    const char* const s_filename_prefix;
+    const char* s_filename_prefix;
 } KlogFileInfo;
 
 /**

@@ -20,35 +20,35 @@
 /*  The maximum number of loggers allowed */
 extern uint32_t g_klog_max_number_loggers;
 
-/* The maximum length allowed for a logger's name */
-extern uint32_t g_klog_logger_name_max_length;
-
-/* The number of backing logging threads we have */
-extern uint32_t g_klog_number_backing_threads;
-
-/* The number of messages in the message queue */
-extern uint32_t g_klog_message_queue_number_elements;
-
-/* Whether or not to print a timestamp */
-extern bool     g_klog_print_timestamp;
-
-/* Whether or not to print a thread id */
-extern bool     g_klog_print_thread_id;
-
-/* How the long the filename should be when printing source location. If 0, then source location is not printed */
-extern uint32_t g_klog_source_location_filename_max_length;
-
-/* The length of messages in the queue */
-extern uint32_t g_klog_message_max_length;
-
-/* The maximum verbosity for stdout */
-extern uint32_t g_klog_stdout_level;
-
-/* Whether or not to print color for stdout */
-extern bool     g_klog_stdout_use_color;
-
-/* The maximum verbosity for file */
-extern uint32_t g_klog_file_level;
+// /* The maximum length allowed for a logger's name */
+// extern uint32_t g_klog_logger_name_max_length;
+// 
+// /* The number of backing logging threads we have */
+// extern uint32_t g_klog_number_backing_threads;
+// 
+// /* The number of messages in the message queue */
+// extern uint32_t g_klog_message_queue_number_elements;
+// 
+// /* Whether or not to print a timestamp */
+// extern bool     g_klog_print_timestamp;
+// 
+// /* Whether or not to print a thread id */
+// extern bool     g_klog_print_thread_id;
+// 
+// /* How the long the filename should be when printing source location. If 0, then source location is not printed */
+// extern uint32_t g_klog_source_location_filename_max_length;
+// 
+// /* The length of messages in the queue */
+// extern uint32_t g_klog_message_max_length;
+// 
+// /* The maximum verbosity for stdout */
+// extern uint32_t g_klog_stdout_level;
+// 
+// /* Whether or not to print color for stdout */
+// extern bool     g_klog_stdout_use_color;
+// 
+// /* The maximum verbosity for file */
+// extern uint32_t g_klog_file_level;
 
 /* The file we are outputting to */
 extern FILE*    gp_klog_file;

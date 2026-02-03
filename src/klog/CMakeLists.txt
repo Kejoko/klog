@@ -8,6 +8,8 @@ add_library(
     klog.c
     klog_state.h
     klog_state.c
+    klog_state_new.h
+    klog_state_new.c
     klog_constants.h
     klog_constants.c
     klog_handle.h
