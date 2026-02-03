@@ -1,6 +1,7 @@
 #include "klog/klog.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 /* This is testing klog with max loggers set to 4, and name length set to 6 */
 int main(void) {

@@ -82,7 +82,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Is everything as const as possible?
 
 # Planned Features
-
 - [ ] async logging, with number of backing threads determined by user (using the message queue for consumers/producers design)
 - [ ] windows support
 
@@ -90,8 +89,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 ## Source
 
 ## Utility
-- [ ] run_all_tests.sh script should be able to tell if something segfaulted, which does not count as a correct failure
-- [ ] run_all_tests.sh script should output failed commands on newlines
 - [ ] Ensure we are cmaking the package correctly
 
 ## Documentation
@@ -117,5 +114,3 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Notes
 
-- it'd be ideal if we can provide default arguments to the klog function which default to __FILE__ and __LINE__
-    - but I think those would evaluate in situ in the declaration instead of evaluating at the invocation

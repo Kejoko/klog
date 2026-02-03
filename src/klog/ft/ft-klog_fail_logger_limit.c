@@ -22,6 +22,9 @@ int main(void) {
     kdprintf("Logging with second logger\n");
     klog(handle_2, KLOG_LEVEL_TRACE, "What's up - trace level - second log statement");
 
+
+    /* This is where we should fail. We should not be able to create a third logger */
+
     const char* name_3 = "ABC";
     kdprintf("Creating third logger\n");
     const KlogLoggerHandle* handle_3 = klog_logger_create(name_3);

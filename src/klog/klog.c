@@ -211,7 +211,7 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
         const KlogString packed_message = {split_messages_info.a_string_lengths[i_message], split_messages_info.ls_strings[i_message]};
 
         if (requested_level <= g_klog_config.console.max_level) {
-            klog_output_stdout(p_thread_id, p_packed_time, &packed_name, p_packed_level_stdout, p_packed_source_location, &packed_message);
+            klog_output_console(p_thread_id, p_packed_time, &packed_name, p_packed_level_stdout, p_packed_source_location, &packed_message);
         }
         if (g_klog_state.p_file && requested_level <= g_klog_config.file.max_level) {
             klog_output_file(g_klog_state.p_file, p_thread_id, p_packed_time, &packed_name, &packed_level_file, p_packed_source_location, &packed_message);

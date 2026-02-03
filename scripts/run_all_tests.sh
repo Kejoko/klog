@@ -65,7 +65,7 @@ for test_command in "${all_tests_to_run[@]}"; do
     command_to_run="$test_command"
 
     if [[ ! " ${ignore_memory_list[*]} " =~ " ${test_name} " ]]; then
-        command_to_run="valgrind --tool=memcheck --leak-check=full --error-exitcode=54 $command_to_run"
+        command_to_run="valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all --error-exitcode=54 $command_to_run"
     fi
 
     $command_to_run > /dev/null 2>&1
@@ -75,10 +75,10 @@ for test_command in "${all_tests_to_run[@]}"; do
     if [[ " ${expected_failure_list[*]} " =~ " ${test_name} " ]]; then # If we should have failed
         if [ "$status" -eq 0 ]; then
             result_message=$P_EF
-            failed_commands+=$command_to_run
+            failed_commands+=( "$command_to_run" )
         elif [ "$status" -eq 54 ]; then
             result_message=$ME_EF
-            failed_commands+=$command_to_run
+            failed_commands+=( "$command_to_run" )
         else
             result_message=$F_EF
         fi
@@ -87,10 +87,10 @@ for test_command in "${all_tests_to_run[@]}"; do
             result_message=$P_EP
         elif [ "$status" -eq 54 ]; then
             result_message=$ME_EP
-            failed_commands+=$command_to_run
+            failed_commands+=( "$command_to_run" )
         else
             result_message=$F_EP
-            failed_commands+=$command_to_run
+            failed_commands+=( "$command_to_run" )
         fi
     fi
 
