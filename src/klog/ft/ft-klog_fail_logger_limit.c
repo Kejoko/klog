@@ -1,3 +1,7 @@
+/**
+ * @brief Ensure that the program exits if we try to create too many loggers
+ */
+
 #include "klog/klog.h"
 
 #include <stdio.h>

@@ -22,7 +22,7 @@ const char* klog_format_input_message(const char* const s_format, va_list p_args
 
     /* Actually create the input message, now that we know the length */
     char* const s_input_message = malloc(input_message_length);
-    
+
     /*  Format the input message with the unused copy of the args */
     vsnprintf(s_input_message, input_message_length, s_format, p_args_copy);
     va_end(p_args_copy);
@@ -95,11 +95,11 @@ KlogString klog_format_time(void) {
 
 KlogString klog_format_source_location(const uint32_t filename_size_max, const char* const s_filepath, const uint32_t line_number) {
     /* filename, +1 for colon, +4 for line_number, +1 for null terminator */
-    const uint32_t total_size = filename_size_max + 1 + 4 + 1; 
+    const uint32_t total_size = filename_size_max + 1 + 4 + 1;
     char* const s_formatted = malloc(total_size);
 
     /* Initialize with spaces, so the filename is padded correctly */
-    memset(s_formatted, ' ', total_size); 
+    memset(s_formatted, ' ', total_size);
 
     const char* const s_filename = klog_platform_get_basename(s_filepath);
     const uint32_t filename_size_original = strlen(s_filename);
@@ -109,7 +109,7 @@ KlogString klog_format_source_location(const uint32_t filename_size_max, const c
 
     /* Format the remainder after the filename has been populated */
     sprintf(s_formatted + filename_size_max, ":%4d", line_number);
-    
+
     const KlogString packed_source_location = { total_size, s_formatted };
 
     return packed_source_location;

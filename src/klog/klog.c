@@ -173,6 +173,11 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
         exit(1);
     }
 
+    if (requested_level == 0) {
+        kdprintf("Trying to log with the level set to OFF\n");
+        return;
+    }
+
     if (requested_level > g_klog_state.a_logger_levels[p_logger_handle->value]) {
         return;
     }

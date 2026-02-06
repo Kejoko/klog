@@ -31,7 +31,12 @@ if (KLOG_BUILD_TESTS)
     create_unit_test_plain(ut/ut-klog_format_split_strings.c klog)
     create_unit_test_plain(ut/ut-klog_initialize_parameters_are_valid.c klog)
     create_unit_test_plain(ut/ut-klog_initialize_level_strings_buffer.c klog)
+
     create_functional_test(ft/ft-klog_basic.c klog)
+    create_functional_test(ft/ft-klog_console.c klog)
+    create_functional_test(ft/ft-klog_file.c klog)
     create_functional_test(ft/ft-klog_fail_uninitialized.c klog EXPECT_FAILURE)
     create_functional_test(ft/ft-klog_fail_logger_limit.c klog EXPECT_FAILURE IGNORE_MEMORY)
+
+    # create_functional_test(ft/ft-klog_stress_st_sync.c klog)
 endif ()

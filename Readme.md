@@ -83,10 +83,25 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Planned Features
 - [ ] async logging, with number of backing threads determined by user (using the message queue for consumers/producers design)
+- [ ] console logger logs error and fatal logs to stderr
 - [ ] windows support
 
 # Tech Debt
 ## Source
+- [ ] Guard against newlines in logger names (convert them to spaces)
+- [ ] Introduce timing capabilities for our stress testing
+- [ ] Create performance/profiling subset of tests (pt)
+    - [ ] stress tests
+    - [ ] move the expansive file test to this (or make it smaller / log less things)
+- [ ] Preallocate buffers for the prefix
+- [ ] Preallocate buffers for the messages
+- [ ] Enforce the message max length
+- [ ] Enforce that the level cannot be a higher value than TRACE
+    - exit if we log at a higher level
+    - exit if we set the level to a higher level
+    - exit if we initialize with a higher level
+- [ ] Define klog exit code and exit with this
+    - enables user to discern that program exited due to klog issue
 
 ## Utility
 - [ ] Ensure we are cmaking the package correctly
@@ -99,18 +114,26 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Update all function names to adhere to correct formatting
 
 ## Tests to write
+- [ ] Setting level and logging works correctly
+    - set the level
+    - query the level
+    - log to tempfile with various levels, ensure file contents are correct
+    - working in conjunction with the max verbosity for the file and console configs
+- [ ] Message max length actually truncates the message
 - [ ] Lots of loggers and lots of log statements (hundreds and thousands)
-- [ ] Log to stdout but not to file works as expected
-- [ ] Log to file but not to stdout works as expected
-- [ ] Log to stdout with colors
-- [ ] Log to stdout without colors
+- [ ] With async backing threads, from single threaded application
+- [ ] With async backing threads, from multithreaded application
+- [ ] With NO async backing threads, from single threaded application
+- [ ] Stress tests for files too
 - [ ] Formatting prefix strings correctly (for all possible combinations)
+    - Output to tempfile, read the contents and ensure the prefixes look correct
 - [ ] With thread id
 - [ ] Without thread id
 - [ ] Source location string formatting
     - [ ] Longer filenames than allowed
     - [ ] Shorter filenames than allowed
 - [ ] Undefine and redefine KLOG_OFF and other macros before tests
+    - probably won't work because we can't change the definition inside of the already compiled source file
 
 # Notes
 

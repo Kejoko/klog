@@ -40,9 +40,6 @@ enum KlogLevel {
     KLOG_LEVEL_INFO  = 4,
     KLOG_LEVEL_DEBUG = 5,
     KLOG_LEVEL_TRACE = 6,
-
-    /* For ease of determining how many levels we have */
-    KLOG_LEVEL_COUNT = 7
 };
 
 void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogConsoleInfo* p_klog_console_info, const KlogFileInfo* p_klog_file_info);

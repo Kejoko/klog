@@ -7,9 +7,6 @@
 int validate(void) {
     char* b_level_strings = klog_initialize_level_strings_buffer();
 
-    // We are going to ensure the result is 0 before performing any additional validation.
-    // If result is not 0, then we know a previous check is an error, so we should not
-    // continue.
     int result = 0;
 
     if (!result && !b_level_strings) {

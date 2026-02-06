@@ -1,3 +1,7 @@
+/**
+ * @brief Ensure that the program exits if we try to do stuff without initializing klog
+ */
+
 #include "klog/klog.h"
 
 #include <stdio.h>

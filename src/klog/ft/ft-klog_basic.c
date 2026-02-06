@@ -1,3 +1,7 @@
+/**
+ * @brief Just a basic klog test. Testing nothing in particular, just general functionality
+ */
+
 #include "klog/klog.h"
 
 #include <stdio.h>
