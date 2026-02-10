@@ -32,10 +32,12 @@ bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const 
 
     if (p_klog_async_info) {
         /* @todo kjk 2026/01/21 Validate async info */
+        /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parmaeters_are_valid.c */
     }
 
     if (p_klog_file_info) {
         /* @todo kjk 2026/01/21 Validate file info */
+        /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parmaeters_are_valid.c */
         /* Make sure filename prefix is valid */
     }
 

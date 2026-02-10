@@ -125,10 +125,11 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] With async backing threads, from multithreaded application
 - [ ] With NO async backing threads, from single threaded application
 - [ ] Stress tests for files too
+- [ ] Ensure we are creating the filename correctly (sanitizing and whatnot)
 - [ ] Formatting prefix strings correctly (for all possible combinations)
     - Output to tempfile, read the contents and ensure the prefixes look correct
-- [ ] With thread id
-- [ ] Without thread id
+    - [ ] With thread id
+    - [ ] Without thread id
 - [ ] Source location string formatting
     - [ ] Longer filenames than allowed
     - [ ] Shorter filenames than allowed
