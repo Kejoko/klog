@@ -88,16 +88,14 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
-- [ ] format function for logger names
-    - Guard against newlines in logger names (convert them to spaces)
-    - To allow for testing
-- [ ] format function for filename prefix
-    - To allow for testing
 - [ ] format function for message prefix
     - To allow for testing
 - [ ] Preallocate buffers for the prefix
 - [ ] Preallocate buffers for the messages
-- [ ] Enforce the message max length
+    - How are we going to handle this with newlines creating multiple messages?
+        - As we iterate, populate the buffer, then consume? then populate, then consume?
+- [ ] Enforce the message max length when formatting the message
+    - Should this go into the split function?
 
 ## Utility
 - [ ] Ensure we are cmaking the package correctly
@@ -110,37 +108,29 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Document all preconditions
 - [ ] Be consistent with "string" and prefixes in names and order of words in names
     - Ex: "colored_level" vs "level_colored"
+    - filename vs file_name
 - [ ] Update all argument names to use prefixes and const correctly
 - [ ] Update all function names to adhere to correct formatting
 
-## Tests to write
-- [ ] Ensure that the program fails if we try to log with level greater than TRACE
-- [ ] Ensure formatting works as expected
+## Tests to write (in order of priority)
+- [ ] logger name formatting
+- [ ] filename prefix formatting
+- [ ] source location formatting
+- [ ] message prefix formatting
+    - color and non-colored level strings
+- [ ] actual message formatting
     - Format message using format specifiers ("%.3d", etc) and ensure the resulting message contains the correct values
     - Adherance to the maximum message length
+- [ ] Functional test for all formatting
+    - Ensure the final output is valid
     - Log to file and ensure line contains the correct message
+- [ ] Ensure formatting works as expected
 - [ ] More failing tests
-- [ ] Setting level and logging works correctly
-    - set the level
-    - query the level
-    - log to tempfile with various levels, ensure file contents are correct
-    - working in conjunction with the max verbosity for the file and console configs
-- [ ] Message max length actually truncates the message
-- [ ] Lots of loggers and lots of log statements (hundreds and thousands)
-- [ ] With async backing threads, from single threaded application
-- [ ] With async backing threads, from multithreaded application
-- [ ] With NO async backing threads, from single threaded application
-- [ ] Stress tests for files too
-- [ ] Ensure we are creating the filename correctly (sanitizing and whatnot)
-- [ ] Formatting prefix strings correctly (for all possible combinations)
-    - Output to tempfile, read the contents and ensure the prefixes look correct
-    - [ ] With thread id
-    - [ ] Without thread id
-- [ ] Source location string formatting
-    - [ ] Longer filenames than allowed
-    - [ ] Shorter filenames than allowed
-- [ ] Undefine and redefine KLOG_OFF and other macros before tests
-    - probably won't work because we can't change the definition inside of the already compiled source file
+- [ ] Performance test using lots of loggers and lots of log statements (hundreds and thousands)
+    - [ ] With async backing threads, from single threaded application
+    - [ ] With async backing threads, from multithreaded application
+    - [ ] With NO async backing threads, from single threaded application
+    - [ ] For console, and for file
 
 # Notes
 

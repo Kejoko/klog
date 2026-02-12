@@ -10,6 +10,48 @@
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
 
+const char* klog_format_logger_name(const char* const s_name) {
+    /**
+     * Perhaps we should be doing this in place but creating loggers is not where we will
+     * be saving on performance, so mallocing a copy is okay
+     */
+
+    const uint32_t length_name = strlen(s_name);
+    char* s_sanitized_name = malloc(length_name + 1); /* +1 for null termination */
+    
+    for (uint32_t i_input_char = 0; i_input_char < length_name; ++i_input_char) {
+        const char curr_char = s_name[i_input_char];
+        if (curr_char == '\n' || curr_char == '\t' || curr_char == ' ' || curr_char == '\r' || curr_char == '\0') {
+            s_sanitized_name[i_input_char] = '_';
+            continue;
+        }
+
+        s_sanitized_name[i_input_char] = curr_char;
+    }
+
+    s_sanitized_name[length_name] = '\0';
+
+    return s_sanitized_name;
+}
+
+const char* klog_format_file_name_prefix(const char* const s_name) {
+    /**
+     * Perhaps we should be doing this in place but creating the file only happens once so, oh well
+     */
+
+    /* @todo kjk 2026/02/12 Should we be doing anything to sanitize filepaths for windows vs linux? Convert "/" to "\\" and vice versa?? */
+
+    return klog_format_logger_name(s_name);
+}
+
+const char* klog_format_message_prefix(void) {
+    /* @todo kjk 2026/02/12 Inputs: thread id, formatted time, logger name, level, formatted source location  */
+
+    /* @todo kjk 2026/02/12 do this */
+
+    return NULL;
+}
+
 const char* klog_format_input_message(const char* const s_format, va_list p_args) {
     /* We need to make a copy of the args (for the second vsnprintf call) before we consume them with the first vsnprintf call */
     va_list p_args_copy;

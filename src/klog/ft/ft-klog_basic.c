@@ -11,10 +11,10 @@
 int main(void) {
     KlogFormatInfo format_info = {6, 100, 10, true, true};
     KlogConsoleInfo stdout_info = {KLOG_LEVEL_INFO, false};
-    KlogFileInfo file_info = {KLOG_LEVEL_TRACE, "BASICPREFIX"};
+    KlogFileInfo file_info = {KLOG_LEVEL_TRACE, "BASIC\tPREFIX"};
     klog_initialize(4, format_info, NULL, &stdout_info, &file_info);
 
-    const KlogLoggerHandle* handle_1 = klog_logger_create("MyLogger");
+    const KlogLoggerHandle* handle_1 = klog_logger_create("My Logger");
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");
     klog_logger_set_level(handle_1, KLOG_LEVEL_DEBUG);
     klog(handle_1, KLOG_LEVEL_TRACE, "This should also not appear");

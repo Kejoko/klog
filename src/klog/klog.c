@@ -118,11 +118,14 @@ const KlogLoggerHandle* klog_logger_create(const char* const s_logger_name) {
 
     const uint32_t current_logger_index = g_klog_state.number_loggers_created;
 
+    const char* const s_sanitized_name = klog_format_logger_name(s_logger_name);
+
     const uint32_t logger_name_start_index = current_logger_index * g_klog_config.format.logger_name_max_length;
-    const uint32_t number_chars_to_copy = strlen(s_logger_name) >= g_klog_config.format.logger_name_max_length ?
+    const uint32_t number_chars_to_copy = strlen(s_sanitized_name) >= g_klog_config.format.logger_name_max_length ?
         g_klog_config.format.logger_name_max_length : /* copy as much as we can fit */
-        strlen(s_logger_name);                             /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
-    memcpy(&g_klog_state.b_logger_names[logger_name_start_index], s_logger_name, number_chars_to_copy);
+        strlen(s_sanitized_name);                     /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
+    memcpy(&g_klog_state.b_logger_names[logger_name_start_index], s_sanitized_name, number_chars_to_copy);
+    free((char*)s_sanitized_name);
 
     g_klog_state.a_logger_levels[current_logger_index] = KLOG_LEVEL_OFF;
 

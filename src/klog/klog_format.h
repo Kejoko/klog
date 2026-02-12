@@ -20,6 +20,9 @@ typedef struct {
     const uint32_t* const a_string_lengths;
 } KlogFormatSplitInfo;
 
+const char*         klog_format_logger_name(const char* s_name);
+const char*         klog_format_file_name_prefix(const char* s_name);
+const char*         klog_format_message_prefix(void);
 const char*         klog_format_input_message(const char* s_format, va_list args);
 KlogFormatSplitInfo klog_format_split_strings(const char* s_message);
 KlogString          klog_format_time(void);

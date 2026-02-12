@@ -8,6 +8,7 @@
 #include "./klog_handle.h"
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
+#include "klog_format.h"
 
 bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogConsoleInfo* const p_klog_console_info, const KlogFileInfo* const p_klog_file_info) {
     if (klog_is_initialized) {
@@ -158,14 +159,16 @@ FILE* klog_initialize_file(const KlogFileInfo* const p_klog_file_info) {
 
     const timepoint_t timepoint = klog_platform_get_current_timepoint();
 
+    const char* const s_sanitized_prefix = klog_format_file_name_prefix(p_klog_file_info->s_filename_prefix);
+
     /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS_SSSS.log */
     /* Extra chars                  : 00+     123456789                 */
     /*                                10+              0123456789       */
     /*                                20+                        012345 */
-    const uint32_t prefix_length = strlen(p_klog_file_info->s_filename_prefix);
+    const uint32_t prefix_length = strlen(s_sanitized_prefix);
     const uint32_t full_filename_length = prefix_length + 25 + 1; /* +1 for null terminator */
     char* const full_filename = malloc(full_filename_length);
-    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", p_klog_file_info->s_filename_prefix, timepoint.year, timepoint.month, timepoint.day_month, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond/1000);
+    sprintf(full_filename, "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log", s_sanitized_prefix, timepoint.year, timepoint.month, timepoint.day_month, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond/1000);
 
     FILE* const p_file = fopen(full_filename, "w");
     if (!p_file) {
@@ -174,6 +177,7 @@ FILE* klog_initialize_file(const KlogFileInfo* const p_klog_file_info) {
     }
     kdprintf("Created output file pointer at %p\n", (void*)p_file);
 
+    free((char*)s_sanitized_prefix);
     free(full_filename);
     return p_file;
 }
