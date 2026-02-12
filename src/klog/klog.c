@@ -151,6 +151,11 @@ void klog_logger_set_level(const KlogLoggerHandle* const p_logger_handle, const 
         exit(KLOG_EXIT_CODE);
     }
 
+    if (updated_level > KLOG_LEVEL_TRACE) {
+        kdprintf("Trying to set level (%d) greater than trace (%d)\n", updated_level, KLOG_LEVEL_TRACE);
+        exit(KLOG_EXIT_CODE);
+    }
+
     g_klog_state.a_logger_levels[p_logger_handle->value] = updated_level;
 #endif
 }
@@ -170,6 +175,11 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
 
     if (p_logger_handle->value >= g_klog_state.number_loggers_created) {
         kdprintf("Trying to log with logger %d, when only %d loggers exist\n", p_logger_handle->value, g_klog_state.number_loggers_created);
+        exit(KLOG_EXIT_CODE);
+    }
+
+    if (requested_level > KLOG_LEVEL_TRACE) {
+        kdprintf("Trying to log with level (%d) greater than trace (%d)\n", requested_level, KLOG_LEVEL_TRACE);
         exit(KLOG_EXIT_CODE);
     }
 

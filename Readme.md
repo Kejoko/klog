@@ -95,18 +95,14 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
     - To allow for testing
 - [ ] format function for message prefix
     - To allow for testing
-- [ ] Introduce timing capabilities for our stress testing
 - [ ] Preallocate buffers for the prefix
 - [ ] Preallocate buffers for the messages
 - [ ] Enforce the message max length
-- [ ] Enforce that the level cannot be a higher value than TRACE
-    - exit if we log at a higher level
-    - exit if we set the level to a higher level
-    - exit if we initialize with a higher level
 
 ## Utility
 - [ ] Ensure we are cmaking the package correctly
 - [ ] Create performance/profiling subset of tests (pt)
+    - [ ] Introduce timing capabilities for our stress testing
     - [ ] stress tests
     - [ ] move the expansive file test to this (or make it smaller / log less things)
 
@@ -118,6 +114,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Update all function names to adhere to correct formatting
 
 ## Tests to write
+- [ ] Ensure that the program fails if we try to log with level greater than TRACE
 - [ ] Ensure formatting works as expected
     - Format message using format specifiers ("%.3d", etc) and ensure the resulting message contains the correct values
     - Adherance to the maximum message length
