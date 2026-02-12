@@ -170,7 +170,7 @@ FILE* klog_initialize_file(const KlogFileInfo* const p_klog_file_info) {
     FILE* const p_file = fopen(full_filename, "w");
     if (!p_file) {
         kdprintf("Failed to create log file at %s\n", full_filename);
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
     kdprintf("Created output file pointer at %p\n", (void*)p_file);
 

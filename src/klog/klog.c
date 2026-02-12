@@ -25,7 +25,7 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
     (void)p_klog_file_info;
 #else
     if (!klog_initialize_are_parameters_valid(g_klog_state.is_initialized, max_number_loggers, klog_format_info, p_klog_async_info, p_klog_console_info, p_klog_file_info)) {
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
 
     g_klog_config.format = klog_format_info;
@@ -78,7 +78,7 @@ void klog_deinitialize(void) {
 #else
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to de-initialize klog, when it is not yet initialized\n");
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
 
     g_klog_config = (struct KlogConfig){ 0 };
@@ -108,12 +108,12 @@ const KlogLoggerHandle* klog_logger_create(const char* const s_logger_name) {
 #else
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
 
     if (g_klog_state.number_loggers_created >= g_klog_state.number_loggers_max) {
         kdprintf("Trying to create klog logger, but klog only allows %d loggers\n", g_klog_state.number_loggers_max);
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
 
     const uint32_t current_logger_index = g_klog_state.number_loggers_created;
@@ -143,12 +143,12 @@ void klog_logger_set_level(const KlogLoggerHandle* const p_logger_handle, const 
 #else
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
 
     if (p_logger_handle->value >= g_klog_state.number_loggers_created) {
         kdprintf("Trying to set level for logger %d, when only %d loggers exist\n", p_logger_handle->value, g_klog_state.number_loggers_created);
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
 
     g_klog_state.a_logger_levels[p_logger_handle->value] = updated_level;
@@ -165,12 +165,12 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
 #else
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
 
     if (p_logger_handle->value >= g_klog_state.number_loggers_created) {
         kdprintf("Trying to log with logger %d, when only %d loggers exist\n", p_logger_handle->value, g_klog_state.number_loggers_created);
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
 
     if (requested_level == 0) {

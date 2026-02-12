@@ -88,11 +88,14 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
-- [ ] Guard against newlines in logger names (convert them to spaces)
+- [ ] format function for logger names
+    - Guard against newlines in logger names (convert them to spaces)
+    - To allow for testing
+- [ ] format function for filename prefix
+    - To allow for testing
+- [ ] format function for message prefix
+    - To allow for testing
 - [ ] Introduce timing capabilities for our stress testing
-- [ ] Create performance/profiling subset of tests (pt)
-    - [ ] stress tests
-    - [ ] move the expansive file test to this (or make it smaller / log less things)
 - [ ] Preallocate buffers for the prefix
 - [ ] Preallocate buffers for the messages
 - [ ] Enforce the message max length
@@ -100,11 +103,12 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
     - exit if we log at a higher level
     - exit if we set the level to a higher level
     - exit if we initialize with a higher level
-- [ ] Define klog exit code and exit with this
-    - enables user to discern that program exited due to klog issue
 
 ## Utility
 - [ ] Ensure we are cmaking the package correctly
+- [ ] Create performance/profiling subset of tests (pt)
+    - [ ] stress tests
+    - [ ] move the expansive file test to this (or make it smaller / log less things)
 
 ## Documentation
 - [ ] Document all preconditions
@@ -114,6 +118,11 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Update all function names to adhere to correct formatting
 
 ## Tests to write
+- [ ] Ensure formatting works as expected
+    - Format message using format specifiers ("%.3d", etc) and ensure the resulting message contains the correct values
+    - Adherance to the maximum message length
+    - Log to file and ensure line contains the correct message
+- [ ] More failing tests
 - [ ] Setting level and logging works correctly
     - set the level
     - query the level

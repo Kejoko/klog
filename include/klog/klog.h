@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define KLOG_EXIT_CODE 32
+
 typedef struct KlogLoggerHandle KlogLoggerHandle;
 
 typedef struct {

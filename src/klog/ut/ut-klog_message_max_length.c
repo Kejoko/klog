@@ -3,6 +3,8 @@
  *      - Ensure the message buffer is initialized correctly
  *      - Ensure that when we log, the message is truncated accordingly
  *          - Log to a tempfile, and ensure the lines are correct
+ * 
+ * @brief test the formatting function AND the output to a tempfile
  *
  * @brief This assumes that the prefixes are being created correctly
  */

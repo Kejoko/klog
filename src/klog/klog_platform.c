@@ -2,6 +2,8 @@
 
 #include <stdlib.h>
 
+#include "klog/klog.h"
+
 #include "./klog_debug_util.h"
 
 procid_t klog_platform_get_current_thread_id(void) {
@@ -17,7 +19,7 @@ timepoint_t klog_platform_get_current_timepoint(void) {
     struct timeval tv;
     if (gettimeofday(&tv, NULL)) {
         kdprintf("Failure when invoking gettimeofday()\n");
-        exit(1);
+        exit(KLOG_EXIT_CODE);
     }
     const struct tm* const p_tm = localtime(&now);
 
