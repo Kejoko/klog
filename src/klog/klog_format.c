@@ -21,7 +21,7 @@ const char* klog_format_logger_name(const char* const s_name) {
     
     for (uint32_t i_input_char = 0; i_input_char < length_name; ++i_input_char) {
         const char curr_char = s_name[i_input_char];
-        if (curr_char == '\n' || curr_char == '\t' || curr_char == ' ' || curr_char == '\r' || curr_char == '\0') {
+        if (curr_char == '\n' || curr_char == '\t' || curr_char == ' ' || curr_char == '\r' || curr_char == '\b' || curr_char == '\0') {
             s_sanitized_name[i_input_char] = '_';
             continue;
         }

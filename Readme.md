@@ -113,7 +113,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Update all function names to adhere to correct formatting
 
 ## Tests to write (in order of priority)
-- [ ] logger name formatting
 - [ ] filename prefix formatting
 - [ ] source location formatting
 - [ ] message prefix formatting
