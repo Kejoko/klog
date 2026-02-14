@@ -89,6 +89,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 # Tech Debt
 ## Source
 - [ ] Preallocate buffers for the prefix
+    - File and console get their own preallocated buffer for descripancy with color usage
 - [ ] Preallocate buffers for the messages
     - How are we going to handle this with newlines creating multiple messages?
         - As we iterate, populate the buffer, then consume? then populate, then consume?
@@ -112,17 +113,11 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 ## Tests to write (in order of priority)
 - [ ] filename prefix formatting
-- [ ] source location formatting
 - [ ] message prefix formatting
     - color and non-colored level strings
 - [ ] actual message formatting
     - Format message using format specifiers ("%.3d", etc) and ensure the resulting message contains the correct values
     - Adherance to the maximum message length
-- [ ] Functional test for all formatting
-    - Ensure the final output is valid
-    - Log to file and ensure line contains the correct message
-- [ ] Ensure formatting works as expected
-- [ ] More failing tests
 - [ ] Performance test using lots of loggers and lots of log statements (hundreds and thousands)
     - [ ] With async backing threads, from single threaded application
     - [ ] With async backing threads, from multithreaded application

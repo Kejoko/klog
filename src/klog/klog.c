@@ -208,7 +208,7 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
     /* Split the input string into multiple input strings based on the newlines */
     const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(s_input_message);
 
-    /* Get the information to create the message header */
+    /* Get the information to create the message prefix */
     const uint32_t thread_id = (uint32_t)klog_platform_get_current_thread_id();
     const char* const s_logger_name = &(g_klog_state.b_logger_names[p_logger_handle->value * g_klog_config.format.logger_name_max_length]);
     const char* const s_level = &(g_klog_state.b_level_strings[G_klog_level_string_length * requested_level]);
@@ -218,27 +218,30 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
     const KlogString packed_name = {g_klog_config.format.logger_name_max_length, s_logger_name};
     const KlogString packed_level_color = {G_klog_colored_level_string_length, s_level_colored};
     const KlogString packed_level_file = {G_klog_level_string_length, s_level};
-    const KlogString* const p_packed_level_stdout = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
+    const KlogString* const p_packed_level_console = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
 
     const KlogString packed_source_location = (g_klog_config.format.source_location_filename_max_length && s_filename) ?
         klog_format_source_location(g_klog_config.format.source_location_filename_max_length, s_filename, line_number) :
         (KlogString){0, NULL};
     const KlogString* const p_packed_source_location = (g_klog_config.format.source_location_filename_max_length && s_filename) ? & packed_source_location : NULL;
 
-    const KlogString packed_prefix = klog_format_message_prefix(p_thread_id, p_packed_time, &packed_name, p_packed_level_stdout, p_packed_source_location);
+    /* Actually create the prefixes. We create one for the file and one for the console in case the console is using color */
+    const KlogString packed_prefix_file = klog_format_message_prefix(p_thread_id, p_packed_time, &packed_name, &packed_level_file, p_packed_source_location);
+    const KlogString packed_prefix_console = klog_format_message_prefix(p_thread_id, p_packed_time, &packed_name, p_packed_level_console, p_packed_source_location);
 
+    /* Actually log the message */
     for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
         const KlogString packed_message = {split_messages_info.a_string_lengths[i_message], split_messages_info.ls_strings[i_message]};
-
         if (requested_level <= g_klog_config.console.max_level) {
-            klog_output_console(&packed_prefix, &packed_message);
+            klog_output_console(&packed_prefix_console, &packed_message);
         }
         if (g_klog_state.p_file && requested_level <= g_klog_config.file.max_level) {
-            klog_output_file(g_klog_state.p_file, &packed_prefix, &packed_message);
+            klog_output_file(g_klog_state.p_file, &packed_prefix_file, &packed_message);
         }
     }
 
-    free((char*)packed_prefix.s);
+    free((char*)packed_prefix_file.s);
+    free((char*)packed_prefix_console.s);
     free((char*)s_input_message);
 
     free(split_messages_info.ls_strings);

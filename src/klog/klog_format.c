@@ -189,6 +189,10 @@ KlogString klog_format_time(void) {
 }
 
 KlogString klog_format_source_location(const uint32_t filename_size_max, const char* const s_filepath, const uint32_t line_number) {
+    if (filename_size_max == 0) {
+        return (KlogString){0, NULL};
+    }
+
     /* filename, +1 for colon, +4 for line_number, +1 for null terminator */
     const uint32_t total_size = filename_size_max + 1 + 4 + 1;
     char* const s_formatted = malloc(total_size);
@@ -203,7 +207,8 @@ KlogString klog_format_source_location(const uint32_t filename_size_max, const c
     memcpy(s_formatted, s_filename, filename_size_copy);
 
     /* Format the remainder after the filename has been populated */
-    sprintf(s_formatted + filename_size_max, ":%4d", line_number);
+    const uint32_t line_number_adjusted = line_number <= 9999 ? line_number : 9999;
+    sprintf(s_formatted + filename_size_max, ":%4d", line_number_adjusted);
 
     const KlogString packed_source_location = { total_size, s_formatted };
 
