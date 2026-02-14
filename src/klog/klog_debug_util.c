@@ -6,7 +6,7 @@
 void kdprintf(const char* const s_format, ...) {
 #ifdef KLOG_DEBUG
     va_list p_args;
-    va_start(p_args, format);
+    va_start(p_args, s_format);
     vprintf(s_format, p_args);
     va_end(p_args);
 #else

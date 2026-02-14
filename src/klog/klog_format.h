@@ -22,7 +22,7 @@ typedef struct {
 
 const char*         klog_format_logger_name(const char* s_name);
 const char*         klog_format_file_name_prefix(const char* s_name);
-const char*         klog_format_message_prefix(void);
+KlogString          klog_format_message_prefix(const uint32_t* p_thread_id, const KlogString* p_time, const KlogString* p_name, const KlogString* p_level, const KlogString* p_source_location);
 const char*         klog_format_input_message(const char* s_format, va_list args);
 KlogFormatSplitInfo klog_format_split_strings(const char* s_message);
 KlogString          klog_format_time(void);

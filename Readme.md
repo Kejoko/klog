@@ -88,8 +88,6 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 
 # Tech Debt
 ## Source
-- [ ] format function for message prefix
-    - To allow for testing
 - [ ] Preallocate buffers for the prefix
 - [ ] Preallocate buffers for the messages
     - How are we going to handle this with newlines creating multiple messages?

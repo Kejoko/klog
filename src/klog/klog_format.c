@@ -1,11 +1,11 @@
 #include "./klog_format.h"
-#include "klog_platform.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
@@ -18,7 +18,7 @@ const char* klog_format_logger_name(const char* const s_name) {
 
     const uint32_t length_name = strlen(s_name);
     char* s_sanitized_name = malloc(length_name + 1); /* +1 for null termination */
-    
+
     for (uint32_t i_input_char = 0; i_input_char < length_name; ++i_input_char) {
         const char curr_char = s_name[i_input_char];
         if (curr_char == '\n' || curr_char == '\t' || curr_char == ' ' || curr_char == '\r' || curr_char == '\b' || curr_char == '\0') {
@@ -44,12 +44,65 @@ const char* klog_format_file_name_prefix(const char* const s_name) {
     return klog_format_logger_name(s_name);
 }
 
-const char* klog_format_message_prefix(void) {
-    /* @todo kjk 2026/02/12 Inputs: thread id, formatted time, logger name, level, formatted source location  */
+KlogString klog_format_message_prefix(const uint32_t* const p_thread_id, const KlogString* const p_time, const KlogString* const p_name, const KlogString* const p_level, const KlogString* const p_source_location) {
+    /*         "0062503 043:08:14:31:933041 [ABC   ] [debug] [ft-klog_ba:  35]" */
+    /*          |                           |        |       |                  */
+    /* 00+      12345678|                   |        |       |                  */
+    /* 00+              123456789           |        |       |                  */
+    /* 10+                       0123456789 |        |       |                  */
+    /* 20+                                 0|        |       |                  */
+    /* 00+                                  123456789|       |                  */
+    /* 00+                                           12345678|                  */
+    
+    /**
+     * @brief So in total we have 8[thread id and space] + (p_time.length)[timestamp and space] + (p_name.length+3)[logger name, brackets, space] + (p_level+3)[level name, brackets, space] + (p_source_location.length+7)[filepath, colon, 4 digit line number, brackets]
+     */
 
-    /* @todo kjk 2026/02/12 do this */
+    uint32_t size_total = 0;
+    if (p_thread_id) {
+        size_total = size_total + 8;
+    }
+    if (p_time) {
+        size_total = size_total + p_time->length;
+    }
+    if (p_name) {
+        size_total = size_total + p_name->length + 3;
+    }
+    if (p_level) {
+        size_total = size_total + p_level->length + 3;
+    }
+    if (p_source_location) {
+        size_total = size_total + p_source_location->length + 2;
+    }
+    char* s_prefix = malloc(size_total + 1); /* +1 for null termination */
+    memset(s_prefix, '!', size_total + 1);
 
-    return NULL;
+    uint32_t write_offset = 0;
+    if (p_thread_id) {
+        sprintf(&(s_prefix[write_offset]), "%.7d ", *p_thread_id);
+        write_offset = write_offset + 8;
+    }
+    if (p_time) {
+        sprintf(&(s_prefix[write_offset]), "%.*s ", p_time->length, p_time->s);
+        write_offset = write_offset + p_time->length;
+    }
+    if (p_name) {
+        sprintf(&(s_prefix[write_offset]), "[%.*s] ", p_name->length, p_name->s);
+        write_offset = write_offset + p_name->length + 3;
+    }
+    if (p_level) {
+        sprintf(&(s_prefix[write_offset]), "[%.*s] ", p_level->length, p_level->s);
+        write_offset = write_offset + p_level->length + 3;
+    }
+    if (p_source_location) {
+        sprintf(&(s_prefix[write_offset]), "[%.*s]", p_source_location->length, p_source_location->s);
+        write_offset = write_offset + p_source_location->length + 2;
+    }
+
+    /* Set the final byte to the null terminator */
+    s_prefix[size_total] = '\0';
+
+    return (KlogString){size_total, s_prefix};
 }
 
 const char* klog_format_input_message(const char* const s_format, va_list p_args) {
