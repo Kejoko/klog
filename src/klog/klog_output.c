@@ -6,7 +6,7 @@
 
 void klog_output_console(const KlogString* const p_prefix, const KlogString* const p_message) {
     if (p_prefix) {
-        printf("%.*s ", p_prefix->length, p_prefix->s);
+        printf("%.*s", p_prefix->length, p_prefix->s);
     }
     if (p_message) {
         printf("%.*s", p_message->length, p_message->s);
@@ -16,7 +16,7 @@ void klog_output_console(const KlogString* const p_prefix, const KlogString* con
 
 void klog_output_file(FILE* const p_file, const KlogString* const p_prefix, const KlogString* const p_message) {
     if (p_prefix) {
-        fprintf(p_file, "%.*s ", p_prefix->length, p_prefix->s);
+        fprintf(p_file, "%.*s", p_prefix->length, p_prefix->s);
     }
     if (p_message) {
         fprintf(p_file, "%.*s", p_message->length, p_message->s);

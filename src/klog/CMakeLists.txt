@@ -28,7 +28,6 @@ target_compile_options(klog PUBLIC ${GNEISS_CMAKE_C_FLAGS})
 target_compile_definitions(klog PUBLIC ${GNEISS_COMPILE_DEFINITIONS})
 
 if (KLOG_BUILD_TESTS)
-    create_unit_test_plain(ut/ut-klog_format_filename_prefix.c klog)
     create_unit_test_plain(ut/ut-klog_format_logger_name.c klog)
     create_unit_test_plain(ut/ut-klog_format_prefix.c klog)
     create_unit_test_plain(ut/ut-klog_format_source_location.c klog)

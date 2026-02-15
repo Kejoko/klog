@@ -55,25 +55,35 @@ KlogString klog_format_message_prefix(const uint32_t* const p_thread_id, const K
     /* 00+                                           12345678|                  */
     
     /**
-     * @brief So in total we have 8[thread id and space] + (p_time.length)[timestamp and space] + (p_name.length+3)[logger name, brackets, space] + (p_level+3)[level name, brackets, space] + (p_source_location.length+7)[filepath, colon, 4 digit line number, brackets]
+     * @brief So in total we have:
+     *      8[thread id and space] +
+     *      (p_time.length)[timestamp and space] +
+     *      (p_name.length+3)[logger name, brackets, space] +
+     *      (p_level+3)[level name, brackets, space] +
+     *      (p_source_location.length+3)[source location, brackets, space]
      */
 
     uint32_t size_total = 0;
     if (p_thread_id) {
         size_total = size_total + 8;
     }
-    if (p_time) {
-        size_total = size_total + p_time->length;
+    if (p_time && p_time->length) {
+        size_total = size_total + p_time->length + 1;
     }
-    if (p_name) {
+    if (p_name && p_name->length) {
         size_total = size_total + p_name->length + 3;
     }
-    if (p_level) {
+    if (p_level && p_level->length) {
         size_total = size_total + p_level->length + 3;
     }
-    if (p_source_location) {
-        size_total = size_total + p_source_location->length + 2;
+    if (p_source_location && p_source_location->length) {
+        size_total = size_total + p_source_location->length + 3;
     }
+
+    if (size_total == 0) {
+        return (KlogString){0, NULL};
+    }
+
     char* s_prefix = malloc(size_total + 1); /* +1 for null termination */
     memset(s_prefix, '!', size_total + 1);
 
@@ -82,21 +92,21 @@ KlogString klog_format_message_prefix(const uint32_t* const p_thread_id, const K
         sprintf(&(s_prefix[write_offset]), "%.7d ", *p_thread_id);
         write_offset = write_offset + 8;
     }
-    if (p_time) {
+    if (p_time && p_time->length) {
         sprintf(&(s_prefix[write_offset]), "%.*s ", p_time->length, p_time->s);
-        write_offset = write_offset + p_time->length;
+        write_offset = write_offset + p_time->length + 1;
     }
-    if (p_name) {
+    if (p_name && p_name->length) {
         sprintf(&(s_prefix[write_offset]), "[%.*s] ", p_name->length, p_name->s);
         write_offset = write_offset + p_name->length + 3;
     }
-    if (p_level) {
+    if (p_level && p_level->length) {
         sprintf(&(s_prefix[write_offset]), "[%.*s] ", p_level->length, p_level->s);
         write_offset = write_offset + p_level->length + 3;
     }
-    if (p_source_location) {
-        sprintf(&(s_prefix[write_offset]), "[%.*s]", p_source_location->length, p_source_location->s);
-        write_offset = write_offset + p_source_location->length + 2;
+    if (p_source_location && p_source_location->length) {
+        sprintf(&(s_prefix[write_offset]), "[%.*s] ", p_source_location->length, p_source_location->s);
+        write_offset = write_offset + p_source_location->length + 3;
     }
 
     /* Set the final byte to the null terminator */
@@ -179,7 +189,6 @@ KlogString klog_format_time(void) {
     /* Time prefix: DDD.HH:MM:SS:SSSSSS  */
     /* Length: 00+  123456789            */
     /*         10+           0123456789  */
-    /*         20+                     0 */
     const uint32_t time_prefix_size = 19 + 1; /* +1 for null termination */
     char* const s_time = malloc(time_prefix_size);
     sprintf(s_time, "%.3d:%.2d:%.2d:%.2d:%.6d", timepoint.day_year, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond);
