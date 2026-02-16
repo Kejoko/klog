@@ -8,7 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../klog_state.h"
+#include "../klog_constants.h"
 #include "../klog_format.h"
+#include "klog/klog.h"
 
 int none(void) {
     KlogString result = klog_format_message_prefix(NULL, NULL, NULL, NULL, NULL);
@@ -404,6 +407,60 @@ int shortened_strings(void) {
 }
 
 int nominal_parameters(void) {
+    const uint32_t thread_id = 0xBEEF;
+
+    const KlogString packed_time = klog_format_time();
+
+    const char* const s_logger_name = "boo_yah "; /* Because we are not using klog_logger_create, this name will not be sanitized */
+    const KlogString packed_name = {8, s_logger_name};
+    
+    const char* const s_level = "FATALERRORWARN info debugtrace";
+    const KlogString packed_level = {5, s_level};
+
+    const char* s_filename = "WEEWEE YA!";
+    const uint32_t line_number = 0x4269; /* greater than 9999 */
+    const KlogString packed_source_location = klog_format_source_location(15, s_filename, line_number);
+
+    KlogString result = klog_format_message_prefix(&thread_id, &packed_time, &packed_name, &packed_level, &packed_source_location);
+
+    const uint32_t length_expected = 8 + (packed_time.length + 1) + (packed_name.length + 3) + (packed_level.length + 3) + (packed_source_location.length + 3);
+
+    if (result.length != length_expected) {
+        printf("Resulting KlogString's length is %d but should be %d\n", result.length, length_expected);
+        return 1;
+    }
+
+    if (result.s == NULL) {
+        printf("Resulting KlogString's string should not be NULL\n");
+        return 1;
+    }
+
+    const char* s_expected = "0048879 ddd:hh:mm:ss:uuuuuu [boo_yah ] [FATAL] [WEEWEE YA!     :9999] ";
+    /*                        |       |                   |          |       |                       */
+    /* length 00+             123456789                   |          |       |                       */
+    /*        10+                      0123456789         |          |       |                       */
+    /*        20+                                0123456789          |       |                       */
+    /*        30+                                          0123456789|       |                       */
+    /*        40+                                                    0123456789                     */
+    /*        50+                                                              0123456789           */
+    /*        60+                                                                        0123456789 */
+
+    const int comparison_thread_id = strncmp(result.s, s_expected, 8);
+    if (comparison_thread_id != 0) {
+        printf("Thread id strncmp result (%d) shows that resulting string contains \"%.*s\" instead of \"%.*s\"\n", comparison_thread_id, 8, result.s, 8, s_expected);
+        return 1;
+    }
+
+    const int comparison_remainder = strcmp(result.s + 29, s_expected + 29);
+    if (comparison_remainder != 0) {
+        printf("Remainder strcmp result (%d) shows that resulting string contains \"%s\" instead of \"%s\"\n", comparison_remainder, result.s + 29, s_expected + 29);
+        return 1;
+    }
+
+    free((char*)packed_time.s);
+    free((char*)packed_source_location.s);
+    free((char*)result.s);
+
     return 0;
 }
 

@@ -112,8 +112,7 @@ The `run_all_tests.sh` script is the preferred way to run tests, because in addi
 - [ ] Update all function names to adhere to correct formatting
 
 ## Tests to write (in order of priority)
-- [ ] message prefix formatting
-    - color and non-colored level strings
+- [ ] message prefix formatting using nominal values (get values from correct locations and functions, the same way we do in klog_log function)
 - [ ] actual message formatting
     - Format message using format specifiers ("%.3d", etc) and ensure the resulting message contains the correct values
     - Adherance to the maximum message length

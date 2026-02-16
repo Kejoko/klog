@@ -9,7 +9,7 @@
 #include "../klog_format.h"
 
 int perform_checks(KlogString* const p_result, const uint32_t length_provided, const char* s_filename_provided, const uint32_t line_provided) {
-    const uint32_t length_expected = length_provided + 1 + 4 + 1; /* colon, 4 digit line number, null terminator */
+    const uint32_t length_expected = length_provided + 1 + 4; /* colon, 4 digit line number */
 
     if (p_result->length != length_expected) {
         printf("Resulting KlogString (\"%s\") length is actually %d instead of expected %d\n", p_result->s, p_result->length, length_expected);
@@ -53,6 +53,12 @@ int perform_checks(KlogString* const p_result, const uint32_t length_provided, c
     }
     if ((result_line != line_provided) && (line_provided <= 9999)) {
         printf("Resulting line is %d instead of %d\n", result_line, line_provided);
+        return 1;
+    }
+
+    const char final_character = p_result->s[length_expected];
+    if (final_character != '\0') {
+        printf("Resulting KlogString's final character (index %d, reported length + 1) should be null terminator, but instead it is '%c'\n", length_expected, final_character);
         return 1;
     }
 

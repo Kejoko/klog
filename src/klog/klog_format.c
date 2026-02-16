@@ -186,13 +186,14 @@ KlogFormatSplitInfo klog_format_split_strings(const char* const s_message) {
 KlogString klog_format_time(void) {
     const timepoint_t timepoint = klog_platform_get_current_timepoint();
 
-    /* Time prefix: DDD.HH:MM:SS:SSSSSS  */
-    /* Length: 00+  123456789            */
-    /*         10+           0123456789  */
-    const uint32_t time_prefix_size = 19 + 1; /* +1 for null termination */
-    char* const s_time = malloc(time_prefix_size);
+    /* Time prefix: DDD:HH:MM:SS:SSSSSS */
+    /* Length: 00+  123456789           */
+    /*         10+           0123456789 */
+    const uint32_t time_prefix_size = 19;
+    char* const s_time = malloc(time_prefix_size + 1); /* +1 for null termination */
     sprintf(s_time, "%.3d:%.2d:%.2d:%.2d:%.6d", timepoint.day_year, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond);
 
+    /* We do not report the null terminator in our length */
     KlogString packed_time = { time_prefix_size, s_time };
     return packed_time;
 }
@@ -202,9 +203,9 @@ KlogString klog_format_source_location(const uint32_t filename_size_max, const c
         return (KlogString){0, NULL};
     }
 
-    /* filename, +1 for colon, +4 for line_number, +1 for null terminator */
-    const uint32_t total_size = filename_size_max + 1 + 4 + 1;
-    char* const s_formatted = malloc(total_size);
+    /* filename, +1 for colon, +4 for line_number */
+    const uint32_t total_size = filename_size_max + 1 + 4;
+    char* const s_formatted = malloc(total_size + 1); /* +1 for null terminator */
 
     /* Initialize with spaces, so the filename is padded correctly */
     memset(s_formatted, ' ', total_size);
@@ -219,6 +220,7 @@ KlogString klog_format_source_location(const uint32_t filename_size_max, const c
     const uint32_t line_number_adjusted = line_number <= 9999 ? line_number : 9999;
     sprintf(s_formatted + filename_size_max, ":%4d", line_number_adjusted);
 
+    /* We are not reporting the null terminator in our length */
     const KlogString packed_source_location = { total_size, s_formatted };
 
     return packed_source_location;
