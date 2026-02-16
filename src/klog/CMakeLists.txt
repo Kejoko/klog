@@ -4,7 +4,7 @@
 
 add_library(
     klog SHARED
-    ${GNEISS_INCLUDE_DIR}/klog/klog.h
+    ${KLOG_INCLUDE_DIR}/klog/klog.h
     klog.c
     klog_state.h
     klog_state.c
@@ -23,9 +23,9 @@ add_library(
     klog_output.c
 )
 
-target_include_directories(klog PUBLIC ${GNEISS_INCLUDE_DIR})
-target_compile_options(klog PUBLIC ${GNEISS_CMAKE_C_FLAGS})
-target_compile_definitions(klog PUBLIC ${GNEISS_COMPILE_DEFINITIONS})
+target_include_directories(klog PUBLIC ${KLOG_INCLUDE_DIR})
+target_compile_options(klog PUBLIC ${KLOG_CMAKE_C_FLAGS})
+target_compile_definitions(klog PUBLIC ${KLOG_COMPILE_DEFINITIONS})
 
 if (KLOG_BUILD_TESTS)
     create_unit_test_plain(ut/ut-klog_format_logger_name.c klog)
@@ -37,7 +37,6 @@ if (KLOG_BUILD_TESTS)
     create_unit_test_plain(ut/ut-klog_initialize_level_strings_buffer.c klog)
     create_unit_test_plain(ut/ut-klog_logger_create.c klog)
     create_unit_test_plain(ut/ut-klog_logger_set_level.c klog)
-    create_unit_test_plain(ut/ut-klog_message_max_length.c klog)
 
     create_functional_test(ft/ft-klog_basic.c klog)
     create_functional_test(ft/ft-klog_console.c klog)

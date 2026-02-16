@@ -46,9 +46,9 @@ function(create_test main_file runtime_output_directory)
     get_filename_component(test_name ${main_file} NAME_WE)
     add_executable(${test_name} ${main_file})
 
-    target_compile_definitions(${test_name} PRIVATE ${GNEISS_COMPILE_DEFINITIONS})
-    target_compile_options(${test_name} PRIVATE ${GNEISS_CMAKE_C_FLAGS})
-    target_include_directories(${test_name} PRIVATE ${GNEISS_INCLUDE_DIR})
+    target_compile_definitions(${test_name} PRIVATE ${KLOG_COMPILE_DEFINITIONS})
+    target_compile_options(${test_name} PRIVATE ${KLOG_CMAKE_C_FLAGS})
+    target_include_directories(${test_name} PRIVATE ${KLOG_INCLUDE_DIR})
 
     set(expect_failure FALSE)
     set(ignore_memory FALSE)
