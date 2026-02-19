@@ -1,15 +1,21 @@
 # =========================================================================== #
-# Gneiss                                                                      #
+# Klog                                                                      #
 # =========================================================================== #
 
-set(PROJECT_NAME "Gneiss")
+set(PROJECT_NAME "Klog")
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include(GneissVersion)
+
+include(KlogVersion)
 
 cmake_minimum_required(VERSION 3.20)
 
-project(${PROJECT_NAME} VERSION ${GNEISS_MAJOR_VERSION}.${GNEISS_MINOR_VERSION}.${GNEISS_PATCH_VERSION} LANGUAGES C)
+project(${PROJECT_NAME} VERSION ${KLOG_VERSION_MAJOR}.${KLOG_VERSION_MINOR}.${KLOG_VERSION_PATCH} LANGUAGES C)
+
+include(CTest)
+enable_testing()
+
+include(CreateTest)
 
 # =========================================================================== #
 # Project config                                                              #
@@ -37,39 +43,59 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 message(STATUS "C Compiler Path: ${CMAKE_C_COMPILER}")
 message(STATUS "C Compiler Version: ${CMAKE_C_COMPILER_VERSION}")
 
-set(GNEISS_CMAKE_C_DESIRED_WARNING_FLAGS -Wall -Wextra -Werror -Wpedantic)
+set(KLOG_CMAKE_C_DESIRED_WARNING_FLAGS -Wall -Wextra -Werror -Wpedantic)
 
-set(GNEISS_CMAKE_C_FLAGS ${CMAKE_C_FLAGS} ${GNEISS_CMAKE_C_DESIRED_WARNING_FLAGS})
+set(KLOG_CMAKE_C_FLAGS ${CMAKE_C_FLAGS} ${KLOG_CMAKE_C_DESIRED_WARNING_FLAGS})
 
 message(STATUS "C flags:")
 foreach(COMPILE_FLAG ${CMAKE_C_FLAGS})
     message(STATUS "    ${COMPILE_FLAG}")
 endforeach()
 
-message(STATUS "Gneiss specific C flags:")
-foreach(COMPILE_FLAG ${GNEISS_CMAKE_C_FLAGS})
+message(STATUS "Klog specific C flags:")
+foreach(COMPILE_FLAG ${KLOG_CMAKE_C_FLAGS})
     message(STATUS "    ${COMPILE_FLAG}")
+endforeach()
+
+# =========================================================================== #
+# Preprocessor Directives                                                     #
+# =========================================================================== #
+
+list(
+    APPEND KLOG_COMPILE_DEFINITIONS
+    KLOG_VERSION
+    KLOG_VERSION_MAJOR=${KLOG_VERSION_MAJOR}
+    KLOG_VERSION_MINOR=${KLOG_VERSION_MINOR}
+    KLOG_VERSION_PATCH=${KLOG_VERSION_PATCH}
+)
+
+if (KLOG_DEBUG)
+    list(APPEND KLOG_COMPILE_DEFINITIONS KLOG_DEBUG)
+endif ()
+
+if (KLOG_OFF)
+    list(APPEND KLOG_COMPILE_DEFINITIONS KLOG_OFF)
+endif ()
+
+message(STATUS "Klog specific compile definitions:")
+foreach(COMPILE_DEFINITION ${KLOG_COMPILE_DEFINITIONS})
+    message(STATUS "    ${COMPILE_DEFINITION}")
 endforeach()
 
 # =========================================================================== #
 # Source                                                                      #
 # =========================================================================== #
 
-set(GNEISS_ROOT_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
-set(GNEISS_INCLUDE_DIRS ${GNEISS_ROOT_SOURCE_DIR})
+set(KLOG_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src")
+set(KLOG_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 
-add_subdirectory("${GNEISS_ROOT_SOURCE_DIR}/klog")
+add_subdirectory("${KLOG_SOURCE_DIR}/klog")
 
 # =========================================================================== #
-# Test                                                                        #
+# Tests                                                                       #
 # =========================================================================== #
 
-include(CTest)
-enable_testing()
-
-set(GNEISS_TEST_DIR "${PROJECT_SOURCE_DIR}/test")
-add_subdirectory("${GNEISS_TEST_DIR}/unit")
-add_subdirectory("${GNEISS_TEST_DIR}/scratch")
+add_subdirectory("${PROJECT_SOURCE_DIR}/scratch")
 
 # =========================================================================== #
 # Examples                                                                    #
