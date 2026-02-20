@@ -2,6 +2,7 @@
 #define KLOG_FORMAT_INCLUDED
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct {
@@ -19,6 +20,8 @@ typedef struct {
     /* An array of lengths, so we know how long each of the format strings are */
     const uint32_t* const a_string_lengths;
 } KlogFormatSplitInfo;
+
+uint32_t klog_format_prefix_length_get(const bool use_thread_id, const bool use_timestamp, const uint32_t logger_name_max_length, const bool use_color, const uint32_t source_location_filename_max_length);
 
 const char*         klog_format_logger_name(const char* s_name);
 const char*         klog_format_file_name_prefix(const char* s_name);

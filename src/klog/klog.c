@@ -41,7 +41,7 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
 
     g_klog_state.number_loggers_max = max_number_loggers;
 
-    g_klog_state.b_logger_names = klog_initialize_logger_names_buffer(g_klog_state.number_loggers_max, g_klog_config.format.logger_name_max_length);
+    g_klog_state.b_logger_names = klog_initialize_buffer(g_klog_state.number_loggers_max, g_klog_config.format.logger_name_max_length, ' ', false);
     kdprintf("b_logger_names: %p through %p\n", (void*)g_klog_state.b_logger_names, (void*)(g_klog_state.b_logger_names + (max_number_loggers * klog_format_info.logger_name_max_length)));
 
     g_klog_state.a_logger_levels = klog_initialize_logger_levels_array(g_klog_state.number_loggers_max);
@@ -58,12 +58,21 @@ void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klo
     g_klog_state.a_logger_handles = klog_initialize_logger_handle_array(g_klog_state.number_loggers_max);
     kdprintf("a_logger_handles: %p through %p\n", (void*)g_klog_state.a_logger_handles, (void*)(g_klog_state.a_logger_handles + (g_klog_state.number_loggers_max * sizeof(KlogLoggerHandle))));
 
-    /* @todo kjk 2025/12/30 If we have no backing threads, then the queue size is 1, because it doesn't make sense to have mutliple items in the queue when we are blocking anyways */
-    /* @todo kjk 2025/12/20 Create threads */
+    g_klog_state.prefix_file_size = klog_format_prefix_length_get(g_klog_config.format.use_thread_id, g_klog_config.format.use_timestamp, g_klog_config.format.logger_name_max_length, false, g_klog_config.format.source_location_filename_max_length);
+    g_klog_state.prefix_console_size = klog_format_prefix_length_get(g_klog_config.format.use_thread_id, g_klog_config.format.use_timestamp, g_klog_config.format.logger_name_max_length, g_klog_config.console.use_color, g_klog_config.format.source_location_filename_max_length);
+    g_klog_state.prefix_element_index = 0;
     if (p_klog_async_info) {
-        g_klog_state.b_message_queue = klog_initialize_message_queue(g_klog_config.async.message_queue_number_elements, g_klog_config.format.message_max_length);
-        kdprintf("b_message_queue: %p through %p\n", (void*)g_klog_state.b_message_queue, (void*)(g_klog_state.b_message_queue + (g_klog_config.async.message_queue_number_elements * g_klog_config.format.message_max_length)));
+        g_klog_state.prefix_element_count = p_klog_async_info->message_queue_number_elements;
+        g_klog_state.message_element_count = p_klog_async_info->message_queue_number_elements;
+    } else {
+        g_klog_state.prefix_element_count = 1;
+        g_klog_state.prefix_console_size = 1;
+        g_klog_config.async.message_queue_number_elements = 1;
     }
+    g_klog_state.b_prefixes_file = klog_initialize_buffer(g_klog_config.async.message_queue_number_elements, g_klog_state.prefix_file_size, '\0', true);
+    g_klog_state.b_prefixes_console = klog_initialize_buffer(g_klog_config.async.message_queue_number_elements, g_klog_state.prefix_console_size, '\0', true);
+    g_klog_state.b_messages = klog_initialize_buffer(g_klog_config.async.message_queue_number_elements, g_klog_config.format.message_max_length, '\0', true);
+    kdprintf("b_messages: %p through %p\n", (void*)g_klog_state.b_messages, (void*)(g_klog_state.b_messages + (g_klog_config.async.message_queue_number_elements * g_klog_config.format.message_max_length)));
 
     g_klog_state.p_file = klog_initialize_file(p_klog_file_info);
     kdprintf("p_file: %p\n", (void*)g_klog_state.p_file);
@@ -84,17 +93,37 @@ void klog_deinitialize(void) {
     g_klog_config = (struct KlogConfig){ 0 };
 
     g_klog_state.number_loggers_max = 0;
-
     g_klog_state.number_loggers_created = 0;
+
     free(g_klog_state.a_logger_handles);
+    g_klog_state.a_logger_handles = NULL;
     free(g_klog_state.b_logger_names);
+    g_klog_state.b_logger_names = NULL;
     free(g_klog_state.a_logger_levels);
+    g_klog_state.a_logger_levels = NULL;
+
     free(g_klog_state.b_level_strings);
+    g_klog_state.b_level_strings = NULL;
     free(g_klog_state.b_level_strings_colored);
-    free(g_klog_state.b_message_queue);
+    g_klog_state.b_level_strings_colored = NULL;
+
+    g_klog_state.prefix_element_index = 0;
+    g_klog_state.prefix_element_count = 0;
+    g_klog_state.prefix_file_size = 0;
+    free(g_klog_state.b_prefixes_file);
+    g_klog_state.b_prefixes_file = NULL;
+    g_klog_state.prefix_console_size = 0;
+    free(g_klog_state.b_prefixes_console);
+    g_klog_state.b_prefixes_console = NULL;
+
+    g_klog_state.message_element_index = 0;
+    g_klog_state.message_element_count = 0;
+    free(g_klog_state.b_messages);
+    g_klog_state.b_messages = NULL;
 
     if (g_klog_state.p_file) {
         fclose(g_klog_state.p_file);
+        g_klog_state.p_file = NULL;
     }
 
     g_klog_state.is_initialized = false;
