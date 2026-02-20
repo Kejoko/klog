@@ -7,8 +7,30 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "./klog_constants.h"
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
+
+uint32_t klog_format_prefix_length_get(const bool use_thread_id, const bool use_timestamp, const uint32_t logger_name_max_length, const bool use_color, const uint32_t source_location_filename_max_length) {
+    uint32_t total = 0;
+
+    if (use_thread_id) {
+        total += 7 + 1; /* 7 digit id + space */
+    }
+    if (use_timestamp) {
+        total += 19 + 1; /* 19 digit timestamp + space */
+    }
+    total += logger_name_max_length + 2 + 1; /* logger name + brackets + space */
+    total += G_klog_level_string_length + 2 + 1; /* level + brackets + space */
+    if (use_color) {
+        total += 4;
+    }
+    if (source_location_filename_max_length > 0) {
+        total += source_location_filename_max_length + 2 + 1 + 4 + 1; /* filename + brackets + colon + line + space */
+    }
+
+    return total;
+}
 
 const char* klog_format_logger_name(const char* const s_name) {
     /**
@@ -45,14 +67,14 @@ const char* klog_format_file_name_prefix(const char* const s_name) {
 }
 
 KlogString klog_format_message_prefix(const uint32_t* const p_thread_id, const KlogString* const p_time, const KlogString* const p_name, const KlogString* const p_level, const KlogString* const p_source_location) {
-    /*         "0062503 043:08:14:31:933041 [ABC   ] [debug] [ft-klog_ba:  35]" */
-    /*          |                           |        |       |                  */
-    /* 00+      12345678|                   |        |       |                  */
-    /* 00+              123456789           |        |       |                  */
-    /* 10+                       0123456789 |        |       |                  */
-    /* 20+                                 0|        |       |                  */
-    /* 00+                                  123456789|       |                  */
-    /* 00+                                           12345678|                  */
+    /*         "0062503 043:08:14:31:933041 [ABC   ] [debug] [ft-klog_ba:  35] " */
+    /*          |                           |        |       |                   */
+    /* 00+      12345678|                   |        |       |                   */
+    /* 00+              123456789           |        |       |                   */
+    /* 10+                       0123456789 |        |       |                   */
+    /* 20+                                 0|        |       |                   */
+    /* 00+                                  123456789|       |                   */
+    /* 00+                                           12345678|                   */
     
     /**
      * @brief So in total we have:
