@@ -38,6 +38,7 @@ if (KLOG_BUILD_TESTS)
     create_unit_test_plain(ut/ut-klog_initialize_level_strings_buffer.c klog)
     create_unit_test_plain(ut/ut-klog_logger_create.c klog)
     create_unit_test_plain(ut/ut-klog_logger_set_level.c klog)
+    create_unit_test_plain(ut/ut-klog_prefix_buffer_usage.c klog)
 
     create_functional_test(ft/ft-klog_basic.c klog)
     create_functional_test(ft/ft-klog_console.c klog)

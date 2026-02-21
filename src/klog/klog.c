@@ -220,6 +220,10 @@ void klog_log(const KlogLoggerHandle* const p_logger_handle, const enum KlogLeve
         kdprintf("Trying to log with the level set to OFF\n");
         return;
     }
+    if ((requested_level > g_klog_config.console.max_level) && (requested_level > g_klog_config.file.max_level)) {
+        kdprintf("Trying to log with a level that neither console nor file accept\n");
+        return;
+    }
 
     if (requested_level > g_klog_state.a_logger_levels[p_logger_handle->value]) {
         kdprintf("Trying to log with a level more verbose than is possible\n");
