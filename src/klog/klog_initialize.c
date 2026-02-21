@@ -25,7 +25,10 @@ char* klog_initialize_buffer(const uint32_t number_elements, const uint32_t elem
     kdprintf("Created buffer\n");
     kdprintf("  start: %p\n", (void*)b_buffer);
     kdprintf("  end  : %p\n", (void*)(b_buffer + total_size));
-    kdprintf("  size : %d\n", total_size);
+    kdprintf("  total size : %d\n", total_size);
+    kdprintf("  num elements: %d\n", number_elements);
+    kdprintf("  element max length: %d\n", element_length_max);
+    kdprintf("  null terminated elements: %b\n", null_terminate);
     
     return b_buffer;
 }

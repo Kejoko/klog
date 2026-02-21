@@ -23,7 +23,7 @@ uint32_t klog_format_prefix_length_get(const bool use_thread_id, const bool use_
     total += logger_name_max_length + 2 + 1; /* logger name + brackets + space */
     total += G_klog_level_string_length + 2 + 1; /* level + brackets + space */
     if (use_color) {
-        total += 4;
+        total += 9;
     }
     if (source_location_filename_max_length > 0) {
         total += source_location_filename_max_length + 2 + 1 + 4 + 1; /* filename + brackets + colon + line + space */
@@ -66,7 +66,7 @@ const char* klog_format_file_name_prefix(const char* const s_name) {
     return klog_format_logger_name(s_name);
 }
 
-KlogString klog_format_message_prefix(const uint32_t* const p_thread_id, const KlogString* const p_time, const KlogString* const p_name, const KlogString* const p_level, const KlogString* const p_source_location) {
+KlogString klog_format_message_prefix(char* s_prefix, const uint32_t* const p_thread_id, const KlogString* const p_time, const KlogString* const p_name, const KlogString* const p_level, const KlogString* const p_source_location) {
     /*         "0062503 043:08:14:31:933041 [ABC   ] [debug] [ft-klog_ba:  35] " */
     /*          |                           |        |       |                   */
     /* 00+      12345678|                   |        |       |                   */
@@ -84,6 +84,9 @@ KlogString klog_format_message_prefix(const uint32_t* const p_thread_id, const K
      *      (p_level+3)[level name, brackets, space] +
      *      (p_source_location.length+3)[source location, brackets, space]
      */
+
+    /* @todo should we use our prefix_length_get function here? */
+    /* @todo should we memset to 0 at the front here instead of the end of klog_log? */
 
     uint32_t size_total = 0;
     if (p_thread_id) {
@@ -103,11 +106,8 @@ KlogString klog_format_message_prefix(const uint32_t* const p_thread_id, const K
     }
 
     if (size_total == 0) {
-        return (KlogString){0, NULL};
+        return (KlogString){0, s_prefix};
     }
-
-    char* s_prefix = malloc(size_total + 1); /* +1 for null termination */
-    memset(s_prefix, '!', size_total + 1);
 
     uint32_t write_offset = 0;
     if (p_thread_id) {

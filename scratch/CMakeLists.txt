@@ -5,6 +5,7 @@
 include(CreateScratchExecutable)
 
 if (KLOG_BUILD_SCRATCH)
+    create_scratch_executable(ansi_exploration.c)
     create_scratch_executable(array_exploration.c)
     create_scratch_executable(color_exploration.c)
     create_scratch_executable(macro_exploration.c)
