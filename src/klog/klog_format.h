@@ -28,7 +28,7 @@ const char*         klog_format_file_name_prefix(const char* s_name);
 KlogString          klog_format_message_prefix(char* b_prefix, const uint32_t* p_thread_id, const KlogString* p_time, const KlogString* p_name, const KlogString* p_level, const KlogString* p_source_location);
 const char*         klog_format_input_message(const char* s_format, va_list args);
 KlogFormatSplitInfo klog_format_split_strings(const char* s_message);
-KlogString          klog_format_time(void);
+KlogString          klog_format_time(char* b_time);
 KlogString          klog_format_source_location(const uint32_t filename_size_max, const char* s_filepath, const uint32_t line_number);
 
 #endif /* KLOG_FORMAT_INCLUDED */

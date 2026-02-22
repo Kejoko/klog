@@ -18,7 +18,7 @@ uint32_t klog_format_prefix_length_get(const bool use_thread_id, const bool use_
         total += 7 + 1; /* 7 digit id + space */
     }
     if (use_timestamp) {
-        total += 19 + 1; /* 19 digit timestamp + space */
+        total += G_klog_time_string_length + 1; /* 19 digit timestamp + space */
     }
     total += logger_name_max_length + 2 + 1; /* logger name + brackets + space */
     total += G_klog_level_string_length + 2 + 1; /* level + brackets + space */
@@ -205,18 +205,15 @@ KlogFormatSplitInfo klog_format_split_strings(const char* const s_message) {
     return result;
 }
 
-KlogString klog_format_time(void) {
+KlogString klog_format_time(char* b_time) {
     const timepoint_t timepoint = klog_platform_get_current_timepoint();
 
     /* Time prefix: DDD:HH:MM:SS:SSSSSS */
     /* Length: 00+  123456789           */
     /*         10+           0123456789 */
-    const uint32_t time_prefix_size = 19;
-    char* const s_time = malloc(time_prefix_size + 1); /* +1 for null termination */
-    sprintf(s_time, "%.3d:%.2d:%.2d:%.2d:%.6d", timepoint.day_year, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond);
+    sprintf(b_time, "%.3d:%.2d:%.2d:%.2d:%.6d", timepoint.day_year, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond);
 
-    /* We do not report the null terminator in our length */
-    KlogString packed_time = { time_prefix_size, s_time };
+    KlogString packed_time = { G_klog_time_string_length, b_time };
     return packed_time;
 }
 

@@ -38,14 +38,18 @@ extern struct KlogState {
     char*                    b_level_strings_colored;
 
     uint32_t                 prefix_element_index;
-    uint32_t                 prefix_element_count; /* @todo Is this duplicating state? Maybe not because we alter it from what user gives in some cases */
+    uint32_t                 prefix_element_count;
     uint32_t                 prefix_file_size;
     char*                    b_prefixes_file;
     uint32_t                 prefix_console_size;
     char*                    b_prefixes_console;
+    uint32_t                 prefix_time_size;
+    char*                    b_prefixes_time;
+    uint32_t                 prefix_source_location_size;
+    char*                    b_prefixes_source_location;
 
     uint32_t                 message_element_index;
-    uint32_t                 message_element_count; /* @todo Is this duplicating state? Maybe not because we alter it from what user gives in some cases */
+    uint32_t                 message_element_count;
     char*                    b_messages;
 
     FILE*                    p_file;

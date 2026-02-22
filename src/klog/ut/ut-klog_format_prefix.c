@@ -505,7 +505,8 @@ int shortened_strings(void) {
 int nominal_parameters(void) {
     const uint32_t thread_id = 0xBEEF;
 
-    const KlogString packed_time = klog_format_time();
+    char* b_time = malloc(G_klog_time_string_length + 1);
+    const KlogString packed_time = klog_format_time(b_time);
 
     const char* const s_logger_name = "boo_yah "; /* Because we are not using klog_logger_create, this name will not be sanitized */
     const KlogString packed_name = {8, s_logger_name};
