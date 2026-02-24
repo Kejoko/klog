@@ -13,8 +13,97 @@
 #include "../klog_format.h"
 #include "klog/klog.h"
 
+int length_0(void) {
+    const char* s = "[hello] [fatal] ";
+    /*  00+          123456789          */
+    /*  10+                   0123456   */
+    const uint32_t expected = strlen(s);
+
+    const uint32_t actual = klog_format_prefix_length_get(false, false, 5, false, 0);
+
+    if (actual != expected) {
+        printf("Prefix length for \"%s\" should be %d, got %d\n", s, expected, actual);
+        return 1;
+    }
+
+    return 0;
+}
+
+int length_color(void) {
+    const char* s = "[hello12345] [\x1b[36mdebug\x1b[0m] ";
+    /*  00+          123456789                              */
+    /*  10+                   012345    6789                */
+    /*  20+                                 01234    5678   */
+    const uint32_t expected = strlen(s);
+
+    const uint32_t actual = klog_format_prefix_length_get(false, false, 10, true, 0);
+
+    if (actual != expected) {
+        printf("Prefix length for \"%s\" should be %d, got %d\n", s, expected, actual);
+        return 1;
+    }
+
+    return 0;
+}
+
+int length_source_location(void) {
+    const char* s = "[hel] [\x1b[33mWARN \x1b[0m] [aaaaBBBBccccDDDD:9999] ";
+    const uint32_t expected = strlen(s);
+
+    const uint32_t actual = klog_format_prefix_length_get(false, false, 3, true, 16);
+
+    if (actual != expected) {
+        printf("Prefix length for \"%s\" should be %d, got %d\n", s, expected, actual);
+        return 1;
+    }
+
+    return 0;
+}
+
+int length_timestamp(void) {
+    const char* s = "ddd:hh:mm:ss:uuuuuu [123456789] [debug] [aaaabbbb:9999] ";
+    const uint32_t expected = strlen(s);
+
+    const uint32_t actual = klog_format_prefix_length_get(false, true, 9, false, 8);
+
+    if (actual != expected) {
+        printf("prefix length for \"%s\" should be %d, got %d\n", s, expected, actual);
+        return 1;
+    }
+
+    return 0;
+}
+
+int length_thread_id(void) {
+    const char* s = "1234567 ddd:hh:mm:ss:uuuuuu [123456789] [warn ] ";
+    const uint32_t expected = strlen(s);
+
+    const uint32_t actual = klog_format_prefix_length_get(true, true, 9, false, 0);
+
+    if (actual != expected) {
+        printf("prefix length for \"%s\" should be %d, got %d\n", s, expected, actual);
+        return 1;
+    }
+
+    return 0;
+}
+
+int length_all(void) {
+    const char* s = "1234567 ddd:hh:mm:ss:uuuuuu [logger] [\x1b[31mERROR\x1b[0m] [12345  :   1] ";
+    const uint32_t expected = strlen(s);
+
+    const uint32_t actual = klog_format_prefix_length_get(true, true, 6, true, 7);
+
+    if (actual != expected) {
+        printf("prefix length for \"%s\" should be %d, got %d\n", s, expected, actual);
+        return 1;
+    }
+
+    return 0;
+}
+
 int none(void) {
-    KlogString result = klog_format_message_prefix(NULL, NULL, NULL, NULL, NULL);
+    KlogString result = klog_format_message_prefix(NULL, NULL, NULL, NULL, NULL, NULL);
 
     if (result.length != 0) {
         printf("Resulting KlogString's length should be 0 when nothing is given to the prefix\n");
@@ -42,7 +131,7 @@ int empty_strings(void) {
     const char* s_source_location = "googoo";
     KlogString packed_source_location = {0, s_source_location};
 
-    KlogString result = klog_format_message_prefix(NULL, &packed_time, &packed_name, &packed_level, &packed_source_location);
+    KlogString result = klog_format_message_prefix(NULL, NULL, &packed_time, &packed_name, &packed_level, &packed_source_location);
 
     if (result.length != 0) {
         printf("Resulting KlogString's length should be 0 when nothing is given to the prefix\n");
@@ -60,7 +149,9 @@ int empty_strings(void) {
 int just_thread_id(void) {
     const uint32_t length_expected = 8;
     const uint32_t thread_id = 1234;
-    KlogString result = klog_format_message_prefix(&thread_id, NULL, NULL, NULL, NULL);
+
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, &thread_id, NULL, NULL, NULL, NULL);
 
     if (result.length != length_expected) { printf("Resulting KlogString's length is %d but should be %d when only the thread id is provided\n", result.length, length_expected);
         return 1;
@@ -87,9 +178,10 @@ int just_time(void) {
     const uint32_t length_provided = 10;
     const char* s_provided = "0123456789";
     KlogString packed_time = {length_provided, s_provided};
-    KlogString result = klog_format_message_prefix(NULL, &packed_time, NULL, NULL, NULL);
-
+    
     const uint32_t length_expected = length_provided + 1;
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, NULL, &packed_time, NULL, NULL, NULL);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d due to only the time string being provided length\n", result.length, length_expected);
@@ -117,9 +209,10 @@ int just_name(void) {
     const uint32_t length_provided = 6;
     const char* s_provided = "LOGGER";
     KlogString packed_name = {length_provided, s_provided};
-    KlogString result = klog_format_message_prefix(NULL, NULL, &packed_name, NULL, NULL);
 
     const uint32_t length_expected = length_provided + 3;
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, NULL, NULL, &packed_name, NULL, NULL);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d due to only the logger name string being provided\n", result.length, length_expected);
@@ -147,9 +240,10 @@ int just_level(void) {
     const uint32_t length_provided = 20;
     const char* s_provided = "AAAAbbbbCCCCdddd    ";
     KlogString packed_level = {length_provided, s_provided};
-    KlogString result = klog_format_message_prefix(NULL, NULL, NULL, &packed_level, NULL);
 
     const uint32_t length_expected = length_provided + 3;
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, NULL, NULL, NULL, &packed_level, NULL);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d due to only the level string being provided\n", result.length, length_expected);
@@ -177,9 +271,11 @@ int just_source_location(void) {
     const uint32_t length_provided = 3;
     const char* s_provided = "X:2";
     KlogString packed_source_location = {length_provided, s_provided};
-    KlogString result = klog_format_message_prefix(NULL, NULL, NULL, NULL, &packed_source_location);
-
+    
     const uint32_t length_expected = length_provided + 3;
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, NULL, NULL, NULL, NULL, &packed_source_location);
+
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d due to only the source location being provided\n", result.length, length_expected);
@@ -214,9 +310,9 @@ int subset_1(void) {
     const char* s_name = " HOHO xD Rawr ";
     KlogString packed_name = {name_length_provided, s_name};
 
-    KlogString result = klog_format_message_prefix(&thread_id, &packed_time, &packed_name, NULL, NULL);
-
     const uint32_t length_expected = 8 + (time_length_provided + 1) + (name_length_provided + 3);
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, &thread_id, &packed_time, &packed_name, NULL, NULL);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d\n", result.length, length_expected);
@@ -253,9 +349,9 @@ int subset_2(void) {
     const char* s_level = "UP!";
     KlogString packed_level = {level_length_provided, s_level};
 
-    KlogString result = klog_format_message_prefix(NULL, &packed_time, &packed_name, &packed_level, NULL);
-
     const uint32_t length_expected = (time_length_provided + 1) + (name_length_provided + 3) + (level_length_provided + 3);
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, NULL, &packed_time, &packed_name, &packed_level, NULL);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d\n", result.length, length_expected);
@@ -292,9 +388,9 @@ int subset_3(void) {
     const char* s_source_location = "  hehehe  ";
     KlogString packed_source_location = {source_location_length_provided, s_source_location};
 
-    KlogString result = klog_format_message_prefix(NULL, NULL, &packed_name, &packed_level, &packed_source_location);
-
     const uint32_t length_expected = (name_length_provided + 3) + (level_length_provided + 3) + (source_location_length_provided + 3);
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, NULL, NULL, &packed_name, &packed_level, &packed_source_location);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d\n", result.length, length_expected);
@@ -337,9 +433,9 @@ int everything(void) {
     const char* s_source_location = "googoo";
     KlogString packed_source_location = {source_location_length_provided, s_source_location};
 
-    KlogString result = klog_format_message_prefix(&thread_id, &packed_time, &packed_name, &packed_level, &packed_source_location);
-
     const uint32_t length_expected = 8 + (time_length_provided + 1) + (name_length_provided + 3) + (level_length_provided + 3) + (source_location_length_provided + 3);
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, &thread_id, &packed_time, &packed_name, &packed_level, &packed_source_location);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d\n", result.length, length_expected);
@@ -380,9 +476,9 @@ int shortened_strings(void) {
     const char* s_source_location = "googoo";
     KlogString packed_source_location = {source_location_length_provided, s_source_location};
 
-    KlogString result = klog_format_message_prefix(NULL, &packed_time, &packed_name, &packed_level, &packed_source_location);
-
     const uint32_t length_expected = (time_length_provided + 1) + (name_length_provided + 3) + (level_length_provided + 3) + (source_location_length_provided + 3);
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, NULL, &packed_time, &packed_name, &packed_level, &packed_source_location);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d\n", result.length, length_expected);
@@ -409,7 +505,8 @@ int shortened_strings(void) {
 int nominal_parameters(void) {
     const uint32_t thread_id = 0xBEEF;
 
-    const KlogString packed_time = klog_format_time();
+    char* b_time = malloc(G_klog_time_string_length + 1);
+    const KlogString packed_time = klog_format_time(b_time);
 
     const char* const s_logger_name = "boo_yah "; /* Because we are not using klog_logger_create, this name will not be sanitized */
     const KlogString packed_name = {8, s_logger_name};
@@ -419,11 +516,12 @@ int nominal_parameters(void) {
 
     const char* s_filename = "WEEWEE YA!";
     const uint32_t line_number = 0x4269; /* greater than 9999 */
-    const KlogString packed_source_location = klog_format_source_location(15, s_filename, line_number);
-
-    KlogString result = klog_format_message_prefix(&thread_id, &packed_time, &packed_name, &packed_level, &packed_source_location);
+    char* b_source_location = malloc(21);
+    const KlogString packed_source_location = klog_format_source_location(b_source_location, 15, s_filename, line_number);
 
     const uint32_t length_expected = 8 + (packed_time.length + 1) + (packed_name.length + 3) + (packed_level.length + 3) + (packed_source_location.length + 3);
+    char* s = malloc(length_expected + 1);
+    KlogString result = klog_format_message_prefix(s, &thread_id, &packed_time, &packed_name, &packed_level, &packed_source_location);
 
     if (result.length != length_expected) {
         printf("Resulting KlogString's length is %d but should be %d\n", result.length, length_expected);
@@ -470,6 +568,12 @@ int noop(void) {
 
 int main(void) {
     return
+        length_0() ||
+        length_color() ||
+        length_source_location() ||
+        length_timestamp() ||
+        length_thread_id() ||
+        length_all() ||
         none() ||
         empty_strings() ||
         just_thread_id() ||

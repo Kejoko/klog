@@ -12,7 +12,7 @@ function(create_scratch_executable main_file)
 
     set(link_libraries ${ARGN})
 
-    # target_link_libraries(${executable_name} PRIVATE ${link_libraries} UTIL_Logger)
+    target_link_libraries(${executable_name} PRIVATE ${link_libraries} klog)
     target_link_libraries(${executable_name} PRIVATE ${link_libraries})
 
     set_target_properties(${executable_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/scratch)

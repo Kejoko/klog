@@ -10,6 +10,29 @@
 #include "./klog_platform.h"
 #include "klog_format.h"
 
+char* klog_initialize_buffer(const uint32_t number_elements, const uint32_t element_length_max, const char fill_char, const bool null_terminate) {
+    const uint32_t element_length_max_real = null_terminate ? element_length_max + 1 : element_length_max;
+    const uint32_t total_size = number_elements * element_length_max_real;
+    char* const b_buffer = malloc(total_size);
+    memset(b_buffer, fill_char, total_size);
+    if (null_terminate) {
+        for (uint32_t i = 0; i < number_elements; ++i) {
+            const uint32_t end_index = (i * element_length_max_real) + (element_length_max_real - 1);
+            b_buffer[end_index] = '\0';
+        }
+    }
+
+    kdprintf("Created buffer\n");
+    kdprintf("  start: %p\n", (void*)b_buffer);
+    kdprintf("  end  : %p\n", (void*)(b_buffer + total_size));
+    kdprintf("  total size : %d\n", total_size);
+    kdprintf("  num elements: %d\n", number_elements);
+    kdprintf("  element max length: %d\n", element_length_max);
+    kdprintf("  null terminated elements: %b\n", null_terminate);
+    
+    return b_buffer;
+}
+
 bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* const p_klog_async_info, const KlogConsoleInfo* const p_klog_console_info, const KlogFileInfo* const p_klog_file_info) {
     if (klog_is_initialized) {
         kdprintf("Trying to initialize klog, when it is already initialized\n");
@@ -57,20 +80,6 @@ KlogLoggerHandle* klog_initialize_logger_handle_array(const uint32_t max_number_
     kdprintf("  size : %d\n", total_handle_array_size);
 
     return a_logger_handles;
-}
-
-char* klog_initialize_logger_names_buffer(const uint32_t max_number_loggers, const uint32_t logger_name_max_length) {
-    /* set all characters to space (' ') by default, so we can auto pad the end of the names if they are too short */
-    const uint32_t total_logger_names_array_size_bytes = max_number_loggers * logger_name_max_length;
-    char* const b_logger_names = malloc(total_logger_names_array_size_bytes);
-    memset(b_logger_names, ' ', total_logger_names_array_size_bytes);
-
-    kdprintf("Created logger names array\n");
-    kdprintf("  start: %p\n", (void*)b_logger_names);
-    kdprintf("  end  : %p\n", (void*)(b_logger_names + total_logger_names_array_size_bytes));
-    kdprintf("  size : %d\n", total_logger_names_array_size_bytes);
-    
-    return b_logger_names;
 }
 
 uint8_t* klog_initialize_logger_levels_array(const uint32_t max_number_loggers) {
@@ -136,19 +145,6 @@ char* klog_initialize_colored_level_strings_buffer(void) {
     kdprintf("  size : %d\n", colored_level_string_array_total_bytes);
     
     return b_colored_level_strings;
-}
-
-char* klog_initialize_message_queue(const uint32_t message_queue_number_elements, const uint32_t message_max_length) {
-    const uint32_t message_queue_size_bytes = message_queue_number_elements * message_max_length;
-    char* const b_message_queue = malloc(message_queue_size_bytes);
-    memset(b_message_queue, 0, message_queue_size_bytes);
-    
-    kdprintf("Created logger level strings array\n");
-    kdprintf("  start: %p\n", (void*)b_message_queue);
-    kdprintf("  end  : %p\n", (void*)(b_message_queue + message_queue_size_bytes));
-    kdprintf("  size : %d\n", message_queue_size_bytes);
-    
-    return b_message_queue;
 }
 
 FILE* klog_initialize_file(const KlogFileInfo* const p_klog_file_info) {

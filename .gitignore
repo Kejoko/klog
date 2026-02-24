@@ -1,6 +1,8 @@
 .build*
 .cache
 
+scratch/
+
 compile_commands.json
 
 notes.md

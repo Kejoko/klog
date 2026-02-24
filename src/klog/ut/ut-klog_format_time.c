@@ -6,17 +6,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../klog_constants.h"
 #include "../klog_format.h"
 
 int check_general_format(void) {
-    KlogString result = klog_format_time();
+    char* b = malloc(G_klog_time_string_length + 1);
+
+    KlogString result = klog_format_time(b);
 
     if (result.s == NULL) {
         printf("Resulting time string is NULL when it should not be\n");
         return 1;
     }
 
-    const uint32_t length_expected = 19;
+    const uint32_t length_expected = G_klog_time_string_length;
     if (result.length != length_expected) {
         printf("Resulting time string has length of %d, when it should have a length of %d\n", result.length, length_expected);
         return 1;

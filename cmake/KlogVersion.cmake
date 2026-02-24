@@ -11,4 +11,5 @@ endfunction()
 # ----- Major Version 0 ----- #
 
 # set_klog_versions(0 0 0)
-set_klog_versions(0 0 7) # Logging to stdout and files according to user configuration
+# set_klog_versions(0 0 7) # Logging to stdout and files according to user configuration
+set_klog_versions(0 0 8) # Pre-allocate message prefix buffers

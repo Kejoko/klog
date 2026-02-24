@@ -9,12 +9,11 @@
 
 bool klog_initialize_are_parameters_valid(const bool klog_is_initialized, const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogConsoleInfo* p_klog_console_info, const KlogFileInfo* p_klog_file_info);
 
+char*             klog_initialize_buffer(const uint32_t number_elements, const uint32_t element_length_max, const char fill_char, const bool null_terminate);
 KlogLoggerHandle* klog_initialize_logger_handle_array(const uint32_t max_number_loggers);
-char*             klog_initialize_logger_names_buffer(const uint32_t max_number_loggers, const uint32_t logger_name_max_length);
 uint8_t*          klog_initialize_logger_levels_array(const uint32_t max_number_loggers);
 char*             klog_initialize_level_strings_buffer(void);
 char*             klog_initialize_colored_level_strings_buffer(void);
-char*             klog_initialize_message_queue(const uint32_t message_queue_number_elements, const uint32_t message_max_length);
 FILE*             klog_initialize_file(const KlogFileInfo* p_klog_file_info);
 
 #endif /* KLOG_INITIALIZE_INCLUDED */

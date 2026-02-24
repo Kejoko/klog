@@ -92,14 +92,12 @@ set(KLOG_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include")
 add_subdirectory("${KLOG_SOURCE_DIR}/klog")
 
 # =========================================================================== #
-# Tests                                                                       #
-# =========================================================================== #
-
-add_subdirectory("${PROJECT_SOURCE_DIR}/scratch")
-
-# =========================================================================== #
 # Examples                                                                    #
 # =========================================================================== #
 
 add_subdirectory(example)
+
+if (EXISTS "${PROJECT_SOURCE_DIR}/scratch" AND EXISTS "${PROJECT_SOURCE_DIR}/scratch/CMakeLists.txt")
+    add_subdirectory("${PROJECT_SOURCE_DIR}/scratch")
+endif ()
 

@@ -7,19 +7,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../klog_debug_util.h"
+
 /* This is testing klog with max loggers set to 4, and name length set to 6 */
 int main(void) {
     KlogFormatInfo format_info = {6, 100, 10, true, true};
     KlogConsoleInfo console_info = {KLOG_LEVEL_INFO, true};
     KlogFileInfo file_info = {KLOG_LEVEL_TRACE, "BASIC\tPREFIX"};
+    kdprintf("INITIALIZING KLOG\n");
     klog_initialize(4, format_info, NULL, &console_info, &file_info);
 
+    kdprintf("CREATING HANDLE\n");
     const KlogLoggerHandle* handle_1 = klog_logger_create("My Logger");
+    kdprintf("LOGGING BEFORE SETTING LEVEL\n");
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");
+    kdprintf("SETTING LEVEL TO DEBUG\n");
     klog_logger_set_level(handle_1, KLOG_LEVEL_DEBUG);
+    kdprintf("LOGGING AT TRACE LEVEL\n");
     klog(handle_1, KLOG_LEVEL_TRACE, "This should also not appear");
+    kdprintf("LOGGING AT INFO LEVEL\n");
     klog(handle_1, KLOG_LEVEL_INFO, "This should appear with the format %d with %f stuff %s - first log statement", 42, 42.42f, "fourty two");
 
+#ifndef KLOG_DEBUG
     const KlogLoggerHandle* handle_2 = klog_logger_create("B");
     klog_logger_set_level(handle_2, 6);
     klog(handle_2, KLOG_LEVEL_TRACE, "What's up - trace level - second log statement");
@@ -41,6 +50,10 @@ int main(void) {
     klog(handle_4_custom, 5, "Logging with an off logger shouldn't do anything");
     klog_logger_set_level(handle_4_custom, KLOG_LEVEL_INFO);
     klog(handle_4_custom, KLOG_LEVEL_INFO, "Multiple formats (one - %d)\ntwo\n\n%s%d\n5", 1, "four", 4);
+#endif
 
+    kdprintf("DEINITIALIZING KLOG\n");
     klog_deinitialize();
+
+    return 0;
 }
