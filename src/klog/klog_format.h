@@ -29,6 +29,6 @@ KlogString          klog_format_message_prefix(char* b_prefix, const uint32_t* p
 const char*         klog_format_input_message(const char* s_format, va_list args);
 KlogFormatSplitInfo klog_format_split_strings(const char* s_message);
 KlogString          klog_format_time(char* b_time);
-KlogString          klog_format_source_location(const uint32_t filename_size_max, const char* s_filepath, const uint32_t line_number);
+KlogString          klog_format_source_location(char* b_time, const uint32_t filename_size_max, const char* s_filepath, const uint32_t line_number);
 
 #endif /* KLOG_FORMAT_INCLUDED */

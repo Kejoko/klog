@@ -75,7 +75,8 @@ int run_test(KlogString* const p_result, const uint32_t length_provided, const c
 
 int none(void) {
     const uint32_t length_expected = 0;
-    KlogString result = klog_format_source_location(length_expected, "Hello", 123);
+    char* b = NULL;
+    KlogString result = klog_format_source_location(b, length_expected, "Hello", 123);
     
     if (result.length != length_expected) {
         printf("Resulting KlogString length is actually %d instead of expected %d\n", result.length, length_expected);
@@ -95,7 +96,9 @@ int length_1(void) {
     const char* s_filename_provided = "Hello";
     const uint32_t line_provided = 123;
     
-    KlogString result = klog_format_source_location(length_provided, s_filename_provided, line_provided);
+    char* b = malloc(length_provided + 6);
+    printf("Formatting\n");
+    KlogString result = klog_format_source_location(b, length_provided, s_filename_provided, line_provided);
 
     return run_test(&result, length_provided, s_filename_provided, line_provided);
 }
@@ -104,8 +107,9 @@ int length_normal(void) {
     const uint32_t length_provided = 5;
     const char* s_filename_provided = "Hello";
     const uint32_t line_provided = 420;
-    
-    KlogString result = klog_format_source_location(length_provided, s_filename_provided, line_provided);
+
+    char* b = malloc(length_provided + 6);
+    KlogString result = klog_format_source_location(b, length_provided, s_filename_provided, line_provided);
 
     return run_test(&result, length_provided, s_filename_provided, line_provided);
 }
@@ -114,8 +118,9 @@ int empty_filename(void) {
     const uint32_t length_provided = 10;
     const char* s_filename_provided = "";
     const uint32_t line_provided = 6969;
-    
-    KlogString result = klog_format_source_location(length_provided, s_filename_provided, line_provided);
+
+    char* b = malloc(length_provided + 6);
+    KlogString result = klog_format_source_location(b, length_provided, s_filename_provided, line_provided);
 
     return run_test(&result, length_provided, s_filename_provided, line_provided);
 }
@@ -124,8 +129,9 @@ int padded_filename(void) {
     const uint32_t length_provided = 50;
     const char* s_filename_provided = " pad ";
     const uint32_t line_provided = 6;
-    
-    KlogString result = klog_format_source_location(length_provided, s_filename_provided, line_provided);
+
+    char* b = malloc(length_provided + 6);
+    KlogString result = klog_format_source_location(b, length_provided, s_filename_provided, line_provided);
 
     return run_test(&result, length_provided, s_filename_provided, line_provided);
 }
@@ -134,8 +140,9 @@ int padded_line_number(void) {
     const uint32_t length_provided = 3;
     const char* s_filename_provided = "yippee";
     const uint32_t line_provided = 0;
-    
-    KlogString result = klog_format_source_location(length_provided, s_filename_provided, line_provided);
+
+    char* b = malloc(length_provided + 6);
+    KlogString result = klog_format_source_location(b, length_provided, s_filename_provided, line_provided);
 
     return run_test(&result, length_provided, s_filename_provided, line_provided);
 }
@@ -144,8 +151,9 @@ int max_line_number(void) {
     const uint32_t length_provided = 3;
     const char* s_filename_provided = "yippee";
     const uint32_t line_provided = 9999;
-    
-    KlogString result = klog_format_source_location(length_provided, s_filename_provided, line_provided);
+
+    char* b = malloc(length_provided + 6);
+    KlogString result = klog_format_source_location(b, length_provided, s_filename_provided, line_provided);
 
     return run_test(&result, length_provided, s_filename_provided, line_provided);
 }
@@ -154,8 +162,9 @@ int truncated_line_number(void) {
     const uint32_t length_provided = 3;
     const char* s_filename_provided = "yippee";
     const uint32_t line_provided = 123456;
-    
-    KlogString result = klog_format_source_location(length_provided, s_filename_provided, line_provided);
+
+    char* b = malloc(length_provided + 6);
+    KlogString result = klog_format_source_location(b, length_provided, s_filename_provided, line_provided);
 
     return run_test(&result, length_provided, s_filename_provided, line_provided);
 }

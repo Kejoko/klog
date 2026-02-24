@@ -54,4 +54,6 @@ int main(void) {
 
     kdprintf("DEINITIALIZING KLOG\n");
     klog_deinitialize();
+
+    return 0;
 }

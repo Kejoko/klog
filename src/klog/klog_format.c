@@ -7,6 +7,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "klog/klog.h"
+
 #include "./klog_constants.h"
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
@@ -109,6 +111,11 @@ KlogString klog_format_message_prefix(char* s_prefix, const uint32_t* const p_th
         return (KlogString){0, s_prefix};
     }
 
+    if (!s_prefix) {
+        kdprintf("Trying to format prefix while providing a NULL buffer\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
     uint32_t write_offset = 0;
     if (p_thread_id) {
         sprintf(&(s_prefix[write_offset]), "%.7d ", *p_thread_id);
@@ -206,6 +213,11 @@ KlogFormatSplitInfo klog_format_split_strings(const char* const s_message) {
 }
 
 KlogString klog_format_time(char* b_time) {
+    if (!b_time) {
+        kdprintf("Trying to format time while providing a NULL buffer\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
     const timepoint_t timepoint = klog_platform_get_current_timepoint();
 
     /* Time prefix: DDD:HH:MM:SS:SSSSSS */
@@ -217,30 +229,34 @@ KlogString klog_format_time(char* b_time) {
     return packed_time;
 }
 
-KlogString klog_format_source_location(const uint32_t filename_size_max, const char* const s_filepath, const uint32_t line_number) {
+KlogString klog_format_source_location(char* b_source_location, const uint32_t filename_size_max, const char* const s_filepath, const uint32_t line_number) {
     if (filename_size_max == 0) {
         return (KlogString){0, NULL};
     }
 
+    if (!b_source_location) {
+        kdprintf("Trying to format source location while providing a NULL buffer\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
     /* filename, +1 for colon, +4 for line_number */
     const uint32_t total_size = filename_size_max + 1 + 4;
-    char* const s_formatted = malloc(total_size + 1); /* +1 for null terminator */
 
-    /* Initialize with spaces, so the filename is padded correctly */
-    memset(s_formatted, ' ', total_size);
+    // /* Initialize with spaces, so the filename is padded correctly */
+    memset(b_source_location, ' ', total_size);
 
     const char* const s_filename = klog_platform_get_basename(s_filepath);
     const uint32_t filename_size_original = strlen(s_filename);
 
     const uint32_t filename_size_copy = filename_size_max < filename_size_original ? filename_size_max : filename_size_original;
-    memcpy(s_formatted, s_filename, filename_size_copy);
+    memcpy(b_source_location, s_filename, filename_size_copy);
 
     /* Format the remainder after the filename has been populated */
     const uint32_t line_number_adjusted = line_number <= 9999 ? line_number : 9999;
-    sprintf(s_formatted + filename_size_max, ":%4d", line_number_adjusted);
+    sprintf(b_source_location + filename_size_max, ":%4d", line_number_adjusted);
 
     /* We are not reporting the null terminator in our length */
-    const KlogString packed_source_location = { total_size, s_formatted };
+    const KlogString packed_source_location = { total_size, b_source_location };
 
     return packed_source_location;
 }

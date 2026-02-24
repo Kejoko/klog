@@ -516,7 +516,8 @@ int nominal_parameters(void) {
 
     const char* s_filename = "WEEWEE YA!";
     const uint32_t line_number = 0x4269; /* greater than 9999 */
-    const KlogString packed_source_location = klog_format_source_location(15, s_filename, line_number);
+    char* b_source_location = malloc(21);
+    const KlogString packed_source_location = klog_format_source_location(b_source_location, 15, s_filename, line_number);
 
     const uint32_t length_expected = 8 + (packed_time.length + 1) + (packed_name.length + 3) + (packed_level.length + 3) + (packed_source_location.length + 3);
     char* s = malloc(length_expected + 1);
