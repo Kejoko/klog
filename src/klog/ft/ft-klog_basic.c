@@ -22,7 +22,7 @@ int main(void) {
     kdprintf("LOGGING BEFORE SETTING LEVEL\n");
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");
     kdprintf("SETTING LEVEL TO DEBUG\n");
-    klog_logger_set_level(handle_1, KLOG_LEVEL_DEBUG);
+    klog_logger_level_set(handle_1, KLOG_LEVEL_DEBUG);
     kdprintf("LOGGING AT TRACE LEVEL\n");
     klog(handle_1, KLOG_LEVEL_TRACE, "This should also not appear");
     kdprintf("LOGGING AT INFO LEVEL\n");
@@ -30,16 +30,16 @@ int main(void) {
 
 #ifndef KLOG_DEBUG
     const KlogLoggerHandle* handle_2 = klog_logger_create("B");
-    klog_logger_set_level(handle_2, 6);
+    klog_logger_level_set(handle_2, 6);
     klog(handle_2, KLOG_LEVEL_TRACE, "What's up - trace level - second log statement");
 
     const char* name_3 = "ABC";
     const KlogLoggerHandle* handle_3 = klog_logger_create(name_3);
     const KlogLoggerHandle* handle_3_custom = handle_3;
-    klog_logger_set_level(handle_3_custom, KLOG_LEVEL_INFO);
+    klog_logger_level_set(handle_3_custom, KLOG_LEVEL_INFO);
     klog(handle_3_custom, 6, "Logger ABC should not log trace");
     klog(handle_3, 4, "Logger ABC should log this - third log statement");
-    klog_logger_set_level(handle_3_custom, 5);
+    klog_logger_level_set(handle_3_custom, 5);
     klog(handle_3, 6, "Logger ABC should not log this");
     klog(handle_3, 5, "Logger ABC should log this too - fourth log statement");
     klog(handle_3, KLOG_LEVEL_WARN, "This should be an warning.");
@@ -48,7 +48,7 @@ int main(void) {
 
     const KlogLoggerHandle* handle_4_custom = klog_logger_create("123456");
     klog(handle_4_custom, 5, "Logging with an off logger shouldn't do anything");
-    klog_logger_set_level(handle_4_custom, KLOG_LEVEL_INFO);
+    klog_logger_level_set(handle_4_custom, KLOG_LEVEL_INFO);
     klog(handle_4_custom, KLOG_LEVEL_INFO, "Multiple formats (one - %d)\ntwo\n\n%s%d\n5", 1, "four", 4);
 #endif
 

@@ -176,7 +176,7 @@ const KlogLoggerHandle* klog_logger_create(const char* const s_logger_name) {
 #endif
 }
 
-void klog_logger_set_level(const KlogLoggerHandle* const p_logger_handle, const enum KlogLevel updated_level) {
+void klog_logger_level_set(const KlogLoggerHandle* const p_logger_handle, const enum KlogLevel updated_level) {
 #ifdef KLOG_OFF
     (void)p_logger_handle;
     (void)updated_level;

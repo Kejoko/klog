@@ -76,7 +76,7 @@ void klog_deinitialize(void);
 const KlogLoggerHandle* klog_logger_create(const char* s_logger_name);
 
 /**
- * @fn klog_logger_set_level
+ * @fn klog_logger_level_set
  * @brief Set the maximum verbosity level allowed for a given logger
  * @details This updates the current level of verbosity for a logger such that
  *      any log messages which are more verbose than the current level will
@@ -88,7 +88,7 @@ const KlogLoggerHandle* klog_logger_create(const char* s_logger_name);
  * @param logger_handle The handle to the logger
  * @param updated_level The desired level of verbosity
  */
-void klog_logger_set_level(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel updated_level);
+void klog_logger_level_set(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel updated_level);
 
 void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* s_filename, const uint32_t line_number, const char* s_format, ...);
 
