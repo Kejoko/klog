@@ -21,7 +21,7 @@ void do_test(void) {
         sprintf(s_logger_name, "%.3d", i);
 
         a_handles[i] = klog_logger_create(s_logger_name);
-        klog_logger_set_level(a_handles[i], KLOG_LEVEL_TRACE);
+        klog_logger_level_set(a_handles[i], KLOG_LEVEL_TRACE);
 
         free(s_logger_name);
     }

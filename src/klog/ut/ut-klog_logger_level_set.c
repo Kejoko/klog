@@ -27,7 +27,7 @@ int set_levels(void) {
         sprintf(s_name, "%.3d", i);
 
         const KlogLoggerHandle* p_handle = klog_logger_create(s_name);
-        klog_logger_set_level(p_handle, desired_level);
+        klog_logger_level_set(p_handle, desired_level);
 
         const uint32_t actual_level = g_klog_state.a_logger_levels[p_handle->value];
         if (actual_level != desired_level) {
@@ -46,7 +46,7 @@ int set_levels(void) {
 int log_levels_tempfile(void) {
     const uint32_t max_number_loggers = 100;
     const uint32_t max_name_length = 3;
-    const KlogFileInfo file_info = { KLOG_LEVEL_TRACE, "/tmp/ut-klog_logger_set_level" }; /* @todo kjk 2026/02/11 portable tempfile path for windows and mac */
+    const KlogFileInfo file_info = { KLOG_LEVEL_TRACE, "/tmp/ut-klog_logger_level_set" }; /* @todo kjk 2026/02/11 portable tempfile path for windows and mac */
     klog_initialize(max_number_loggers, (KlogFormatInfo){max_name_length, 10, 0, false, false}, NULL, NULL, &file_info);
 
     const char* l_names[KLOG_LEVEL_COUNT] = { "001", "002", "003", "004", "005", "006", "007" };
@@ -58,7 +58,7 @@ int log_levels_tempfile(void) {
     /* i acts as the index to the handle, and also as the base accepted level for the handle */
     for (uint32_t i = 0; i < KLOG_LEVEL_COUNT; ++i) {
         a_handles[i] = klog_logger_create(l_names[i]);
-        klog_logger_set_level(a_handles[i], i);
+        klog_logger_level_set(a_handles[i], i);
 
         /* Ensure that we cannot log something to the tempfile with a level that does not match or equal the base level */
         for (uint32_t i_log_level = 0; i_log_level < KLOG_LEVEL_COUNT; ++i_log_level) {
