@@ -15,9 +15,8 @@ You also need valgrind if you wish to run all of the tests.
 - `KLOG_DEBUG` for verbose debugging print information, for debugging Klog itself
 - `KLOG_BUILD_TESTS` to build Klog's tests
 - `KLOG_BUILD_EXAMPLES` to build Klog's examples
-- `KLOG_BUILD_SCRATCH` to build Klog's scratch executables (you should not use this, these executables are for prototyping and exploring features)
 
-Example: `cmake .. -DCMAKE_BUILD_TYPE=Release -DKLOG_DEBUG=true -DKLOG_BUILD_TESTS=true -DKLOG_BUILD_EXAMPLES=true -DKLOG_BUILD_SCRATCH=true`
+Example: `cmake .. -DCMAKE_BUILD_TYPE=Release -DKLOG_DEBUG=true -DKLOG_BUILD_TESTS=true -DKLOG_BUILD_EXAMPLES=true`
 
 ## Contributing
 
