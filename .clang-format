@@ -13,7 +13,7 @@ ColumnLimit: 120
 PointerAlignment: Left
 ReferenceAlignment: Left
 
-AlignAfterOpenBracket: false
+AlignAfterOpenBracket: BlockIndent
 AlignArrayOfStructures: Right
 AlignConsecutiveAssignments: Consecutive
 AlignConsecutiveDeclarations: Consecutive
