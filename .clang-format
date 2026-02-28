@@ -3,31 +3,36 @@
 
 BasedOnStyle: LLVM
 
+Language: Cpp # this is also for C
+
 IndentWidth: 4
 ContinuationIndentWidth: 4
 PPIndentWidth: 1
 TabWidth: 4
 UseTab: Never
 ColumnLimit: 120
+MaxEmptyLinesToKeep: 1
 
 PointerAlignment: Left
 ReferenceAlignment: Left
 
 AlignAfterOpenBracket: BlockIndent
 AlignArrayOfStructures: Right
-AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveAssignments: AcrossEmptyLines
 AlignConsecutiveDeclarations: Consecutive
 AlignConsecutiveBitFields: Consecutive
 AlignConsecutiveMacros: Consecutive
-AlignEscapedNewlines: LeftWithLastLine
+AlignEscapedNewlines: Left
 # AlignConsecutiveShortCaseStatements: true
 AlignOperands: AlignAfterOperator
-AlignTrailingComments: Always
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 1
 
 AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: Empty
-AllowShortCaseExpressionOnASingleLine: true
+# AllowShortCaseExpressionOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
@@ -40,8 +45,12 @@ BinPackParameters: false
 
 BitFieldColonSpacing: Both
 
+AlwaysBreakBeforeMultilineStrings: true # we can set this to false if we can force a way to break after open paren in function call
 BreakBeforeBraces: Attach
+BreakAdjacentStringLiterals: true
+BreakStringLiterals: true
 BreakBeforeTernaryOperators: true
+# BreakAfterOpenBracketIf: true
 
 IncludeBlocks: Preserve
 
@@ -54,11 +63,8 @@ IndentWrappedFunctionNames: false
 InsertBraces: true
 InsertNewlineAtEOF: false
 
-KeepEmptyLines:
-  AtEndOfFile: false
-  AtStartOfBlock: false
-  AtStartOfFile: false
-MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtEOF: false
+KeepEmptyLinesAtTheStartOfBlocks: false
 
 ReflowComments: true
 
