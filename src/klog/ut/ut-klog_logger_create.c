@@ -12,10 +12,12 @@
 #include "../klog_state.h"
 #include "../klog_handle.h"
 
-int create_single_logger(void) {
+int create_single_logger(
+    void
+) {
     const uint32_t max_number_loggers = 1;
-    const uint32_t max_name_length = 3;
-    klog_initialize(max_number_loggers, (KlogFormatInfo){max_name_length, 10, 0, false, false}, NULL, NULL, NULL);
+    const uint32_t max_name_length    = 3;
+    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL);
 
     if (g_klog_state.number_loggers_max != max_number_loggers) {
         printf("Klog initialized with max number of loggers %d instead of %d\n", g_klog_state.number_loggers_max, max_number_loggers);
@@ -42,10 +44,12 @@ int create_single_logger(void) {
     return 0;
 }
 
-int create_multiple_loggers(void) {
+int create_multiple_loggers(
+    void
+) {
     const uint32_t max_number_loggers = 100;
-    const uint32_t max_name_length = 3;
-    klog_initialize(max_number_loggers, (KlogFormatInfo){max_name_length, 10, 0, false, false}, NULL, NULL, NULL);
+    const uint32_t max_name_length    = 3;
+    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL);
 
     if (g_klog_state.number_loggers_max != max_number_loggers) {
         printf("Klog initialized with max number of loggers %d instead of %d\n", g_klog_state.number_loggers_max, max_number_loggers);
@@ -62,9 +66,9 @@ int create_multiple_loggers(void) {
         sprintf(s_name, "%.3d", i);
 
         const KlogLoggerHandle* p_handle = klog_logger_create(s_name);
-        
-        if (g_klog_state.number_loggers_created != (i+1)) {
-            printf("Klog reports %d loggers created instead of %d\n", g_klog_state.number_loggers_max, i+1);
+
+        if (g_klog_state.number_loggers_created != (i + 1)) {
+            printf("Klog reports %d loggers created instead of %d\n", g_klog_state.number_loggers_max, i + 1);
             return 1;
         }
         if (!p_handle) {
@@ -80,14 +84,15 @@ int create_multiple_loggers(void) {
     return 0;
 }
 
-int noop(void) {
+int noop(
+    void
+) {
     return 0;
 }
 
-int main(void) {
-    return
-        create_single_logger() ||
-        create_multiple_loggers() ||
-        noop()
+int main(
+    void
+) {
+    return create_single_logger() || create_multiple_loggers() || noop()
     ;
 }

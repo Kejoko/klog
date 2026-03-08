@@ -6,8 +6,10 @@
 
 #include "klog/klog.h"
 
-int main(void) {
-    klog_initialize(1, (KlogFormatInfo){10, 5, 0, false, false}, NULL, NULL, NULL);
+int main(
+    void
+) {
+    klog_initialize(1, (KlogFormatInfo) { 10, 5, 0, false, false }, NULL, NULL, NULL);
 
     const KlogLoggerHandle* p_handle = klog_logger_create("ABCDE");
 

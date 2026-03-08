@@ -5,11 +5,11 @@
 #include <stdint.h>
 
 #ifdef _WIN32
-#error "Klog does not support Windows"
+# error "Klog does not support Windows"
 #endif
 
 #ifdef __APPLE__
-#error "Klog does not support MacOS"
+# error "Klog does not support MacOS"
 #endif
 
 /* ================================================================================================================== */
@@ -20,38 +20,42 @@
 
 /* Thread / Process ID ---------------------------------------------------------------------------------------------- */
 
-#include <unistd.h> /* For pid_t */
-#include <sys/syscall.h> /* For syscall() */
+# include <unistd.h> /* For pid_t */
+# include <sys/syscall.h> /* For syscall() */
 
-#ifndef SYS_gettid
-#error "SYS_gettid is unavailable on this system"
-#endif
+# ifndef SYS_gettid
+#  error "SYS_gettid is unavailable on this system"
+# endif
 
 typedef pid_t procid_t;
 
-procid_t klog_platform_get_current_thread_id(void);
+procid_t klog_platform_get_current_thread_id(
+    void
+);
 
 /* Filenames -------------------------------------------------------------------------------------------------------- */
 
-#include <libgen.h> /* For basename() */
+# include <libgen.h> /* For basename() */
 
-const char* klog_platform_get_basename(const char* const s_filepath);
+const char* klog_platform_get_basename(
+    const char* const s_filepath
+);
 
 /* Time ------------------------------------------------------------------------------------------------------------- */
 
-#include <time.h>        /* For time(), localtime(), gettimeofday() */
-#include <sys/time.h>
+# include <time.h>       /* For time(), localtime(), gettimeofday() */
+# include <sys/time.h>
 
 /**
  * From struct tm:
- *  int    tm_sec   Seconds [0,60]. 
- *  int    tm_min   Minutes [0,59]. 
- *  int    tm_hour  Hour [0,23]. 
- *  int    tm_mday  Day of month [1,31]. 
- *  int    tm_mon   Month of year [0,11]. 
- *  int    tm_year  Years since 1900. 
- *  int    tm_wday  Day of week [0,6] (Sunday =0). 
- *  int    tm_yday  Day of year [0,365]. 
+ *  int    tm_sec   Seconds [0,60].
+ *  int    tm_min   Minutes [0,59].
+ *  int    tm_hour  Hour [0,23].
+ *  int    tm_mday  Day of month [1,31].
+ *  int    tm_mon   Month of year [0,11].
+ *  int    tm_year  Years since 1900.
+ *  int    tm_wday  Day of week [0,6] (Sunday =0).
+ *  int    tm_yday  Day of year [0,365].
  *  int    tm_isdst Daylight Savings flag.
  *
  * From struct timeval:
@@ -76,7 +80,9 @@ typedef struct {
     bool is_daylight_savings;
 } timepoint_t;
 
-timepoint_t klog_platform_get_current_timepoint(void);
+timepoint_t klog_platform_get_current_timepoint(
+    void
+);
 
 #endif
 

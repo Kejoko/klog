@@ -4,7 +4,9 @@
 
 #include "../klog_initialize.h"
 
-int validate(void) {
+int validate(
+    void
+) {
     char* b_level_strings = klog_initialize_level_strings_buffer();
 
     int result = 0;
@@ -14,13 +16,13 @@ int validate(void) {
         result = 1;
     }
 
-    const char* s_expected = "off  FATALERRORWARN info debugtrace";
-    uint32_t expected_length = strlen(s_expected);
-    int strcmp_result = strncmp(s_expected, b_level_strings, expected_length);
+    const char* s_expected      = "off  FATALERRORWARN info debugtrace";
+    uint32_t    expected_length = strlen(s_expected);
+    int         strcmp_result   = strncmp(s_expected, b_level_strings, expected_length);
     if (!result && strcmp_result) {
         printf("Buffer's contents do not equal expected (strcmp = %d)\n", strcmp_result);
 
-        printf("  Expected: %s\n", s_expected);
+        printf("  Expected: %s\n",   s_expected);
         printf("  Actual  : %.*s\n", (int)strlen(s_expected), b_level_strings);
         result = 1;
     }
@@ -29,7 +31,9 @@ int validate(void) {
     return result;
 }
 
-int validate_colors(void) {
+int validate_colors(
+    void
+) {
     char* b_level_strings_colored = klog_initialize_colored_level_strings_buffer();
 
     int result = 0;
@@ -39,13 +43,14 @@ int validate_colors(void) {
         result = 1;
     }
 
-    const char* s_expected = "\x1b[37moff  \x1b[0m\x1b[41mFATAL\x1b[0m\x1b[31mERROR\x1b[0m\x1b[33mWARN \x1b[0m\x1b[32minfo \x1b[0m\x1b[36mdebug\x1b[0m\x1b[37mtrace\x1b[0m";
+    const char* s_expected =
+        "\x1b[37moff  \x1b[0m\x1b[41mFATAL\x1b[0m\x1b[31mERROR\x1b[0m\x1b[33mWARN \x1b[0m\x1b[32minfo \x1b[0m\x1b[36mdebug\x1b[0m\x1b[37mtrace\x1b[0m";
     uint32_t expected_length = strlen(s_expected);
-    int strcmp_result = strncmp(s_expected, b_level_strings_colored, expected_length);
+    int      strcmp_result   = strncmp(s_expected, b_level_strings_colored, expected_length);
     if (!result && strcmp_result) {
         printf("Buffer's contents do not equal expected (strcmp = %d)\n", strcmp_result);
 
-        printf("  Expected: %s\n", s_expected);
+        printf("  Expected: %s\n",   s_expected);
         printf("  Actual  : %.*s\n", (int)strlen(s_expected), b_level_strings_colored);
         result = 1;
     }
@@ -54,15 +59,16 @@ int validate_colors(void) {
     return result;
 }
 
-int noop(void) {
+int noop(
+    void
+) {
     return 0;
 }
 
-int main(void) {
-    int result =
-        validate() ||
-        validate_colors() ||
-        noop()
+int main(
+    void
+) {
+    int result = validate() || validate_colors() || noop()
     ;
 
     return result;
