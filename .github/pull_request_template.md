@@ -62,10 +62,10 @@ How was this validated?
 
 ## Checklist
 
-- [ ] Adherance to style guide
+- [ ] Adherance to style guide (naming and formatting)
 - [ ] All tests pass
 - [ ] New tests added where appropriate
-- [ ] Documentation updated
+- [ ] Documentation updated (everything exposed in headers really)
 - [ ] Concurrency implications considered
 - [ ] Self review performed
 - [ ] Version incremented if appropriate
