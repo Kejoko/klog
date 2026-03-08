@@ -12,8 +12,8 @@ typedef struct {
     uint32_t logger_name_max_length;
     uint32_t message_max_length;
     uint32_t source_location_filename_max_length;
-    bool use_thread_id;
-    bool use_timestamp;
+    bool     use_thread_id;
+    bool     use_timestamp;
 } KlogFormatInfo;
 
 typedef struct {
@@ -23,11 +23,11 @@ typedef struct {
 
 typedef struct {
     uint8_t max_level;
-    bool use_color;
+    bool    use_color;
 } KlogConsoleInfo;
 
 typedef struct {
-    uint8_t max_level;
+    uint8_t     max_level;
     const char* s_filename_prefix;
 } KlogFileInfo;
 
@@ -41,12 +41,20 @@ enum KlogLevel {
     KLOG_LEVEL_WARN  = 3,
     KLOG_LEVEL_INFO  = 4,
     KLOG_LEVEL_DEBUG = 5,
-    KLOG_LEVEL_TRACE = 6,
+    KLOG_LEVEL_TRACE = 6
 };
 
-void klog_initialize(const uint32_t max_number_loggers, const KlogFormatInfo klog_format_info, const KlogAsyncInfo* p_klog_async_info, const KlogConsoleInfo* p_klog_console_info, const KlogFileInfo* p_klog_file_info);
+void klog_initialize(
+    const uint32_t         max_number_loggers,
+    const KlogFormatInfo   klog_format_info,
+    const KlogAsyncInfo*   p_klog_async_info,
+    const KlogConsoleInfo* p_klog_console_info,
+    const KlogFileInfo*    p_klog_file_info
+);
 
-void klog_deinitialize(void);
+void klog_deinitialize(
+    void
+);
 
 /**
  * @fn klog_logger_create
@@ -73,7 +81,9 @@ void klog_deinitialize(void);
  * @returns KlogLoggerHandle The newly created handle if logger_name did
  *      not already exist, or the retrieved handle if logger_name did exist
  */
-const KlogLoggerHandle* klog_logger_create(const char* s_logger_name);
+const KlogLoggerHandle* klog_logger_create(
+    const char* s_logger_name
+);
 
 /**
  * @fn klog_logger_level_set
@@ -88,16 +98,26 @@ const KlogLoggerHandle* klog_logger_create(const char* s_logger_name);
  * @param logger_handle The handle to the logger
  * @param updated_level The desired level of verbosity
  */
-void klog_logger_level_set(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel updated_level);
+void klog_logger_level_set(
+    const KlogLoggerHandle* p_logger_handle,
+    const enum KlogLevel    updated_level
+);
 
-void klog_log(const KlogLoggerHandle* p_logger_handle, const enum KlogLevel requested_level, const char* s_filename, const uint32_t line_number, const char* s_format, ...);
+void klog_log(
+    const KlogLoggerHandle* p_logger_handle,
+    const enum KlogLevel    requested_level,
+    const char*             s_filename,
+    const uint32_t          line_number,
+    const char*             s_format,
+    ...
+);
 
 #define klog(p_logger_handle, requested_level, ...) klog_log(p_logger_handle, requested_level, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_trace(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_debug(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_info( p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_INFO,  __FILE__, __LINE__, __VA_ARGS__)
-#define klog_warn( p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_WARN,  __FILE__, __LINE__, __VA_ARGS__)
-#define klog_error(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_fatal(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_trace(p_logger_handle, ...)            klog_log(p_logger_handle, KLOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_debug(p_logger_handle, ...)            klog_log(p_logger_handle, KLOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_info(p_logger_handle, ...)             klog_log(p_logger_handle, KLOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_warn(p_logger_handle, ...)             klog_log(p_logger_handle, KLOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_error(p_logger_handle, ...)            klog_log(p_logger_handle, KLOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_fatal(p_logger_handle, ...)            klog_log(p_logger_handle, KLOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 
 #endif /* KLOG_INCLUDED */

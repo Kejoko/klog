@@ -4,7 +4,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void klog_output_console(const KlogString* const p_prefix, const KlogString* const p_message) {
+void klog_output_console(
+    const KlogString* const p_prefix,
+    const KlogString* const p_message
+) {
     if (p_prefix) {
         printf("%.*s", p_prefix->length, p_prefix->s);
     }
@@ -14,7 +17,11 @@ void klog_output_console(const KlogString* const p_prefix, const KlogString* con
     printf("\n");
 }
 
-void klog_output_file(FILE* const p_file, const KlogString* const p_prefix, const KlogString* const p_message) {
+void klog_output_file(
+    FILE* const             p_file,
+    const KlogString* const p_prefix,
+    const KlogString* const p_message
+) {
     if (p_prefix) {
         fprintf(p_file, "%.*s", p_prefix->length, p_prefix->s);
     }
@@ -23,4 +30,3 @@ void klog_output_file(FILE* const p_file, const KlogString* const p_prefix, cons
     }
     fprintf(p_file, "\n");
 }
-

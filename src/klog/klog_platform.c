@@ -6,16 +6,22 @@
 
 #include "./klog_debug_util.h"
 
-procid_t klog_platform_get_current_thread_id(void) {
+procid_t klog_platform_get_current_thread_id(
+    void
+) {
     return syscall(SYS_gettid);
 }
 
-const char* klog_platform_get_basename(const char* const s_filepath) {
+const char* klog_platform_get_basename(
+    const char* const s_filepath
+) {
     return basename((char*)s_filepath);
 }
 
-timepoint_t klog_platform_get_current_timepoint(void) {
-    const time_t now = time(NULL);
+timepoint_t klog_platform_get_current_timepoint(
+    void
+) {
+    const time_t   now = time(NULL);
     struct timeval tv;
     if (gettimeofday(&tv, NULL)) {
         kdprintf("Failure when invoking gettimeofday()\n");

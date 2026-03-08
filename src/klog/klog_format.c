@@ -13,7 +13,13 @@
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
 
-uint32_t klog_format_prefix_length_get(const bool use_thread_id, const bool use_timestamp, const uint32_t logger_name_max_length, const bool use_color, const uint32_t source_location_filename_max_length) {
+uint32_t klog_format_prefix_length_get(
+    const bool     use_thread_id,
+    const bool     use_timestamp,
+    const uint32_t logger_name_max_length,
+    const bool     use_color,
+    const uint32_t source_location_filename_max_length
+) {
     uint32_t total = 0;
 
     if (use_thread_id) {
@@ -34,18 +40,26 @@ uint32_t klog_format_prefix_length_get(const bool use_thread_id, const bool use_
     return total;
 }
 
-const char* klog_format_logger_name(const char* const s_name) {
+const char* klog_format_logger_name(
+    const char* const s_name
+) {
     /**
      * Perhaps we should be doing this in place but creating loggers is not where we will
      * be saving on performance, so mallocing a copy is okay
      */
 
-    const uint32_t length_name = strlen(s_name);
-    char* s_sanitized_name = malloc(length_name + 1); /* +1 for null termination */
+    const uint32_t length_name      = strlen(s_name);
+    char*          s_sanitized_name = malloc(length_name + 1); /* +1 for null termination */
 
     for (uint32_t i_input_char = 0; i_input_char < length_name; ++i_input_char) {
-        const char curr_char = s_name[i_input_char];
-        if (curr_char == '\n' || curr_char == '\t' || curr_char == ' ' || curr_char == '\r' || curr_char == '\b' || curr_char == '\0') {
+        const char curr_char     = s_name[i_input_char];
+        const bool is_whitespace = (curr_char == '\n')
+            || (curr_char == '\t')
+            || (curr_char == ' ')
+            || (curr_char == '\r')
+            || (curr_char == '\b')
+            || (curr_char == '\0');
+        if (is_whitespace) {
             s_sanitized_name[i_input_char] = '_';
             continue;
         }
@@ -58,7 +72,9 @@ const char* klog_format_logger_name(const char* const s_name) {
     return s_sanitized_name;
 }
 
-const char* klog_format_file_name_prefix(const char* const s_name) {
+const char* klog_format_file_name_prefix(
+    const char* const s_name
+) {
     /**
      * Perhaps we should be doing this in place but creating the file only happens once so, oh well
      */
@@ -68,7 +84,14 @@ const char* klog_format_file_name_prefix(const char* const s_name) {
     return klog_format_logger_name(s_name);
 }
 
-KlogString klog_format_message_prefix(char* s_prefix, const uint32_t* const p_thread_id, const KlogString* const p_time, const KlogString* const p_name, const KlogString* const p_level, const KlogString* const p_source_location) {
+KlogString klog_format_message_prefix(
+    char*                   s_prefix,
+    const uint32_t* const   p_thread_id,
+    const KlogString* const p_time,
+    const KlogString* const p_name,
+    const KlogString* const p_level,
+    const KlogString* const p_source_location
+) {
     /*         "0062503 043:08:14:31:933041 [ABC   ] [debug] [ft-klog_ba:  35] " */
     /*          |                           |        |       |                   */
     /* 00+      12345678|                   |        |       |                   */
@@ -77,7 +100,7 @@ KlogString klog_format_message_prefix(char* s_prefix, const uint32_t* const p_th
     /* 20+                                 0|        |       |                   */
     /* 00+                                  123456789|       |                   */
     /* 00+                                           12345678|                   */
-    
+
     /**
      * @brief So in total we have:
      *      8[thread id and space] +
@@ -108,7 +131,7 @@ KlogString klog_format_message_prefix(char* s_prefix, const uint32_t* const p_th
     }
 
     if (size_total == 0) {
-        return (KlogString){0, s_prefix};
+        return (KlogString) { 0, s_prefix };
     }
 
     if (!s_prefix) {
@@ -141,10 +164,13 @@ KlogString klog_format_message_prefix(char* s_prefix, const uint32_t* const p_th
     /* Set the final byte to the null terminator */
     s_prefix[size_total] = '\0';
 
-    return (KlogString){size_total, s_prefix};
+    return (KlogString) { size_total, s_prefix };
 }
 
-const char* klog_format_input_message(const char* const s_format, va_list p_args) {
+const char* klog_format_input_message(
+    const char* const s_format,
+    va_list           p_args
+) {
     /* We need to make a copy of the args (for the second vsnprintf call) before we consume them with the first vsnprintf call */
     va_list p_args_copy;
     va_copy(p_args_copy, p_args);
@@ -164,7 +190,9 @@ const char* klog_format_input_message(const char* const s_format, va_list p_args
     return s_input_message;
 }
 
-KlogFormatSplitInfo klog_format_split_strings(const char* const s_message) {
+KlogFormatSplitInfo klog_format_split_strings(
+    const char* const s_message
+) {
     const uint32_t input_strlen = strlen(s_message);
 
     uint32_t number_strings = 1;
@@ -177,16 +205,16 @@ KlogFormatSplitInfo klog_format_split_strings(const char* const s_message) {
     }
 
     /* Allocate the resulting buffers */
-    const char** const ls_strings = malloc(number_strings * sizeof(char*));
-    uint32_t* const string_lengths = malloc(number_strings * sizeof(uint32_t));
+    const char** const ls_strings     = malloc(number_strings * sizeof(char*));
+    uint32_t* const    string_lengths = malloc(number_strings * sizeof(uint32_t));
 
     /* Initialize the first format string values in case we never reach a newline */
-    ls_strings[0] = s_message;
+    ls_strings[0]     = s_message;
     string_lengths[0] = input_strlen;
 
     /* Find all of the newlines so we know where the format string pointers should begin */
     uint32_t curr_format_string_start_index = 0;
-    uint32_t i_curr_format_string = 0;
+    uint32_t i_curr_format_string           = 0;
     for (uint32_t i_char_base = 0; i_char_base < input_strlen; ++i_char_base) {
         if (s_message[i_char_base] != '\n') {
             continue;
@@ -194,25 +222,27 @@ KlogFormatSplitInfo klog_format_split_strings(const char* const s_message) {
 
         /* Update the information for our current format string */
         const uint32_t curr_format_string_length = i_char_base - curr_format_string_start_index;
-        string_lengths[i_curr_format_string] = curr_format_string_length;
+        string_lengths[i_curr_format_string]     = curr_format_string_length;
         if (i_curr_format_string < (number_strings - 1)) {
-            ls_strings[i_curr_format_string+1] = s_message + i_char_base + 1;
+            ls_strings[i_curr_format_string + 1] = s_message + i_char_base + 1;
         }
 
         /* Move on to the next format string */
-        i_curr_format_string += 1;
+        i_curr_format_string          += 1;
         curr_format_string_start_index = i_char_base + 1; /* +1 so we can skip over the current newline character */
     }
 
     const uint32_t final_format_string_length = input_strlen - curr_format_string_start_index;
-    string_lengths[i_curr_format_string] = final_format_string_length;
+    string_lengths[i_curr_format_string]      = final_format_string_length;
 
-    const KlogFormatSplitInfo result = {number_strings, ls_strings, string_lengths};
+    const KlogFormatSplitInfo result = { number_strings, ls_strings, string_lengths };
 
     return result;
 }
 
-KlogString klog_format_time(char* s_time) {
+KlogString klog_format_time(
+    char* s_time
+) {
     if (!s_time) {
         kdprintf("Trying to format time while providing a NULL buffer\n");
         exit(KLOG_EXIT_CODE);
@@ -223,15 +253,28 @@ KlogString klog_format_time(char* s_time) {
     /* Time prefix: DDD:HH:MM:SS:SSSSSS */
     /* Length: 00+  123456789           */
     /*         10+           0123456789 */
-    sprintf(s_time, "%.3d:%.2d:%.2d:%.2d:%.6d", timepoint.day_year, timepoint.hour, timepoint.minute, timepoint.second, timepoint.microsecond);
+    sprintf(
+        s_time,
+        "%.3d:%.2d:%.2d:%.2d:%.6d",
+        timepoint.day_year,
+        timepoint.hour,
+        timepoint.minute,
+        timepoint.second,
+        timepoint.microsecond
+    );
 
     KlogString packed_time = { G_klog_time_string_length, s_time };
     return packed_time;
 }
 
-KlogString klog_format_source_location(char* s_source_location, const uint32_t filename_size_max, const char* const s_filepath, const uint32_t line_number) {
+KlogString klog_format_source_location(
+    char*             s_source_location,
+    const uint32_t    filename_size_max,
+    const char* const s_filepath,
+    const uint32_t    line_number
+) {
     if (filename_size_max == 0) {
-        return (KlogString){0, NULL};
+        return (KlogString) { 0, NULL };
     }
 
     if (!s_source_location) {
@@ -242,11 +285,11 @@ KlogString klog_format_source_location(char* s_source_location, const uint32_t f
     /* filename, +1 for colon, +4 for line_number */
     const uint32_t total_size = filename_size_max + 1 + 4;
 
-    // /* Initialize with spaces, so the filename is padded correctly */
+    /* / * Initialize with spaces, so the filename is padded correctly * / */
     memset(s_source_location, ' ', total_size);
 
-    const char* const s_filename = klog_platform_get_basename(s_filepath);
-    const uint32_t filename_size_original = strlen(s_filename);
+    const char* const s_filename             = klog_platform_get_basename(s_filepath);
+    const uint32_t    filename_size_original = strlen(s_filename);
 
     const uint32_t filename_size_copy = filename_size_max < filename_size_original ? filename_size_max : filename_size_original;
     memcpy(s_source_location, s_filename, filename_size_copy);

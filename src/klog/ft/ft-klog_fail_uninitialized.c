@@ -6,7 +6,9 @@
 
 #include <stdio.h>
 
-int main(void) {
+int main(
+    void
+) {
     /* Fail because klog is uninitialized */
     const KlogLoggerHandle* handle_1 = klog_logger_create("MyLogger");
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");
