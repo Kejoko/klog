@@ -3,7 +3,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-void kdprintf(const char* const s_format, ...) {
+void kdprintf(
+    const char* const s_format,
+    ...
+) {
 #ifdef KLOG_DEBUG
     va_list p_args;
     va_start(p_args, s_format);

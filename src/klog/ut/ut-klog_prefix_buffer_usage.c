@@ -7,10 +7,12 @@
 #include "../klog_state.h"
 #include "../klog_format.h"
 
-int no_async_param(void) {
-    const uint32_t logger_name_length = 6;
-    KlogFormatInfo format_info = {logger_name_length, 10, 0, false, false};
-    KlogConsoleInfo console_info = {KLOG_LEVEL_TRACE, false};
+int no_async_param(
+    void
+) {
+    const uint32_t  logger_name_length = 6;
+    KlogFormatInfo  format_info        = { logger_name_length, 10, 0, false, false };
+    KlogConsoleInfo console_info       = { KLOG_LEVEL_TRACE, false };
     klog_initialize(5, format_info, NULL, &console_info, NULL);
 
     if (g_klog_state.prefix_element_index != 0) {
@@ -63,14 +65,22 @@ int no_async_param(void) {
 
     char* full_buffer = "[dummy!] [info ] ";
     if (memcmp(g_klog_state.b_prefixes_file, full_buffer, prefix_size)) {
-        printf("Klog file prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_file);
+        printf(
+            "Klog file prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_file
+        );
         return 1;
     }
     if (memcmp(g_klog_state.b_prefixes_console, full_buffer, prefix_size)) {
-        printf("Klog console prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_console);
+        printf(
+            "Klog console prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_console
+        );
         return 1;
     }
-    
+
     free(empty_buffer);
 
     klog_deinitialize();
@@ -78,11 +88,13 @@ int no_async_param(void) {
     return 0;
 }
 
-int single_element(void) {
-    const uint32_t logger_name_length = 8;
-    KlogFormatInfo format_info = {logger_name_length, 10, 0, false, false};
-    KlogAsyncInfo async_info = {1, 3};
-    KlogConsoleInfo console_info = {KLOG_LEVEL_INFO, false};
+int single_element(
+    void
+) {
+    const uint32_t  logger_name_length = 8;
+    KlogFormatInfo  format_info        = { logger_name_length, 10, 0, false, false };
+    KlogAsyncInfo   async_info         = { 1, 3 };
+    KlogConsoleInfo console_info       = { KLOG_LEVEL_INFO, false };
     klog_initialize(5, format_info, &async_info, &console_info, NULL);
 
     if (g_klog_state.prefix_element_index != 0) {
@@ -135,14 +147,22 @@ int single_element(void) {
 
     char* full_buffer = "[dummy123] [info ] ";
     if (memcmp(g_klog_state.b_prefixes_file, full_buffer, prefix_size)) {
-        printf("Klog file prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_file);
+        printf(
+            "Klog file prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_file
+        );
         return 1;
     }
     if (memcmp(g_klog_state.b_prefixes_console, full_buffer, prefix_size)) {
-        printf("Klog console prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_console);
+        printf(
+            "Klog console prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_console
+        );
         return 1;
     }
-    
+
     free(empty_buffer);
 
     klog_deinitialize();
@@ -150,13 +170,15 @@ int single_element(void) {
     return 0;
 }
 
-int multiple_elements(void) {
-    const uint32_t num_elements = 3;
-    const uint32_t num_loggers = 4;
-    const uint32_t logger_name_length = 3;
-    KlogFormatInfo format_info = {logger_name_length, 10, 0, false, false};
-    KlogAsyncInfo async_info = {num_elements, 3};
-    KlogConsoleInfo console_info = {KLOG_LEVEL_DEBUG, false};
+int multiple_elements(
+    void
+) {
+    const uint32_t  num_elements       = 3;
+    const uint32_t  num_loggers        = 4;
+    const uint32_t  logger_name_length = 3;
+    KlogFormatInfo  format_info        = { logger_name_length, 10, 0, false, false };
+    KlogAsyncInfo   async_info         = { num_elements, 3 };
+    KlogConsoleInfo console_info       = { KLOG_LEVEL_DEBUG, false };
     klog_initialize(num_loggers, format_info, &async_info, &console_info, NULL);
 
     if (g_klog_state.prefix_element_index != 0) {
@@ -212,11 +234,19 @@ int multiple_elements(void) {
 
     char* full_buffer = "[dum] [info ] ";
     if (memcmp(g_klog_state.b_prefixes_file, full_buffer, prefix_size)) {
-        printf("Klog file prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_file);
+        printf(
+            "Klog file prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_file
+        );
         return 1;
     }
     if (memcmp(g_klog_state.b_prefixes_console, full_buffer, prefix_size)) {
-        printf("Klog console prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_console);
+        printf(
+            "Klog console prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_console
+        );
         return 1;
     }
 
@@ -243,14 +273,22 @@ int multiple_elements(void) {
 
     char* full_buffer_2 = "[two] [debug] ";
     if (memcmp(g_klog_state.b_prefixes_file + prefix_size, full_buffer_2, prefix_size)) {
-        printf("Klog file prefix buffer element 1 should contain \"%s\" after logging at trace level, but instead it contains \"%s\"\n", full_buffer_2, g_klog_state.b_prefixes_file + prefix_size);
+        printf(
+            "Klog file prefix buffer element 1 should contain \"%s\" after logging at trace level, but instead it contains \"%s\"\n",
+            full_buffer_2,
+            g_klog_state.b_prefixes_file + prefix_size
+        );
         return 1;
     }
     if (memcmp(g_klog_state.b_prefixes_console + prefix_size, full_buffer_2, prefix_size)) {
-        printf("Klog console prefix buffer element 1 should contain \"%s\" after logging at trace level, but instead it contains \"%s\"\n", full_buffer_2, g_klog_state.b_prefixes_console + prefix_size);
+        printf(
+            "Klog console prefix buffer element 1 should contain \"%s\" after logging at trace level, but instead it contains \"%s\"\n",
+            full_buffer_2,
+            g_klog_state.b_prefixes_console + prefix_size
+        );
         return 1;
     }
-    
+
     /* Third logging statement */
 
     if (memcmp(g_klog_state.b_prefixes_file + prefix_size * 2, empty_buffer, prefix_size)) {
@@ -274,22 +312,38 @@ int multiple_elements(void) {
 
     char* full_buffer_3 = "[3  ] [ERROR] ";
     if (memcmp(g_klog_state.b_prefixes_file + prefix_size * 2, full_buffer_3, prefix_size)) {
-        printf("Klog file prefix buffer element 2 should contain \"%s\" after logging at error level, but instead it contains \"%s\"\n", full_buffer_3, g_klog_state.b_prefixes_file + prefix_size * 2);
+        printf(
+            "Klog file prefix buffer element 2 should contain \"%s\" after logging at error level, but instead it contains \"%s\"\n",
+            full_buffer_3,
+            g_klog_state.b_prefixes_file + prefix_size * 2
+        );
         return 1;
     }
     if (memcmp(g_klog_state.b_prefixes_console + prefix_size * 2, full_buffer_3, prefix_size)) {
-        printf("Klog console prefix buffer element 2 should contain \"%s\" after logging at error level, but instead it contains \"%s\"\n", full_buffer_3, g_klog_state.b_prefixes_console + prefix_size * 2);
+        printf(
+            "Klog console prefix buffer element 2 should contain \"%s\" after logging at error level, but instead it contains \"%s\"\n",
+            full_buffer_3,
+            g_klog_state.b_prefixes_console + prefix_size * 2
+        );
         return 1;
     }
 
     /* Fourth logging statement */
 
     if (memcmp(g_klog_state.b_prefixes_file, full_buffer, prefix_size)) {
-        printf("Klog file prefix buffer element 0 should contain \"%s\" before logging after overflow at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_file);
+        printf(
+            "Klog file prefix buffer element 0 should contain \"%s\" before logging after overflow at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_file
+        );
         return 1;
     }
     if (memcmp(g_klog_state.b_prefixes_console, full_buffer, prefix_size)) {
-        printf("Klog console prefix buffer element 0 should contain \"%s\" before logging after overflow at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_file);
+        printf(
+            "Klog console prefix buffer element 0 should contain \"%s\" before logging after overflow at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_file
+        );
         return 1;
     }
 
@@ -301,11 +355,19 @@ int multiple_elements(void) {
     }
 
     if (memcmp(g_klog_state.b_prefixes_file, full_buffer, prefix_size)) {
-        printf("Klog file prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_file);
+        printf(
+            "Klog file prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_file
+        );
         return 1;
     }
     if (memcmp(g_klog_state.b_prefixes_console, full_buffer, prefix_size)) {
-        printf("Klog console prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n", full_buffer, g_klog_state.b_prefixes_console);
+        printf(
+            "Klog console prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
+            full_buffer,
+            g_klog_state.b_prefixes_console
+        );
         return 1;
     }
 
@@ -318,16 +380,16 @@ int multiple_elements(void) {
     return 0;
 }
 
-int noop(void) {
+int noop(
+    void
+) {
     return 0;
 }
 
-int main(void) {
-    int result =
-        no_async_param() ||
-        single_element() ||
-        multiple_elements() ||
-        noop()
+int main(
+    void
+) {
+    int result = no_async_param() || single_element() || multiple_elements() || noop()
     ;
 
     return result;

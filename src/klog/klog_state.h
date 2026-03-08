@@ -27,34 +27,34 @@ extern struct KlogConfig {
  * @brief This represents the actual state of klog
  */
 extern struct KlogState {
-    uint32_t                 number_loggers_max;
-    uint32_t                 number_loggers_created;
+    uint32_t number_loggers_max;
+    uint32_t number_loggers_created;
 
     struct KlogLoggerHandle* a_logger_handles;
     char*                    b_logger_names;
     uint8_t*                 a_logger_levels;
 
-    char*                    b_level_strings;
-    char*                    b_level_strings_colored;
+    char* b_level_strings;
+    char* b_level_strings_colored;
 
-    uint32_t                 prefix_element_index;
-    uint32_t                 prefix_element_count;
-    uint32_t                 prefix_file_size;
-    char*                    b_prefixes_file;
-    uint32_t                 prefix_console_size;
-    char*                    b_prefixes_console;
-    uint32_t                 prefix_time_size;
-    char*                    b_prefixes_time;
-    uint32_t                 prefix_source_location_size;
-    char*                    b_prefixes_source_location;
+    uint32_t prefix_element_index;
+    uint32_t prefix_element_count;
+    uint32_t prefix_file_size;
+    char*    b_prefixes_file;
+    uint32_t prefix_console_size;
+    char*    b_prefixes_console;
+    uint32_t prefix_time_size;
+    char*    b_prefixes_time;
+    uint32_t prefix_source_location_size;
+    char*    b_prefixes_source_location;
 
-    uint32_t                 message_element_index;
-    uint32_t                 message_element_count;
-    char*                    b_messages;
+    uint32_t message_element_index;
+    uint32_t message_element_count;
+    char*    b_messages;
 
-    FILE*                    p_file;
+    FILE* p_file;
 
-    bool                     is_initialized;
+    bool is_initialized;
 } g_klog_state;
 
 #endif /* KLOG_STATE_INCLUDED */
