@@ -10,17 +10,6 @@ typedef struct {
     const char* const s;
 } KlogString;
 
-typedef struct {
-    /* The number of resulting format strings */
-    const uint32_t number_strings;
-
-    /* An array of format strings, each index of this points to a format string */
-    const char** const ls_strings;
-
-    /* An array of lengths, so we know how long each of the format strings are */
-    const uint32_t* const a_string_lengths;
-} KlogFormatSplitInfo;
-
 uint32_t klog_format_prefix_length_get(
     const bool     use_thread_id,
     const bool     use_timestamp,
@@ -46,13 +35,12 @@ KlogString klog_format_message_prefix(
     const KlogString* p_source_location
 );
 
-const char* klog_format_input_message(
-    const char* s_format,
-    va_list     args
-);
-
-KlogFormatSplitInfo klog_format_split_strings(
-    const char* s_message
+/* Returns the length of the full message (not including null terminating character) */
+uint32_t klog_format_input_message(
+    char*          b_output,
+    const uint32_t output_size,
+    const char*    s_format,
+    va_list        args
 );
 
 KlogString klog_format_time(
