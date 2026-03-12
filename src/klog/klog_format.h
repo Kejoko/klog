@@ -46,9 +46,11 @@ KlogString klog_format_message_prefix(
     const KlogString* p_source_location
 );
 
-const char* klog_format_input_message(
-    const char* s_format,
-    va_list     args
+void klog_format_input_message(
+    char*          b_output,
+    const uint32_t output_size,
+    const char*    s_format,
+    va_list        args
 );
 
 KlogFormatSplitInfo klog_format_split_strings(

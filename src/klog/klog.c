@@ -116,11 +116,9 @@ void klog_initialize(
     g_klog_state.prefix_source_location_size = g_klog_config.format.source_location_filename_max_length + 4 + 1; /* 4 digit line number, colon */
     g_klog_state.prefix_element_index        = 0;
     if (p_klog_async_info) {
-        g_klog_state.prefix_element_count  = p_klog_async_info->message_queue_number_elements;
-        g_klog_state.message_element_count = p_klog_async_info->message_queue_number_elements;
+        g_klog_state.prefix_element_count = p_klog_async_info->message_queue_number_elements;
     } else {
-        g_klog_state.prefix_element_count  = 1;
-        g_klog_state.message_element_count = 1;
+        g_klog_state.prefix_element_count = 1;
     }
     g_klog_state.b_prefixes_file = klog_initialize_buffer(
         g_klog_state.prefix_element_count,
@@ -146,9 +144,11 @@ void klog_initialize(
         '@',
         true
     );
-    g_klog_state.b_messages = klog_initialize_buffer(
-        g_klog_state.message_element_count,
-        g_klog_config.format.message_max_length,
+
+    g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length + 1; /* +1 for null terminating character */
+    g_klog_state.b_message_formatted        = klog_initialize_buffer(
+        1,
+        g_klog_state.message_formatted_max_size,
         '\0',
         true
     );
@@ -177,36 +177,39 @@ void klog_deinitialize(
     g_klog_state.number_loggers_created = 0;
 
     free(g_klog_state.a_logger_handles);
-    g_klog_state.a_logger_handles = NULL;
     free(g_klog_state.b_logger_names);
-    g_klog_state.b_logger_names = NULL;
     free(g_klog_state.a_logger_levels);
-    g_klog_state.a_logger_levels = NULL;
+    g_klog_state.a_logger_handles = NULL;
+    g_klog_state.b_logger_names   = NULL;
+    g_klog_state.a_logger_levels  = NULL;
 
     free(g_klog_state.b_level_strings);
-    g_klog_state.b_level_strings = NULL;
     free(g_klog_state.b_level_strings_colored);
+    g_klog_state.b_level_strings         = NULL;
     g_klog_state.b_level_strings_colored = NULL;
 
     g_klog_state.prefix_element_index = 0;
     g_klog_state.prefix_element_count = 0;
-    g_klog_state.prefix_file_size     = 0;
+
+    g_klog_state.prefix_file_size = 0;
     free(g_klog_state.b_prefixes_file);
-    g_klog_state.b_prefixes_file     = NULL;
+    g_klog_state.b_prefixes_file = NULL;
+
     g_klog_state.prefix_console_size = 0;
     free(g_klog_state.b_prefixes_console);
     g_klog_state.b_prefixes_console = NULL;
-    g_klog_state.prefix_time_size   = 0;
+
+    g_klog_state.prefix_time_size = 0;
     free(g_klog_state.b_prefixes_time);
-    g_klog_state.b_prefixes_time             = NULL;
+    g_klog_state.b_prefixes_time = NULL;
+
     g_klog_state.prefix_source_location_size = 0;
     free(g_klog_state.b_prefixes_source_location);
     g_klog_state.b_prefixes_source_location = NULL;
 
-    g_klog_state.message_element_index = 0;
-    g_klog_state.message_element_count = 0;
-    free(g_klog_state.b_messages);
-    g_klog_state.b_messages = NULL;
+    g_klog_state.message_formatted_max_size = 0;
+    free(g_klog_state.b_message_formatted);
+    g_klog_state.b_message_formatted = NULL;
 
     if (g_klog_state.p_file) {
         fclose(g_klog_state.p_file);
@@ -340,11 +343,11 @@ void klog_log(
     /* Create the input string with the arguments injected */
     va_list p_args;
     va_start(p_args, s_format);
-    const char* const s_input_message = klog_format_input_message(s_format, p_args);
+    klog_format_input_message(g_klog_state.b_message_formatted, g_klog_state.message_formatted_max_size, s_format, p_args);
     va_end(p_args);
 
     /* Split the input string into multiple input strings based on the newlines */
-    const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(s_input_message);
+    const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(g_klog_state.b_message_formatted);
 
     /* Get the information to create the message prefix */
     const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
@@ -410,7 +413,7 @@ void klog_log(
         g_klog_state.prefix_element_index = 0;
     }
 
-    free((char*)s_input_message);
+    memset(g_klog_state.b_message_formatted, 0, g_klog_state.message_formatted_max_size);
 
     free(split_messages_info.ls_strings);
     free((uint32_t*)split_messages_info.a_string_lengths);

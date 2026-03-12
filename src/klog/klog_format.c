@@ -167,7 +167,9 @@ KlogString klog_format_message_prefix(
     return (KlogString) { size_total, s_prefix };
 }
 
-const char* klog_format_input_message(
+void klog_format_input_message(
+    char* const       b_output,
+    const uint32_t    output_size,
     const char* const s_format,
     va_list           p_args
 ) {
@@ -178,16 +180,12 @@ const char* klog_format_input_message(
     /* Calculate the length of the input message */
     /* +1 for null termination */
     /* @todo kjk 2026/01/14 Use _vscprintf */
-    const int input_message_length = vsnprintf(0, 0, s_format, p_args) + 1;
-
-    /* Actually create the input message, now that we know the length */
-    char* const s_input_message = malloc(input_message_length);
+    const int32_t  input_message_length  = vsnprintf(0, 0, s_format, p_args) + 1;
+    const uint32_t actual_message_length = output_size < (uint32_t)input_message_length ? output_size : (uint32_t)input_message_length;
 
     /*  Format the input message with the unused copy of the args */
-    vsnprintf(s_input_message, input_message_length, s_format, p_args_copy);
+    vsnprintf(b_output, actual_message_length, s_format, p_args_copy);
     va_end(p_args_copy);
-
-    return s_input_message;
 }
 
 KlogFormatSplitInfo klog_format_split_strings(
