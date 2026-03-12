@@ -190,56 +190,6 @@ uint32_t klog_format_input_message(
     return actual_message_length;
 }
 
-KlogFormatSplitInfo klog_format_split_strings(
-    const char* const s_message
-) {
-    const uint32_t input_strlen = strlen(s_message);
-
-    uint32_t number_strings = 1;
-
-    /* First pass to count how many strings we will have, so we can allocate our result buffers accordingly */
-    for (uint32_t i_char_newline_count = 0; i_char_newline_count < input_strlen; ++i_char_newline_count) {
-        if (s_message[i_char_newline_count] == '\n') {
-            number_strings += 1;
-        }
-    }
-
-    /* Allocate the resulting buffers */
-    const char** const ls_strings     = malloc(number_strings * sizeof(char*));
-    uint32_t* const    string_lengths = malloc(number_strings * sizeof(uint32_t));
-
-    /* Initialize the first format string values in case we never reach a newline */
-    ls_strings[0]     = s_message;
-    string_lengths[0] = input_strlen;
-
-    /* Find all of the newlines so we know where the format string pointers should begin */
-    uint32_t curr_format_string_start_index = 0;
-    uint32_t i_curr_format_string           = 0;
-    for (uint32_t i_char_base = 0; i_char_base < input_strlen; ++i_char_base) {
-        if (s_message[i_char_base] != '\n') {
-            continue;
-        }
-
-        /* Update the information for our current format string */
-        const uint32_t curr_format_string_length = i_char_base - curr_format_string_start_index;
-        string_lengths[i_curr_format_string]     = curr_format_string_length;
-        if (i_curr_format_string < (number_strings - 1)) {
-            ls_strings[i_curr_format_string + 1] = s_message + i_char_base + 1;
-        }
-
-        /* Move on to the next format string */
-        i_curr_format_string          += 1;
-        curr_format_string_start_index = i_char_base + 1; /* +1 so we can skip over the current newline character */
-    }
-
-    const uint32_t final_format_string_length = input_strlen - curr_format_string_start_index;
-    string_lengths[i_curr_format_string]      = final_format_string_length;
-
-    const KlogFormatSplitInfo result = { number_strings, ls_strings, string_lengths };
-
-    return result;
-}
-
 KlogString klog_format_time(
     char* s_time
 ) {
