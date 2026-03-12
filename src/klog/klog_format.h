@@ -46,7 +46,8 @@ KlogString klog_format_message_prefix(
     const KlogString* p_source_location
 );
 
-void klog_format_input_message(
+/* Returns the length of the full message (not including null terminating character) */
+uint32_t klog_format_input_message(
     char*          b_output,
     const uint32_t output_size,
     const char*    s_format,

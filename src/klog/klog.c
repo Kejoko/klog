@@ -343,11 +343,13 @@ void klog_log(
     /* Create the input string with the arguments injected */
     va_list p_args;
     va_start(p_args, s_format);
-    klog_format_input_message(g_klog_state.b_message_formatted, g_klog_state.message_formatted_max_size, s_format, p_args);
+    const uint32_t actual_message_length = klog_format_input_message(
+        g_klog_state.b_message_formatted,
+        g_klog_state.message_formatted_max_size,
+        s_format,
+        p_args
+    );
     va_end(p_args);
-
-    /* Split the input string into multiple input strings based on the newlines */
-    const KlogFormatSplitInfo split_messages_info = klog_format_split_strings(g_klog_state.b_message_formatted);
 
     /* Get the information to create the message prefix */
     const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
@@ -398,14 +400,22 @@ void klog_log(
     );
 
     /* Actually log the message */
-    for (uint32_t i_message = 0; i_message < split_messages_info.number_strings; ++i_message) {
-        const KlogString packed_message = { split_messages_info.a_string_lengths[i_message], split_messages_info.ls_strings[i_message] };
+    uint32_t i_starting_character = 0;
+    while (i_starting_character <= actual_message_length) {
+        const char* const p_newline         = strchr(g_klog_state.b_message_formatted + i_starting_character, '\n');
+        const uint32_t    submessage_length = p_newline
+            ? p_newline - (g_klog_state.b_message_formatted + i_starting_character)
+            : actual_message_length;
+
+        const KlogString packed_message = { submessage_length, g_klog_state.b_message_formatted + i_starting_character };
         if (requested_level <= g_klog_config.console.max_level) {
             klog_output_console(&packed_prefix_console, &packed_message);
         }
         if (g_klog_state.p_file && (requested_level <= g_klog_config.file.max_level)) {
             klog_output_file(g_klog_state.p_file, &packed_prefix_file, &packed_message);
         }
+
+        i_starting_character = i_starting_character + submessage_length + 1;
     }
 
     g_klog_state.prefix_element_index = g_klog_state.prefix_element_index + 1;
@@ -414,8 +424,5 @@ void klog_log(
     }
 
     memset(g_klog_state.b_message_formatted, 0, g_klog_state.message_formatted_max_size);
-
-    free(split_messages_info.ls_strings);
-    free((uint32_t*)split_messages_info.a_string_lengths);
 #endif
 }

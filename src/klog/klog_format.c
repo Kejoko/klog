@@ -167,7 +167,7 @@ KlogString klog_format_message_prefix(
     return (KlogString) { size_total, s_prefix };
 }
 
-void klog_format_input_message(
+uint32_t klog_format_input_message(
     char* const       b_output,
     const uint32_t    output_size,
     const char* const s_format,
@@ -186,6 +186,8 @@ void klog_format_input_message(
     /*  Format the input message with the unused copy of the args */
     vsnprintf(b_output, actual_message_length, s_format, p_args_copy);
     va_end(p_args_copy);
+
+    return actual_message_length;
 }
 
 KlogFormatSplitInfo klog_format_split_strings(
