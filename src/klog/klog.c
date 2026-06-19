@@ -331,7 +331,7 @@ void klog_log(
     }
 
     if (requested_level > g_klog_state.a_logger_levels[p_logger_handle->value]) {
-        kdprintf("Trying to log with a level more verbose than is possible\n");
+        kdprintf("Trying to log with a level more verbose than the requested logger allows\n");
         return;
     }
 
@@ -418,11 +418,13 @@ void klog_log(
         i_starting_character = i_starting_character + submessage_length + 1;
     }
 
+    /* Update the index into our ring buffer */
     g_klog_state.prefix_element_index = g_klog_state.prefix_element_index + 1;
     if (g_klog_state.prefix_element_index >= g_klog_state.prefix_element_count) {
         g_klog_state.prefix_element_index = 0;
     }
 
+    /* Clear the buffer for the next time it is used */
     memset(g_klog_state.b_message_formatted, 0, g_klog_state.message_formatted_max_size);
 #endif
 }

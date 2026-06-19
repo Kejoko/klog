@@ -173,7 +173,11 @@ uint32_t klog_format_input_message(
     const char* const s_format,
     va_list           p_args
 ) {
-    /* We need to make a copy of the args (for the second vsnprintf call) before we consume them with the first vsnprintf call */
+    /**
+     * We need to make a copy of the args (for the second vsnprintf call) before we consume them with the first vsnprintf call
+     *
+     * NOTE THAT va_copy, va_start MAY HEAP ALLOCATE, AND va_end MAY FREE THE MEMORY DEPENDING ON THE IMPLEMENTATION - SAD
+     */
     va_list p_args_copy;
     va_copy(p_args_copy, p_args);
 
