@@ -8,6 +8,18 @@
 
 typedef struct KlogLoggerHandle KlogLoggerHandle;
 
+/**
+ * @brief Formatting information
+ *
+ * @var logger_name_max_length
+ * @var message_max_length This is the maximum length (in characters) that a fully formatted message
+ *      can be. Note that this length is enforced prior to the message being split at newlines. If you
+ *      set this field to 10, and you have a message of length 15 with a newline at character index 5,
+ *      you will get a line of 5 characters (0-4) and a line of 4 characters (6-9).
+ * @var source_location_filename_max_length
+ * @var use_thread_id
+ * @var use_timestamp
+ */
 typedef struct {
     uint32_t logger_name_max_length;
     uint32_t message_max_length;

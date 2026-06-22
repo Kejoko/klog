@@ -48,9 +48,8 @@ extern struct KlogState {
     uint32_t prefix_source_location_size;
     char*    b_prefixes_source_location;
 
-    uint32_t message_element_index;
-    uint32_t message_element_count;
-    char*    b_messages;
+    uint32_t message_formatted_max_size;
+    char*    b_message_formatted;
 
     FILE* p_file;
 

@@ -15,4 +15,5 @@ endfunction()
 # set_klog_versions(0 0 8) # Pre-allocate message prefix buffers
 # set_klog_versions(0 0 9) # klog_logger_set_level -> klog_logger_level_set
 # set_klog_versions(0 0 10) # Formatting
-set_klog_versions(0 0 11) # EOF Newlines
+# set_klog_versions(0 0 11) # EOF Newlines
+set_klog_versions(0 0 12) # Pre-allocate message buffer, don't malloc for message formatting

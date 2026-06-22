@@ -167,77 +167,31 @@ KlogString klog_format_message_prefix(
     return (KlogString) { size_total, s_prefix };
 }
 
-const char* klog_format_input_message(
+uint32_t klog_format_input_message(
+    char* const       b_output,
+    const uint32_t    size_output,
     const char* const s_format,
     va_list           p_args
 ) {
-    /* We need to make a copy of the args (for the second vsnprintf call) before we consume them with the first vsnprintf call */
+    /**
+     * We need to make a copy of the args (for the second vsnprintf call) before we consume them with the first vsnprintf call
+     *
+     * NOTE THAT va_copy, va_start MAY HEAP ALLOCATE, AND va_end MAY FREE THE MEMORY DEPENDING ON THE IMPLEMENTATION - SAD
+     */
     va_list p_args_copy;
     va_copy(p_args_copy, p_args);
 
     /* Calculate the length of the input message */
     /* +1 for null termination */
     /* @todo kjk 2026/01/14 Use _vscprintf */
-    const int input_message_length = vsnprintf(0, 0, s_format, p_args) + 1;
-
-    /* Actually create the input message, now that we know the length */
-    char* const s_input_message = malloc(input_message_length);
+    const int32_t  input_message_length  = vsnprintf(0, 0, s_format, p_args) + 1;
+    const uint32_t actual_message_length = size_output < (uint32_t)input_message_length ? size_output + 1 : (uint32_t)input_message_length;
 
     /*  Format the input message with the unused copy of the args */
-    vsnprintf(s_input_message, input_message_length, s_format, p_args_copy);
+    vsnprintf(b_output, actual_message_length, s_format, p_args_copy);
     va_end(p_args_copy);
 
-    return s_input_message;
-}
-
-KlogFormatSplitInfo klog_format_split_strings(
-    const char* const s_message
-) {
-    const uint32_t input_strlen = strlen(s_message);
-
-    uint32_t number_strings = 1;
-
-    /* First pass to count how many strings we will have, so we can allocate our result buffers accordingly */
-    for (uint32_t i_char_newline_count = 0; i_char_newline_count < input_strlen; ++i_char_newline_count) {
-        if (s_message[i_char_newline_count] == '\n') {
-            number_strings += 1;
-        }
-    }
-
-    /* Allocate the resulting buffers */
-    const char** const ls_strings     = malloc(number_strings * sizeof(char*));
-    uint32_t* const    string_lengths = malloc(number_strings * sizeof(uint32_t));
-
-    /* Initialize the first format string values in case we never reach a newline */
-    ls_strings[0]     = s_message;
-    string_lengths[0] = input_strlen;
-
-    /* Find all of the newlines so we know where the format string pointers should begin */
-    uint32_t curr_format_string_start_index = 0;
-    uint32_t i_curr_format_string           = 0;
-    for (uint32_t i_char_base = 0; i_char_base < input_strlen; ++i_char_base) {
-        if (s_message[i_char_base] != '\n') {
-            continue;
-        }
-
-        /* Update the information for our current format string */
-        const uint32_t curr_format_string_length = i_char_base - curr_format_string_start_index;
-        string_lengths[i_curr_format_string]     = curr_format_string_length;
-        if (i_curr_format_string < (number_strings - 1)) {
-            ls_strings[i_curr_format_string + 1] = s_message + i_char_base + 1;
-        }
-
-        /* Move on to the next format string */
-        i_curr_format_string          += 1;
-        curr_format_string_start_index = i_char_base + 1; /* +1 so we can skip over the current newline character */
-    }
-
-    const uint32_t final_format_string_length = input_strlen - curr_format_string_start_index;
-    string_lengths[i_curr_format_string]      = final_format_string_length;
-
-    const KlogFormatSplitInfo result = { number_strings, ls_strings, string_lengths };
-
-    return result;
+    return actual_message_length;
 }
 
 KlogString klog_format_time(
@@ -283,10 +237,10 @@ KlogString klog_format_source_location(
     }
 
     /* filename, +1 for colon, +4 for line_number */
-    const uint32_t total_size = filename_size_max + 1 + 4;
+    const uint32_t size_total = filename_size_max + 1 + 4;
 
     /* / * Initialize with spaces, so the filename is padded correctly * / */
-    memset(s_source_location, ' ', total_size);
+    memset(s_source_location, ' ', size_total);
 
     const char* const s_filename             = klog_platform_get_basename(s_filepath);
     const uint32_t    filename_size_original = strlen(s_filename);
@@ -299,7 +253,7 @@ KlogString klog_format_source_location(
     sprintf(s_source_location + filename_size_max, ":%4d", line_number_adjusted);
 
     /* We are not reporting the null terminator in our length */
-    const KlogString packed_source_location = { total_size, s_source_location };
+    const KlogString packed_source_location = { size_total, s_source_location };
 
     return packed_source_location;
 }
