@@ -145,7 +145,7 @@ void klog_initialize(
         true
     );
 
-    g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length + 1; /* +1 for null terminating character */
+    g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length;
     g_klog_state.b_message_formatted        = klog_initialize_buffer(
         1,
         g_klog_state.message_formatted_max_size,
