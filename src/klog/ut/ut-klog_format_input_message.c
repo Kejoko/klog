@@ -348,6 +348,19 @@ int longer_input() {
         }
     }
 
+    /* Ensure the non-populated characters are as we set them (all As) */
+    for (uint32_t idx_char = result + 1; idx_char < size_input + 1; ++idx_char) {
+        if (b_output[idx_char] != 'A') {
+            printf(
+                "Error in interesting_format(): Character at index %d is '%c', should be 'A'\n",
+                idx_char,
+                b_output[idx_char]
+            );
+            free(b_output);
+            return 1;
+        }
+    }
+
     free(b_output);
 
     return 0;
@@ -381,6 +394,7 @@ int interesting_format() {
         return 1;
     }
 
+    /* Ensure the formatted bit is correct */
     const char* s_expected = "07 00DEAD1";
     for (uint32_t idx_char = 0; idx_char < result; ++idx_char) {
         if (b_output[idx_char] != s_expected[idx_char]) {
@@ -389,6 +403,19 @@ int interesting_format() {
                 idx_char,
                 b_output[idx_char],
                 s_expected[idx_char]
+            );
+            free(b_output);
+            return 1;
+        }
+    }
+
+    /* Ensure the non-populated characters are as we set them (all As) */
+    for (uint32_t idx_char = result + 1; idx_char < size_input + 1; ++idx_char) {
+        if (b_output[idx_char] != 'A') {
+            printf(
+                "Error in interesting_format(): Character at index %d is '%c', should be 'A'\n",
+                idx_char,
+                b_output[idx_char]
             );
             free(b_output);
             return 1;
