@@ -42,6 +42,12 @@ int main(
     kdprintf("LOGGING MULTIPLE LINES\n");
     klog(handle_1, KLOG_LEVEL_INFO, "1234\nabcd\n0987\nABCD\n!@#$\n)(*&\n)dsdfsfsfsfsfsfsfs");
     klog(handle_1, KLOG_LEVEL_WARN, "\n1\n2\n3\n4\n5 ha ha many lines \n1\n2\n3\n ha");
+    kdprintf("LOGGING EMPTY LINES\n");
+    klog(handle_1, KLOG_LEVEL_WARN, "");
+    klog(handle_1, KLOG_LEVEL_WARN, "");
+    klog(handle_1, KLOG_LEVEL_WARN, "");
+    klog(handle_1, KLOG_LEVEL_WARN, "");
+    klog(handle_1, KLOG_LEVEL_WARN, "");
 
 #ifndef KLOG_DEBUG
     const KlogLoggerHandle* handle_2 = klog_logger_create("B");

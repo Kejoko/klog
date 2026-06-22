@@ -169,7 +169,7 @@ KlogString klog_format_message_prefix(
 
 uint32_t klog_format_input_message(
     char* const       b_output,
-    const uint32_t    output_size,
+    const uint32_t    size_output,
     const char* const s_format,
     va_list           p_args
 ) {
@@ -185,7 +185,7 @@ uint32_t klog_format_input_message(
     /* +1 for null termination */
     /* @todo kjk 2026/01/14 Use _vscprintf */
     const int32_t  input_message_length  = vsnprintf(0, 0, s_format, p_args) + 1;
-    const uint32_t actual_message_length = output_size < (uint32_t)input_message_length ? output_size : (uint32_t)input_message_length;
+    const uint32_t actual_message_length = size_output < (uint32_t)input_message_length ? size_output + 1 : (uint32_t)input_message_length;
 
     /*  Format the input message with the unused copy of the args */
     vsnprintf(b_output, actual_message_length, s_format, p_args_copy);
@@ -237,10 +237,10 @@ KlogString klog_format_source_location(
     }
 
     /* filename, +1 for colon, +4 for line_number */
-    const uint32_t total_size = filename_size_max + 1 + 4;
+    const uint32_t size_total = filename_size_max + 1 + 4;
 
     /* / * Initialize with spaces, so the filename is padded correctly * / */
-    memset(s_source_location, ' ', total_size);
+    memset(s_source_location, ' ', size_total);
 
     const char* const s_filename             = klog_platform_get_basename(s_filepath);
     const uint32_t    filename_size_original = strlen(s_filename);
@@ -253,7 +253,7 @@ KlogString klog_format_source_location(
     sprintf(s_source_location + filename_size_max, ":%4d", line_number_adjusted);
 
     /* We are not reporting the null terminator in our length */
-    const KlogString packed_source_location = { total_size, s_source_location };
+    const KlogString packed_source_location = { size_total, s_source_location };
 
     return packed_source_location;
 }
