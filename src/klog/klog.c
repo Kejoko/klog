@@ -59,8 +59,8 @@ void klog_initialize(
     if (p_klog_alloc_info) {
         g_klog_config.alloc = *p_klog_alloc_info;
     } else {
-        g_klog_config.alloc.cb_alloc = &malloc;
-        g_klog_config.alloc.cb_free  = &free;
+        g_klog_config.alloc.alloc_cb = &malloc;
+        g_klog_config.alloc.free_cb  = &free;
     }
 
     g_klog_state.number_loggers_max = max_number_loggers;
@@ -70,7 +70,7 @@ void klog_initialize(
         g_klog_config.format.logger_name_max_length,
         ' ',
         false,
-        g_klog_config.alloc.cb_alloc
+        g_klog_config.alloc.alloc_cb
     );
     kdprintf(
         "b_logger_names: %p through %p\n",
@@ -78,21 +78,21 @@ void klog_initialize(
         (void*)(g_klog_state.b_logger_names + (max_number_loggers * klog_format_info.logger_name_max_length))
     );
 
-    g_klog_state.a_logger_levels = klog_initialize_logger_levels_array(g_klog_state.number_loggers_max, g_klog_config.alloc.cb_alloc);
+    g_klog_state.a_logger_levels = klog_initialize_logger_levels_array(g_klog_state.number_loggers_max, g_klog_config.alloc.alloc_cb);
     kdprintf(
         "a_logger_levels: %p through %p\n",
         (void*)g_klog_state.a_logger_levels,
         (void*)(g_klog_state.a_logger_levels + g_klog_state.number_loggers_max)
     );
 
-    g_klog_state.b_level_strings = klog_initialize_level_strings_buffer(g_klog_config.alloc.cb_alloc);
+    g_klog_state.b_level_strings = klog_initialize_level_strings_buffer(g_klog_config.alloc.alloc_cb);
     kdprintf(
         "b_level_strings: %p through %p\n",
         (void*)g_klog_state.b_level_strings,
         (void*)(g_klog_state.b_level_strings + (G_klog_level_string_length * G_klog_number_levels))
     );
 
-    g_klog_state.b_level_strings_colored = klog_initialize_colored_level_strings_buffer(g_klog_config.alloc.cb_alloc);
+    g_klog_state.b_level_strings_colored = klog_initialize_colored_level_strings_buffer(g_klog_config.alloc.alloc_cb);
     kdprintf(
         "b_level_strings_colored: %p through %p\n",
         (void*)g_klog_state.b_level_strings_colored,
@@ -101,7 +101,7 @@ void klog_initialize(
 
     g_klog_state.number_loggers_created = 0;
 
-    g_klog_state.a_logger_handles = klog_initialize_logger_handle_array(g_klog_state.number_loggers_max, g_klog_config.alloc.cb_alloc);
+    g_klog_state.a_logger_handles = klog_initialize_logger_handle_array(g_klog_state.number_loggers_max, g_klog_config.alloc.alloc_cb);
     kdprintf(
         "a_logger_handles: %p through %p\n",
         (void*)g_klog_state.a_logger_handles,
@@ -135,28 +135,28 @@ void klog_initialize(
         g_klog_state.prefix_file_size,
         '\0',
         true,
-        g_klog_config.alloc.cb_alloc
+        g_klog_config.alloc.alloc_cb
     );
     g_klog_state.b_prefixes_console = klog_initialize_buffer(
         g_klog_state.prefix_element_count,
         g_klog_state.prefix_console_size,
         '\0',
         true,
-        g_klog_config.alloc.cb_alloc
+        g_klog_config.alloc.alloc_cb
     );
     g_klog_state.b_prefixes_time = klog_initialize_buffer(
         g_klog_state.prefix_element_count,
         g_klog_state.prefix_time_size,
         '$',
         true,
-        g_klog_config.alloc.cb_alloc
+        g_klog_config.alloc.alloc_cb
     );
     g_klog_state.b_prefixes_source_location = klog_initialize_buffer(
         g_klog_state.prefix_element_count,
         g_klog_state.prefix_source_location_size,
         '@',
         true,
-        g_klog_config.alloc.cb_alloc
+        g_klog_config.alloc.alloc_cb
     );
 
     g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length;
@@ -165,10 +165,10 @@ void klog_initialize(
         g_klog_state.message_formatted_max_size,
         '\0',
         true,
-        g_klog_config.alloc.cb_alloc
+        g_klog_config.alloc.alloc_cb
     );
 
-    g_klog_state.p_file = klog_initialize_file(p_klog_file_info, g_klog_config.alloc.cb_alloc);
+    g_klog_state.p_file = klog_initialize_file(p_klog_file_info, g_klog_config.alloc.alloc_cb);
     kdprintf("p_file: %p\n",             (void*)g_klog_state.p_file);
     kdprintf("File max verbosity: %d\n", g_klog_config.file.max_level);
 
@@ -189,15 +189,15 @@ void klog_deinitialize(
     g_klog_state.number_loggers_max     = 0;
     g_klog_state.number_loggers_created = 0;
 
-    g_klog_config.alloc.cb_free(g_klog_state.a_logger_handles);
-    g_klog_config.alloc.cb_free(g_klog_state.b_logger_names);
-    g_klog_config.alloc.cb_free(g_klog_state.a_logger_levels);
+    g_klog_config.alloc.free_cb(g_klog_state.a_logger_handles);
+    g_klog_config.alloc.free_cb(g_klog_state.b_logger_names);
+    g_klog_config.alloc.free_cb(g_klog_state.a_logger_levels);
     g_klog_state.a_logger_handles = NULL;
     g_klog_state.b_logger_names   = NULL;
     g_klog_state.a_logger_levels  = NULL;
 
-    g_klog_config.alloc.cb_free(g_klog_state.b_level_strings);
-    g_klog_config.alloc.cb_free(g_klog_state.b_level_strings_colored);
+    g_klog_config.alloc.free_cb(g_klog_state.b_level_strings);
+    g_klog_config.alloc.free_cb(g_klog_state.b_level_strings_colored);
     g_klog_state.b_level_strings         = NULL;
     g_klog_state.b_level_strings_colored = NULL;
 
@@ -205,23 +205,23 @@ void klog_deinitialize(
     g_klog_state.prefix_element_count = 0;
 
     g_klog_state.prefix_file_size = 0;
-    g_klog_config.alloc.cb_free(g_klog_state.b_prefixes_file);
+    g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_file);
     g_klog_state.b_prefixes_file = NULL;
 
     g_klog_state.prefix_console_size = 0;
-    g_klog_config.alloc.cb_free(g_klog_state.b_prefixes_console);
+    g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_console);
     g_klog_state.b_prefixes_console = NULL;
 
     g_klog_state.prefix_time_size = 0;
-    g_klog_config.alloc.cb_free(g_klog_state.b_prefixes_time);
+    g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_time);
     g_klog_state.b_prefixes_time = NULL;
 
     g_klog_state.prefix_source_location_size = 0;
-    g_klog_config.alloc.cb_free(g_klog_state.b_prefixes_source_location);
+    g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_source_location);
     g_klog_state.b_prefixes_source_location = NULL;
 
     g_klog_state.message_formatted_max_size = 0;
-    g_klog_config.alloc.cb_free(g_klog_state.b_message_formatted);
+    g_klog_config.alloc.free_cb(g_klog_state.b_message_formatted);
     g_klog_state.b_message_formatted = NULL;
 
     if (g_klog_state.p_file) {
@@ -255,14 +255,14 @@ const KlogLoggerHandle* klog_logger_create(
 
     const uint32_t current_logger_index = g_klog_state.number_loggers_created;
 
-    const char* const s_sanitized_name = klog_format_logger_name(s_logger_name, g_klog_config.alloc.cb_alloc);
+    const char* const s_sanitized_name = klog_format_logger_name(s_logger_name, g_klog_config.alloc.alloc_cb);
 
     const uint32_t logger_name_start_index = current_logger_index * g_klog_config.format.logger_name_max_length;
     const uint32_t number_chars_to_copy    = strlen(s_sanitized_name) >= g_klog_config.format.logger_name_max_length
         ? g_klog_config.format.logger_name_max_length /* copy as much as we can fit */
         : strlen(s_sanitized_name); /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
     memcpy(&g_klog_state.b_logger_names[logger_name_start_index], s_sanitized_name, number_chars_to_copy);
-    g_klog_config.alloc.cb_free((char*)s_sanitized_name);
+    g_klog_config.alloc.free_cb((char*)s_sanitized_name);
 
     g_klog_state.a_logger_levels[current_logger_index] = KLOG_LEVEL_OFF;
 

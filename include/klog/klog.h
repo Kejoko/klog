@@ -48,10 +48,10 @@ typedef struct {
  * @brief User provided callbacks for custom allocation and free logic
  */
 typedef struct {
-    void* (*cb_alloc)(
+    void* (*alloc_cb)(
         size_t size
     );
-    void (*cb_free)(
+    void (*free_cb)(
         void*
     );
 } KlogAllocInfo;

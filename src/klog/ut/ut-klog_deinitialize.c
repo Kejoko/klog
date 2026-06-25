@@ -42,12 +42,12 @@ int check(
     klog_initialize(4, format_info, &async_info, &console_info, &file_info, NULL);
 
     /* Ensure allocation/free callbacks were defaulted correctly */
-    if (g_klog_config.alloc.cb_alloc != &malloc) {
-        printf("g_klog_config.alloc.cb_alloc should by default equal the address of malloc but it does not\n");
+    if (g_klog_config.alloc.alloc_cb != &malloc) {
+        printf("g_klog_config.alloc.alloc_cb should by default equal the address of malloc but it does not\n");
         return 1;
     }
-    if (g_klog_config.alloc.cb_free != &free) {
-        printf("g_klog_config.alloc.cb_free should by default equal the address of free but it does not\n");
+    if (g_klog_config.alloc.free_cb != &free) {
+        printf("g_klog_config.alloc.free_cb should by default equal the address of free but it does not\n");
         return 1;
     }
 
@@ -93,12 +93,12 @@ int callbacks(
     klog_initialize(4, format_info, NULL, NULL, NULL, &alloc_info);
 
     /* Ensure allocation/free callbacks were set correctly */
-    if (g_klog_config.alloc.cb_alloc != &dummy_malloc) {
-        printf("g_klog_config.alloc.cb_alloc should equal the address of dummy_malloc but it does not\n");
+    if (g_klog_config.alloc.alloc_cb != &dummy_malloc) {
+        printf("g_klog_config.alloc.alloc_cb should equal the address of dummy_malloc but it does not\n");
         return 1;
     }
-    if (g_klog_config.alloc.cb_free != &dummy_free) {
-        printf("g_klog_config.alloc.cb_free should equal the address of dummy_free but it does not\n");
+    if (g_klog_config.alloc.free_cb != &dummy_free) {
+        printf("g_klog_config.alloc.free_cb should equal the address of dummy_free but it does not\n");
         return 1;
     }
 

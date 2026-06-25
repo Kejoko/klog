@@ -55,7 +55,7 @@ int no_alloc_cb(
 ) {
     KlogAllocInfo alloc_info = { NULL, &free };
     if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, NULL, &alloc_info)) {
-        printf("Parameters should be invalid when KlogAllocInfo pointer is provided but cb_alloc is NULL\n");
+        printf("Parameters should be invalid when KlogAllocInfo pointer is provided but alloc_cb is NULL\n");
         return 1;
     }
 
@@ -67,7 +67,7 @@ int no_free_cb(
 ) {
     KlogAllocInfo alloc_info = { &malloc, NULL };
     if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, NULL, &alloc_info)) {
-        printf("Parameters should be invalid when KlogAllocInfo pointer is provided but cb_free is NULL\n");
+        printf("Parameters should be invalid when KlogAllocInfo pointer is provided but free_cb is NULL\n");
         return 1;
     }
 

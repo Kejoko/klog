@@ -22,40 +22,40 @@ char* klog_initialize_buffer(
     const uint32_t element_length_max,
     const char     fill_char,
     const bool     null_terminate,
-    void* (* const cb_alloc)(
+    void* (* const alloc_cb)(
         size_t size
     )
 );
 
 KlogLoggerHandle* klog_initialize_logger_handle_array(
     const uint32_t max_number_loggers,
-    void* (* const cb_alloc)(
+    void* (* const alloc_cb)(
         size_t size
     )
 );
 
 uint8_t* klog_initialize_logger_levels_array(
     const uint32_t max_number_loggers,
-    void* (* const cb_alloc)(
+    void* (* const alloc_cb)(
         size_t size
     )
 );
 
 char* klog_initialize_level_strings_buffer(
-    void* (*const cb_alloc)(
+    void* (*const alloc_cb)(
         size_t size
     )
 );
 
 char* klog_initialize_colored_level_strings_buffer(
-    void* (*const cb_alloc)(
+    void* (*const alloc_cb)(
         size_t size
     )
 );
 
 FILE* klog_initialize_file(
     const KlogFileInfo* p_klog_file_info,
-    void* (* const      cb_alloc)(
+    void* (* const      alloc_cb)(
         size_t size
     )
 );

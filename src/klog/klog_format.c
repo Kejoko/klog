@@ -42,7 +42,7 @@ uint32_t klog_format_prefix_length_get(
 
 const char* klog_format_logger_name(
     const char* const s_name,
-    void* (* const    cb_alloc)(
+    void* (* const    alloc_cb)(
         size_t size
     )
 ) {
@@ -52,7 +52,7 @@ const char* klog_format_logger_name(
      */
 
     const uint32_t length_name      = strlen(s_name);
-    char*          s_sanitized_name = cb_alloc(length_name + 1); /* +1 for null termination */
+    char*          s_sanitized_name = alloc_cb(length_name + 1); /* +1 for null termination */
 
     for (uint32_t i_input_char = 0; i_input_char < length_name; ++i_input_char) {
         const char curr_char     = s_name[i_input_char];
@@ -77,7 +77,7 @@ const char* klog_format_logger_name(
 
 const char* klog_format_file_name_prefix(
     const char* const s_name,
-    void* (* const    cb_alloc)(
+    void* (* const    alloc_cb)(
         size_t size
     )
 ) {
@@ -87,7 +87,7 @@ const char* klog_format_file_name_prefix(
 
     /* @todo kjk 2026/02/12 Should we be doing anything to sanitize filepaths for windows vs linux? Convert "/" to "\\" and vice versa?? */
 
-    return klog_format_logger_name(s_name, cb_alloc);
+    return klog_format_logger_name(s_name, alloc_cb);
 }
 
 KlogString klog_format_message_prefix(

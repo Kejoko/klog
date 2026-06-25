@@ -15,13 +15,13 @@ char* klog_initialize_buffer(
     const uint32_t element_length_max,
     const char     fill_char,
     const bool     null_terminate,
-    void* (* const cb_alloc)(
+    void* (* const alloc_cb)(
         size_t size
     )
 ) {
     const uint32_t element_length_max_real = null_terminate ? element_length_max + 1 : element_length_max;
     const uint32_t total_size              = number_elements * element_length_max_real;
-    char* const    b_buffer                = cb_alloc(total_size);
+    char* const    b_buffer                = alloc_cb(total_size);
     memset(b_buffer, fill_char, total_size);
     if (null_terminate) {
         for (uint32_t i = 0; i < number_elements; ++i) {
@@ -82,11 +82,11 @@ bool klog_initialize_are_parameters_valid(
     }
 
     if (p_klog_alloc_info) {
-        if (p_klog_alloc_info->cb_alloc == NULL) {
+        if (p_klog_alloc_info->alloc_cb == NULL) {
             kdprintf("Trying to initialize klog with alloc info struct, yet the alloc callback is NULL\n");
             return false;
         }
-        if (p_klog_alloc_info->cb_free == NULL) {
+        if (p_klog_alloc_info->free_cb == NULL) {
             kdprintf("Trying to initialize klog with alloc info struct, yet the free callback is NULL\n");
             return false;
         }
@@ -100,12 +100,12 @@ bool klog_initialize_are_parameters_valid(
 
 KlogLoggerHandle* klog_initialize_logger_handle_array(
     const uint32_t max_number_loggers,
-    void* (* const cb_alloc)(
+    void* (* const alloc_cb)(
         size_t size
     )
 ) {
     const uint32_t          total_handle_array_size = max_number_loggers * sizeof(KlogLoggerHandle);
-    KlogLoggerHandle* const a_logger_handles        = cb_alloc(total_handle_array_size);
+    KlogLoggerHandle* const a_logger_handles        = alloc_cb(total_handle_array_size);
     kdprintf("Created logger handle array\n");
     kdprintf("  start: %p\n", (void*)a_logger_handles);
     kdprintf("  end  : %p\n", (void*)(a_logger_handles + total_handle_array_size));
@@ -116,12 +116,12 @@ KlogLoggerHandle* klog_initialize_logger_handle_array(
 
 uint8_t* klog_initialize_logger_levels_array(
     const uint32_t max_number_loggers,
-    void* (* const cb_alloc)(
+    void* (* const alloc_cb)(
         size_t size
     )
 ) {
     const uint32_t logger_levels_array_size_bytes = max_number_loggers * sizeof(uint8_t*);
-    uint8_t* const a_logger_levels                = cb_alloc(logger_levels_array_size_bytes);
+    uint8_t* const a_logger_levels                = alloc_cb(logger_levels_array_size_bytes);
     memset(a_logger_levels, 0, logger_levels_array_size_bytes);
 
     kdprintf("Created logger levels array\n");
@@ -133,12 +133,12 @@ uint8_t* klog_initialize_logger_levels_array(
 }
 
 char* klog_initialize_level_strings_buffer(
-    void* (*const cb_alloc)(
+    void* (*const alloc_cb)(
         size_t size
     )
 ) {
     const uint32_t level_string_array_total_bytes = G_klog_level_string_length * G_klog_number_levels;
-    char* const    b_level_strings                = cb_alloc(level_string_array_total_bytes);
+    char* const    b_level_strings                = alloc_cb(level_string_array_total_bytes);
     const char     off_string[]                   = "off  ";
     const char     fatal_string[]                 = "FATAL";
     const char     error_string[]                 = "ERROR";
@@ -163,12 +163,12 @@ char* klog_initialize_level_strings_buffer(
 }
 
 char* klog_initialize_colored_level_strings_buffer(
-    void* (*const cb_alloc)(
+    void* (*const alloc_cb)(
         size_t size
     )
 ) {
     const uint32_t colored_level_string_array_total_bytes = G_klog_colored_level_string_length * G_klog_number_levels;
-    char* const    b_colored_level_strings                = cb_alloc(colored_level_string_array_total_bytes);
+    char* const    b_colored_level_strings                = alloc_cb(colored_level_string_array_total_bytes);
     const char     off_string[]                           = "\x1b[37moff  \x1b[0m"; /* white  */
     const char     fatal_string[]                         = "\x1b[41mFATAL\x1b[0m"; /* red BG */
     const char     error_string[]                         = "\x1b[31mERROR\x1b[0m"; /* red    */
@@ -194,7 +194,7 @@ char* klog_initialize_colored_level_strings_buffer(
 
 FILE* klog_initialize_file(
     const KlogFileInfo* const p_klog_file_info,
-    void* (* const            cb_alloc)(
+    void* (* const            alloc_cb)(
         size_t size
     )
 ) {
@@ -206,7 +206,7 @@ FILE* klog_initialize_file(
     const timepoint_t timepoint = klog_platform_get_current_timepoint();
 
     /* This is a null terminated string with all whitespace removed */
-    const char* const s_sanitized_prefix = klog_format_file_name_prefix(p_klog_file_info->s_filename_prefix, cb_alloc);
+    const char* const s_sanitized_prefix = klog_format_file_name_prefix(p_klog_file_info->s_filename_prefix, alloc_cb);
 
     /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS_SSSS.log */
     /* Extra chars                  : 00+     123456789                 */
@@ -214,7 +214,7 @@ FILE* klog_initialize_file(
     /*                                20+                        012345 */
     const uint32_t prefix_length        = strlen(s_sanitized_prefix) + 1; /* +1 for null terminator */
     const uint32_t full_filename_length = prefix_length + 25 + 1; /* +1 for null terminator */
-    char* const    full_filename        = cb_alloc(full_filename_length);
+    char* const    full_filename        = alloc_cb(full_filename_length);
     sprintf(
         full_filename,
         "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log",
