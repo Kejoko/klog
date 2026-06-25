@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "klog/klog.h"
 
@@ -49,11 +50,41 @@ int no_message_length(
     return 0;
 }
 
+int no_alloc_cb(
+    void
+) {
+    KlogAllocInfo alloc_info = { NULL, &free };
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, NULL, &alloc_info)) {
+        printf("Parameters should be invalid when KlogAllocInfo pointer is provided but cb_alloc is NULL\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+int no_free_cb(
+    void
+) {
+    KlogAllocInfo alloc_info = { &malloc, NULL };
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, NULL, &alloc_info)) {
+        printf("Parameters should be invalid when KlogAllocInfo pointer is provided but cb_free is NULL\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 int valid(
     void
 ) {
     if (!klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 100, 0, false, false }, NULL, NULL, NULL, NULL)) {
-        printf("Parameters should be valid\n");
+        printf("Parameters should be valid - case 0\n");
+        return 1;
+    }
+
+    KlogAllocInfo alloc_info = { &malloc, &free };
+    if (!klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 100, 0, false, false }, NULL, NULL, NULL, &alloc_info)) {
+        printf("Parameters should be valid - case 1\n");
         return 1;
     }
 
@@ -69,7 +100,14 @@ int noop(
 int main(
     void
 ) {
-    const int result = already_initialized() || no_loggers() || no_message_length() || no_message_length() || valid() || noop()
+    const int result = already_initialized()
+        || no_loggers()
+        || no_message_length()
+        || no_message_length()
+        || no_alloc_cb()
+        || no_free_cb()
+        || valid()
+        || noop()
     ;
 
     return result;
