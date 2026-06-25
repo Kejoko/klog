@@ -20,7 +20,7 @@ int set_levels(
 ) {
     const uint32_t max_number_loggers = 100;
     const uint32_t max_name_length    = 3;
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL);
+    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
 
     for (uint32_t i = 0; i < max_number_loggers; ++i) {
         const uint32_t desired_level = i % KLOG_LEVEL_COUNT;
@@ -51,7 +51,7 @@ int log_levels_tempfile(
     const uint32_t     max_number_loggers = 100;
     const uint32_t     max_name_length    = 3;
     const KlogFileInfo file_info          = { KLOG_LEVEL_TRACE, "/tmp/ut-klog_logger_level_set" }; /* @todo kjk 2026/02/11 portable tempfile path for windows and mac */
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, &file_info);
+    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, &file_info, NULL);
 
     const char*             l_names[KLOG_LEVEL_COUNT]   = { "001", "002", "003", "004", "005", "006", "007" };
     const KlogLoggerHandle* a_handles[KLOG_LEVEL_COUNT] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };

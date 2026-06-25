@@ -13,7 +13,7 @@ void do_it(
 ) {
     KlogFormatInfo  format_info = { 4, 10, 5, true, false };
     KlogConsoleInfo stdout_info = { KLOG_LEVEL_TRACE, use_color };
-    klog_initialize(2, format_info, NULL, &stdout_info, NULL);
+    klog_initialize(2, format_info, NULL, &stdout_info, NULL, NULL);
 
     const KlogLoggerHandle* handle_1 = klog_logger_create("Logger");
     klog_logger_level_set(handle_1, KLOG_LEVEL_TRACE);

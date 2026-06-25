@@ -15,7 +15,7 @@ int main(
 ) {
     KlogFormatInfo format_info = { 8, 10, 0, true, true };
     KlogFileInfo   file_info   = { KLOG_LEVEL_INFO, "FILE__PREFIX____OR_WHATEVER_THIS_PREFIX_IS_LONG" };
-    klog_initialize(4, format_info, NULL, NULL, &file_info);
+    klog_initialize(4, format_info, NULL, NULL, &file_info, NULL);
 
     const KlogLoggerHandle* handle_1 = klog_logger_create("MyLogger");
     klog_logger_level_set(handle_1, KLOG_LEVEL_DEBUG);

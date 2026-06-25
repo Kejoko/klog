@@ -65,7 +65,7 @@ for test_command in "${all_tests_to_run[@]}"; do
     command_to_run="$test_command"
 
     if [[ ! " ${ignore_memory_list[*]} " =~ " ${test_name} " ]]; then
-        command_to_run="valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all --error-exitcode=54 $command_to_run"
+        command_to_run="valgrind --tool=memcheck --enable-debuginfod=no --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all --error-exitcode=54 $command_to_run"
     fi
 
     $command_to_run > /dev/null 2>&1

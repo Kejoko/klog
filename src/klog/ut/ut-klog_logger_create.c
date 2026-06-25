@@ -17,7 +17,7 @@ int create_single_logger(
 ) {
     const uint32_t max_number_loggers = 1;
     const uint32_t max_name_length    = 3;
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL);
+    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
 
     if (g_klog_state.number_loggers_max != max_number_loggers) {
         printf("Klog initialized with max number of loggers %d instead of %d\n", g_klog_state.number_loggers_max, max_number_loggers);
@@ -49,7 +49,7 @@ int create_multiple_loggers(
 ) {
     const uint32_t max_number_loggers = 100;
     const uint32_t max_name_length    = 3;
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL);
+    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
 
     if (g_klog_state.number_loggers_max != max_number_loggers) {
         printf("Klog initialized with max number of loggers %d instead of %d\n", g_klog_state.number_loggers_max, max_number_loggers);

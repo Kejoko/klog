@@ -21,6 +21,7 @@ extern struct KlogConfig {
     KlogAsyncInfo   async;
     KlogConsoleInfo console;
     KlogFileInfo    file;
+    KlogAllocInfo   alloc;
 } g_klog_config;
 
 /**

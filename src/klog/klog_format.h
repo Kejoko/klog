@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct {
@@ -19,11 +20,17 @@ uint32_t klog_format_prefix_length_get(
 );
 
 const char* klog_format_logger_name(
-    const char* s_name
+    const char*    s_name,
+    void* (* const alloc_cb)(
+        size_t size
+    )
 );
 
 const char* klog_format_file_name_prefix(
-    const char* s_name
+    const char*    s_name,
+    void* (* const alloc_cb)(
+        size_t size
+    )
 );
 
 KlogString klog_format_message_prefix(

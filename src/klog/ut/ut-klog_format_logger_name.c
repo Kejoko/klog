@@ -17,7 +17,7 @@ int remove_whitespace(
 
     const char* s_expected = "a_b_c_d_e_f__g____h";
 
-    const char* s_actual = klog_format_logger_name(s_input);
+    const char* s_actual = klog_format_logger_name(s_input, &malloc);
 
     int result = strcmp(s_input, s_expected);
 
