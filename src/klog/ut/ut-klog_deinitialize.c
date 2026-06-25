@@ -41,6 +41,16 @@ int check(
     KlogFileInfo    file_info    = { KLOG_LEVEL_TRACE, "BASIC\tPREFIX" };
     klog_initialize(4, format_info, &async_info, &console_info, &file_info, NULL);
 
+    /* Ensure allocation/free callbacks were defaulted correctly */
+    if (g_klog_config.alloc.cb_alloc != &malloc) {
+        printf("g_klog_config.alloc.cb_alloc should by default equal the address of malloc but it does not\n");
+        return 1;
+    }
+    if (g_klog_config.alloc.cb_free != &free) {
+        printf("g_klog_config.alloc.cb_free should by default equal the address of free but it does not\n");
+        return 1;
+    }
+
     /* Create the expected empty state */
     struct KlogConfig klog_config_empty = { 0 };
     struct KlogState  klog_state_empty  = { 0 };
