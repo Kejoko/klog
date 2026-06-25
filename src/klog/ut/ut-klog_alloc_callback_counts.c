@@ -106,6 +106,12 @@ int check(
         return 1;
     }
 
+    /* The alloc and free callbacks should be used the same number of times */
+    if (g_alloc_counter != g_free_counter) {
+        printf("Alloc counter is %d while Free counter is %d. These should be the same\n", g_alloc_counter, g_free_counter);
+        return 1;
+    }
+
     return 0;
 }
 
