@@ -27,7 +27,7 @@ int check(
     KlogFormatInfo  format_info  = { 6, 100, 10, true, true };
     KlogConsoleInfo console_info = { KLOG_LEVEL_INFO, true };
     KlogFileInfo    file_info    = { KLOG_LEVEL_TRACE, "BASIC\tPREFIX" };
-    klog_initialize(4, format_info, &async_info, &console_info, &file_info);
+    klog_initialize(4, format_info, &async_info, &console_info, &file_info, NULL);
 
     /* Create the expected empty state */
     struct KlogConfig klog_config_empty = { 0 };

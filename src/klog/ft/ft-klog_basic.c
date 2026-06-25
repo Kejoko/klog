@@ -17,7 +17,7 @@ int main(
     KlogConsoleInfo console_info = { KLOG_LEVEL_DEBUG, true };
     KlogFileInfo    file_info    = { KLOG_LEVEL_INFO, "BASIC\tPREFIX" };
     kdprintf("INITIALIZING KLOG\n");
-    klog_initialize(4, format_info, NULL, &console_info, &file_info);
+    klog_initialize(4, format_info, NULL, &console_info, &file_info, NULL);
 
     kdprintf("CREATING HANDLE\n");
     const KlogLoggerHandle* handle_1 = klog_logger_create("My Logger");

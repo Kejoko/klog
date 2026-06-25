@@ -13,7 +13,7 @@ int no_async_param(
     const uint32_t  logger_name_length = 6;
     KlogFormatInfo  format_info        = { logger_name_length, 10, 0, false, false };
     KlogConsoleInfo console_info       = { KLOG_LEVEL_TRACE, false };
-    klog_initialize(5, format_info, NULL, &console_info, NULL);
+    klog_initialize(5, format_info, NULL, &console_info, NULL, NULL);
 
     if (g_klog_state.prefix_element_index != 0) {
         printf("Klog prefix element index should be 0 before anything is logged\n");
@@ -95,7 +95,7 @@ int single_element(
     KlogFormatInfo  format_info        = { logger_name_length, 10, 0, false, false };
     KlogAsyncInfo   async_info         = { 1, 3 };
     KlogConsoleInfo console_info       = { KLOG_LEVEL_INFO, false };
-    klog_initialize(5, format_info, &async_info, &console_info, NULL);
+    klog_initialize(5, format_info, &async_info, &console_info, NULL, NULL);
 
     if (g_klog_state.prefix_element_index != 0) {
         printf("Klog prefix element index should be 0 before anything is logged\n");
@@ -179,7 +179,7 @@ int multiple_elements(
     KlogFormatInfo  format_info        = { logger_name_length, 10, 0, false, false };
     KlogAsyncInfo   async_info         = { num_elements, 3 };
     KlogConsoleInfo console_info       = { KLOG_LEVEL_DEBUG, false };
-    klog_initialize(num_loggers, format_info, &async_info, &console_info, NULL);
+    klog_initialize(num_loggers, format_info, &async_info, &console_info, NULL, NULL);
 
     if (g_klog_state.prefix_element_index != 0) {
         printf("Klog prefix element index should be 0 before anything is logged\n");

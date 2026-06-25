@@ -2,6 +2,7 @@
 #define KLOG_INCLUDED
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define KLOG_EXIT_CODE 32
@@ -44,6 +45,18 @@ typedef struct {
 } KlogFileInfo;
 
 /**
+ * @brief User provided callbacks for custom allocation and free logic
+ */
+typedef struct {
+    void* (*cb_alloc)(
+        size_t size
+    );
+    void (*cb_free)(
+        void*
+    );
+} KlogAllocInfo;
+
+/**
  * @enum KlogLevel The different levels of verbosity
  */
 enum KlogLevel {
@@ -61,7 +74,8 @@ void klog_initialize(
     const KlogFormatInfo   klog_format_info,
     const KlogAsyncInfo*   p_klog_async_info,
     const KlogConsoleInfo* p_klog_console_info,
-    const KlogFileInfo*    p_klog_file_info
+    const KlogFileInfo*    p_klog_file_info,
+    const KlogAllocInfo*   p_klog_alloc_info
 );
 
 void klog_deinitialize(

@@ -14,7 +14,14 @@
 void do_test(
     void
 ) {
-    klog_initialize(NUM_LOGGERS, (KlogFormatInfo) { 3, 40, 10, false, false }, NULL, &(KlogConsoleInfo) { KLOG_LEVEL_TRACE, false }, NULL);
+    klog_initialize(
+        NUM_LOGGERS,
+        (KlogFormatInfo) { 3, 40, 10, false, false },
+        NULL,
+        &(KlogConsoleInfo) { KLOG_LEVEL_TRACE, false },
+        NULL,
+        NULL
+    );
 
     const KlogLoggerHandle* a_handles[NUM_LOGGERS];
     for (uint32_t i = 0; i < NUM_LOGGERS; ++i) {

@@ -8,7 +8,7 @@
 int already_initialized(
     void
 ) {
-    if (klog_initialize_are_parameters_valid(true, 0, (KlogFormatInfo) { 0 }, NULL, NULL, NULL)) {
+    if (klog_initialize_are_parameters_valid(true, 0, (KlogFormatInfo) { 0 }, NULL, NULL, NULL, NULL)) {
         printf("Parameters should be invalid when klog is already initialized\n");
         return 1;
     }
@@ -19,7 +19,7 @@ int already_initialized(
 int no_loggers(
     void
 ) {
-    if (klog_initialize_are_parameters_valid(false, 0, (KlogFormatInfo) { 0 }, NULL, NULL, NULL)) {
+    if (klog_initialize_are_parameters_valid(false, 0, (KlogFormatInfo) { 0 }, NULL, NULL, NULL, NULL)) {
         printf("Parameters should be invalid when the maximum number of loggers is set to 0\n");
         return 1;
     }
@@ -30,7 +30,7 @@ int no_loggers(
 int no_logger_name_length(
     void
 ) {
-    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 0, 100, 0, false, false }, NULL, NULL, NULL)) {
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 0, 100, 0, false, false }, NULL, NULL, NULL, NULL)) {
         printf("Parameters should be invalid when the maximum length of logger names is set to 0\n");
         return 1;
     }
@@ -41,7 +41,7 @@ int no_logger_name_length(
 int no_message_length(
     void
 ) {
-    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, NULL)) {
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, NULL, NULL)) {
         printf("Parameters should be invalid when the maximum length of a message is set to 0\n");
         return 1;
     }
@@ -52,7 +52,7 @@ int no_message_length(
 int valid(
     void
 ) {
-    if (!klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 100, 0, false, false }, NULL, NULL, NULL)) {
+    if (!klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 100, 0, false, false }, NULL, NULL, NULL, NULL)) {
         printf("Parameters should be valid\n");
         return 1;
     }

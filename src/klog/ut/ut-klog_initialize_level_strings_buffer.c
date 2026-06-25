@@ -7,7 +7,7 @@
 int validate(
     void
 ) {
-    char* b_level_strings = klog_initialize_level_strings_buffer();
+    char* b_level_strings = klog_initialize_level_strings_buffer(&malloc);
 
     int result = 0;
 
@@ -34,7 +34,7 @@ int validate(
 int validate_colors(
     void
 ) {
-    char* b_level_strings_colored = klog_initialize_colored_level_strings_buffer();
+    char* b_level_strings_colored = klog_initialize_colored_level_strings_buffer(&malloc);
 
     int result = 0;
 

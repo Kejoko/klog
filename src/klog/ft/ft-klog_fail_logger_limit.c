@@ -13,7 +13,7 @@ int main(
     void
 ) {
     KlogFormatInfo format_info = { 6, 100, 20, true, false };
-    klog_initialize(2, format_info, NULL, NULL, NULL);
+    klog_initialize(2, format_info, NULL, NULL, NULL, NULL);
 
     const KlogLoggerHandle* handle_1 = klog_logger_create("MyLogger");
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");
