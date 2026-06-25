@@ -28,6 +28,7 @@ target_compile_options(klog PUBLIC ${KLOG_CMAKE_C_FLAGS})
 target_compile_definitions(klog PUBLIC ${KLOG_COMPILE_DEFINITIONS})
 
 if (KLOG_BUILD_TESTS)
+    create_unit_test_plain(ut/ut-klog_alloc_callback_counts.c klog)
     create_unit_test_plain(ut/ut-klog_deinitialize.c klog)
     create_unit_test_plain(ut/ut-klog_format_input_message.c klog)
     create_unit_test_plain(ut/ut-klog_format_logger_name.c klog)
