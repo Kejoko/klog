@@ -160,8 +160,8 @@ void klog_initialize(
     );
 
     g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length;
-    g_klog_state.b_message_formatted        = klog_initialize_buffer(
-        1,
+    g_klog_state.b_messages_formatted       = klog_initialize_buffer(
+        g_klog_state.prefix_element_count,
         g_klog_state.message_formatted_max_size,
         '\0',
         true,
@@ -221,8 +221,8 @@ void klog_deinitialize(
     g_klog_state.b_prefixes_source_location = NULL;
 
     g_klog_state.message_formatted_max_size = 0;
-    g_klog_config.alloc.free_cb(g_klog_state.b_message_formatted);
-    g_klog_state.b_message_formatted = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_messages_formatted);
+    g_klog_state.b_messages_formatted = NULL;
 
     if (g_klog_state.p_file) {
         fclose(g_klog_state.p_file);
@@ -357,10 +357,12 @@ void klog_log(
     const KlogString packed_time = g_klog_config.format.use_timestamp ? klog_format_time(s_prefix_time) : (KlogString) { 0, NULL };
 
     /* Create the input string with the arguments injected */
+    char* s_message_formatted = g_klog_state.b_messages_formatted
+        + (g_klog_state.prefix_element_index * g_klog_state.message_formatted_max_size);
     va_list p_args;
     va_start(p_args, s_format);
     const uint32_t actual_message_length = klog_format_input_message(
-        g_klog_state.b_message_formatted,
+        s_message_formatted,
         g_klog_state.message_formatted_max_size,
         s_format,
         p_args
@@ -418,12 +420,12 @@ void klog_log(
     /* Actually log the message */
     uint32_t i_starting_character = 0;
     while (i_starting_character <= actual_message_length) {
-        const char* const p_newline         = strchr(g_klog_state.b_message_formatted + i_starting_character, '\n');
+        const char* const p_newline         = strchr(s_message_formatted + i_starting_character, '\n');
         const uint32_t    submessage_length = p_newline
-            ? p_newline - (g_klog_state.b_message_formatted + i_starting_character)
+            ? p_newline - (s_message_formatted + i_starting_character)
             : actual_message_length;
 
-        const KlogString packed_message = { submessage_length, g_klog_state.b_message_formatted + i_starting_character };
+        const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
         if (requested_level <= g_klog_config.console.max_level) {
             klog_output_console(&packed_prefix_console, &packed_message);
         }
@@ -441,6 +443,6 @@ void klog_log(
     }
 
     /* Clear the buffer for the next time it is used */
-    memset(g_klog_state.b_message_formatted, 0, g_klog_state.message_formatted_max_size);
+    memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
 #endif
 }
