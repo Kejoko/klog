@@ -15,12 +15,12 @@ int no_async_param(
     KlogConsoleInfo console_info       = { KLOG_LEVEL_TRACE, false };
     klog_initialize(5, format_info, NULL, &console_info, NULL, NULL);
 
-    if (g_klog_state.prefix_element_index != 0) {
+    if (g_klog_state.message_element_idx != 0) {
         printf("Klog prefix element index should be 0 before anything is logged\n");
         return 1;
     }
 
-    if (g_klog_state.prefix_element_count != 1) {
+    if (g_klog_state.message_element_count != 1) {
         printf("Klog prefix element count should be 1 if no async parameter is provided\n");
         return 1;
     }
@@ -58,7 +58,7 @@ int no_async_param(
     klog_logger_level_set(p, KLOG_LEVEL_INFO);
     klog_info(p, "test");
 
-    if (g_klog_state.prefix_element_index != 0) {
+    if (g_klog_state.message_element_idx != 0) {
         printf("Klog prefix element index should still be 0 because the buffer only has 1 element\n");
         return 1;
     }
@@ -97,12 +97,12 @@ int single_element(
     KlogConsoleInfo console_info       = { KLOG_LEVEL_INFO, false };
     klog_initialize(5, format_info, &async_info, &console_info, NULL, NULL);
 
-    if (g_klog_state.prefix_element_index != 0) {
+    if (g_klog_state.message_element_idx != 0) {
         printf("Klog prefix element index should be 0 before anything is logged\n");
         return 1;
     }
 
-    if (g_klog_state.prefix_element_count != 1) {
+    if (g_klog_state.message_element_count != 1) {
         printf("Klog prefix element count should be 1 if only 1 queue element is specified\n");
         return 1;
     }
@@ -140,7 +140,7 @@ int single_element(
     klog_logger_level_set(p, KLOG_LEVEL_INFO);
     klog_info(p, "test");
 
-    if (g_klog_state.prefix_element_index != 0) {
+    if (g_klog_state.message_element_idx != 0) {
         printf("Klog prefix element index should still be 0 because the buffer only has 1 element\n");
         return 1;
     }
@@ -181,13 +181,13 @@ int multiple_elements(
     KlogConsoleInfo console_info       = { KLOG_LEVEL_DEBUG, false };
     klog_initialize(num_loggers, format_info, &async_info, &console_info, NULL, NULL);
 
-    if (g_klog_state.prefix_element_index != 0) {
+    if (g_klog_state.message_element_idx != 0) {
         printf("Klog prefix element index should be 0 before anything is logged\n");
         return 1;
     }
 
-    if (g_klog_state.prefix_element_count != num_elements) {
-        printf("Klog prefix element count should be %d, but is %d\n", num_elements, g_klog_state.prefix_element_count);
+    if (g_klog_state.message_element_count != num_elements) {
+        printf("Klog prefix element count should be %d, but is %d\n", num_elements, g_klog_state.message_element_count);
         return 1;
     }
 
@@ -227,7 +227,7 @@ int multiple_elements(
     klog_logger_level_set(p, KLOG_LEVEL_INFO);
     klog_info(p, "test");
 
-    if (g_klog_state.prefix_element_index != 1) {
+    if (g_klog_state.message_element_idx != 1) {
         printf("Klog prefix element index should be 1 after the first log\n");
         return 1;
     }
@@ -266,7 +266,7 @@ int multiple_elements(
     klog_trace(p2, "this won't get logged due to the console's min level at debug, and no file logger");
     klog_debug(p2, "test number 2");
 
-    if (g_klog_state.prefix_element_index != 2) {
+    if (g_klog_state.message_element_idx != 2) {
         printf("Klog prefix element index should be 2 after the second log\n");
         return 1;
     }
@@ -305,7 +305,7 @@ int multiple_elements(
     klog_info(p3, "this won't get logged due to the logger's level");
     klog_error(p3, "test 3");
 
-    if (g_klog_state.prefix_element_index != 0) {
+    if (g_klog_state.message_element_idx != 0) {
         printf("Klog prefix element index should be 0 after the third log due to overflow\n");
         return 1;
     }
@@ -349,7 +349,7 @@ int multiple_elements(
 
     klog_info(p, "test, again!");
 
-    if (g_klog_state.prefix_element_index != 1) {
+    if (g_klog_state.message_element_idx != 1) {
         printf("Klog prefix element index should be 1 after the first log\n");
         return 1;
     }
