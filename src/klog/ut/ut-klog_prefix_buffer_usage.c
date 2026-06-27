@@ -528,6 +528,8 @@ int main(
     void
 ) {
     /* int result = no_async_param() || single_element() || multiple_elements() || noop(); */
+    /* int result = no_async_param(); */
+    /* int result = single_element(); */
     int result = multiple_elements();
 
     return result;
