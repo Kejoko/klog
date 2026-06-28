@@ -159,16 +159,6 @@ void klog_initialize(
         g_klog_config.alloc.alloc_cb
     );
 
-# if true
-    g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length;
-    g_klog_state.b_messages_formatted       = klog_initialize_buffer(
-        g_klog_state.message_element_count,
-        g_klog_state.message_formatted_max_size,
-        '\0',
-        true,
-        g_klog_config.alloc.alloc_cb
-    );
-# else
     g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length + 1; /* Account for null termination */
     g_klog_state.b_messages_formatted       = klog_initialize_buffer(
         g_klog_state.message_element_count,
@@ -177,7 +167,6 @@ void klog_initialize(
         false,
         g_klog_config.alloc.alloc_cb
     );
-# endif
 
     g_klog_state.p_file = klog_initialize_file(p_klog_file_info, g_klog_config.alloc.alloc_cb);
     kdprintf("p_file: %p\n",             (void*)g_klog_state.p_file);
@@ -454,12 +443,6 @@ void klog_log(
     }
 
     /* Clear the buffer for the next time it is used - we also re-set the null terminator at the end of the actual message */
-    printf(
-        "!!!!!!!!Clearing buffer starting %p through %p (%d bytes)\n",
-        s_message_formatted,
-        s_message_formatted + g_klog_state.message_formatted_max_size,
-        g_klog_state.message_formatted_max_size
-    );
     memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
 #endif
 }

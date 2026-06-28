@@ -10,10 +10,11 @@
 int no_async_param(
     void
 ) {
-    const uint32_t  logger_name_length = 6;
-    const uint32_t  message_max_length = 7;
-    KlogFormatInfo  format_info        = { logger_name_length, message_max_length, 0, false, false };
-    KlogConsoleInfo console_info       = { KLOG_LEVEL_TRACE, false };
+    const uint32_t  logger_name_length          = 6;
+    const uint32_t  message_max_length          = 7;
+    const uint32_t  message_total_length_length = message_max_length + 1;
+    KlogFormatInfo  format_info                 = { logger_name_length, message_max_length, 0, false, false };
+    KlogConsoleInfo console_info                = { KLOG_LEVEL_TRACE, false };
     klog_initialize(5, format_info, NULL, &console_info, NULL, NULL);
 
     if (g_klog_state.message_element_idx != 0) {
@@ -36,8 +37,8 @@ int no_async_param(
         return 1;
     }
 
-    if (g_klog_state.message_formatted_max_size != message_max_length) {
-        printf("Klog message max length should be %d but it is %d\n", message_max_length, g_klog_state.message_formatted_max_size);
+    if (g_klog_state.message_formatted_max_size != message_total_length_length) {
+        printf("Klog message max length should be %d but it is %d\n", message_total_length_length, g_klog_state.message_formatted_max_size);
         return 1;
     }
 
@@ -60,13 +61,13 @@ int no_async_param(
         return 1;
     }
 
-    char* empty_message_buffer = malloc(message_max_length);
-    memset(empty_message_buffer, 0, message_max_length);
+    char* empty_message_buffer = malloc(message_total_length_length);
+    memset(empty_message_buffer, 0, message_total_length_length);
     if (g_klog_state.b_messages_formatted == NULL) {
         printf("Klog formatted message buffer is not initialized\n");
         return 1;
     }
-    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_max_length)) {
+    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_total_length_length)) {
         printf("Klog formatted messages buffer should be all null characters but it is not\n");
         return 1;
     }
@@ -109,12 +110,13 @@ int no_async_param(
 int single_element(
     void
 ) {
-    const uint32_t  logger_name_length = 8;
-    const uint32_t  message_max_length = 11;
-    const uint32_t  num_elements       = 1;
-    KlogFormatInfo  format_info        = { logger_name_length, message_max_length, 0, false, false };
-    KlogAsyncInfo   async_info         = { num_elements, 3 };
-    KlogConsoleInfo console_info       = { KLOG_LEVEL_INFO, false };
+    const uint32_t  logger_name_length   = 8;
+    const uint32_t  message_max_length   = 11;
+    const uint32_t  message_total_length = message_max_length + 1;
+    const uint32_t  num_elements         = 1;
+    KlogFormatInfo  format_info          = { logger_name_length, message_max_length, 0, false, false };
+    KlogAsyncInfo   async_info           = { num_elements, 3 };
+    KlogConsoleInfo console_info         = { KLOG_LEVEL_INFO, false };
     klog_initialize(5, format_info, &async_info, &console_info, NULL, NULL);
 
     if (g_klog_state.message_element_idx != 0) {
@@ -137,8 +139,8 @@ int single_element(
         return 1;
     }
 
-    if (g_klog_state.message_formatted_max_size != message_max_length) {
-        printf("Klog message max length should be %d but it is %d\n", message_max_length, g_klog_state.message_formatted_max_size);
+    if (g_klog_state.message_formatted_max_size != message_max_length + 1) {
+        printf("Klog message max length should be %d but it is %d\n", message_max_length + 1, g_klog_state.message_formatted_max_size);
         return 1;
     }
 
@@ -161,13 +163,13 @@ int single_element(
         return 1;
     }
 
-    char* empty_message_buffer = malloc(message_max_length);
-    memset(empty_message_buffer, 0, message_max_length);
+    char* empty_message_buffer = malloc(message_total_length);
+    memset(empty_message_buffer, 0, message_total_length);
     if (g_klog_state.b_messages_formatted == NULL) {
         printf("Klog formatted message buffer is not initialized\n");
         return 1;
     }
-    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_max_length)) {
+    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_total_length)) {
         printf("Klog formatted messages buffer should be all null characters but it is not\n");
         return 1;
     }
@@ -210,13 +212,14 @@ int single_element(
 int multiple_elements(
     void
 ) {
-    const uint32_t  num_loggers        = 4;
-    const uint32_t  logger_name_length = 3;
-    const uint32_t  message_max_length = 7; /* good length to set manually if needed */
-    const uint32_t  num_elements       = 3;
-    KlogFormatInfo  format_info        = { logger_name_length, message_max_length, 0, false, false };
-    KlogAsyncInfo   async_info         = { num_elements, 3 };
-    KlogConsoleInfo console_info       = { KLOG_LEVEL_DEBUG, false };
+    const uint32_t  num_loggers          = 4;
+    const uint32_t  logger_name_length   = 3;
+    const uint32_t  message_max_length   = 7; /* good length to set manually if needed */
+    const uint32_t  message_total_length = message_max_length + 1; /* +1 because each is null terminated */
+    const uint32_t  num_elements         = 3;
+    KlogFormatInfo  format_info          = { logger_name_length, message_max_length, 0, false, false };
+    KlogAsyncInfo   async_info           = { num_elements, 3 };
+    KlogConsoleInfo console_info         = { KLOG_LEVEL_DEBUG, false };
     klog_initialize(num_loggers, format_info, &async_info, &console_info, NULL, NULL);
 
     if (g_klog_state.message_element_idx != 0) {
@@ -239,8 +242,8 @@ int multiple_elements(
         return 1;
     }
 
-    if (g_klog_state.message_formatted_max_size != message_max_length) {
-        printf("Klog message max length should be %d but it is %d\n", message_max_length, g_klog_state.message_formatted_max_size);
+    if (g_klog_state.message_formatted_max_size != message_total_length) {
+        printf("Klog message max length should be %d but it is %d\n", message_total_length, g_klog_state.message_formatted_max_size);
         return 1;
     }
 
@@ -263,21 +266,21 @@ int multiple_elements(
         return 1;
     }
 
-    char* empty_message_buffer_all = malloc(message_max_length * num_elements);
-    memset(empty_message_buffer_all, 0, message_max_length * num_elements);
+    char* empty_message_buffer_all = malloc(message_total_length * num_elements);
+    memset(empty_message_buffer_all, 0, message_total_length * num_elements);
     if (g_klog_state.b_messages_formatted == NULL) {
         printf("Klog formatted message buffer is not initialized\n");
         return 1;
     }
-    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer_all, message_max_length * num_elements)) {
+    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer_all, message_total_length * num_elements)) {
         printf("Klog formatted messages buffer should be all null characters but it is not\n");
         return 1;
     }
 
-    char* dirty_message_buffer_all = malloc(message_max_length * num_elements);
-    memset(dirty_message_buffer_all, 'K', message_max_length * num_elements);
-    memcpy(g_klog_state.b_messages_formatted, dirty_message_buffer_all, message_max_length * num_elements); /* Dirty all message buffers to validate clear logic */
-    if (memcmp(g_klog_state.b_messages_formatted, dirty_message_buffer_all, message_max_length * num_elements)) {
+    char* dirty_message_buffer_all = malloc(message_total_length * num_elements);
+    memset(dirty_message_buffer_all, 'K', message_total_length * num_elements);
+    memcpy(g_klog_state.b_messages_formatted, dirty_message_buffer_all, message_total_length * num_elements); /* Dirty all message buffers to validate clear logic */
+    if (memcmp(g_klog_state.b_messages_formatted, dirty_message_buffer_all, message_total_length * num_elements)) {
         printf("Klog formatted messages buffer should be all dirty characters but it is not\n");
         return 1;
     }
@@ -285,19 +288,19 @@ int multiple_elements(
     /* First logging statement */
 
     printf("Buffer before first log:\n");
-    for (uint32_t byte_idx = 0; byte_idx < message_max_length * num_elements; ++byte_idx) {
+    for (uint32_t byte_idx = 0; byte_idx < message_total_length * num_elements; ++byte_idx) {
         const char    byte   = g_klog_state.b_messages_formatted[byte_idx];
         const int16_t casted = (int16_t)byte;
         printf("%d = %d\n", byte_idx, casted);
     }
 
-    char* dirty_message_buffer = malloc(message_max_length);
-    memset(dirty_message_buffer, 'K', message_max_length);
-    if (memcmp(g_klog_state.b_messages_formatted + (message_max_length * 0), dirty_message_buffer, message_max_length)) {
+    char* dirty_message_buffer = malloc(message_total_length);
+    memset(dirty_message_buffer, 'K', message_total_length);
+    if (memcmp(g_klog_state.b_messages_formatted + (message_total_length * 0), dirty_message_buffer, message_total_length)) {
         printf(
             "Klog formatted message buffer element 0 should be dirty ('K') before logging anything, but instead it contains \"%.*s\"\n",
-            message_max_length,
-            g_klog_state.b_messages_formatted + (message_max_length * 0)
+            message_total_length,
+            g_klog_state.b_messages_formatted + (message_total_length * 0)
         );
         return 1;
     }
@@ -313,8 +316,8 @@ int multiple_elements(
         return 1;
     }
 
-    char* empty_message_buffer = malloc(message_max_length);
-    memset(empty_message_buffer, 0, message_max_length);
+    char* empty_message_buffer = malloc(message_total_length);
+    memset(empty_message_buffer, 0, message_total_length);
 
     const KlogLoggerHandle* p = klog_logger_create("dum");
     klog_logger_level_set(p, KLOG_LEVEL_INFO);
@@ -343,10 +346,10 @@ int multiple_elements(
         return 1;
     }
 
-    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_max_length)) {
+    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_total_length)) {
         printf(
             "Klog formatted message buffer element 0 should be empty (cleared) after logging at info level, but instead it contains \"%.*s\"\n",
-            message_max_length,
+            message_total_length,
             g_klog_state.b_messages_formatted
         );
         return 1;
@@ -355,7 +358,7 @@ int multiple_elements(
     /* Second logging statement */
 
     printf("Buffer after first log:\n");
-    for (uint32_t byte_idx = 0; byte_idx < message_max_length * num_elements; ++byte_idx) {
+    for (uint32_t byte_idx = 0; byte_idx < message_total_length * num_elements; ++byte_idx) {
         const char    byte   = g_klog_state.b_messages_formatted[byte_idx];
         const int16_t casted = (int16_t)byte;
         printf("%d = %d\n", byte_idx, casted);
@@ -363,15 +366,15 @@ int multiple_elements(
 
     printf(
         "!!!!!!!!Checking buffer starting %p through %p (%d bytes)\n",
-        g_klog_state.b_messages_formatted + (message_max_length * 1),
-        g_klog_state.b_messages_formatted + (message_max_length * 1) + message_max_length,
+        g_klog_state.b_messages_formatted + (message_total_length * 1),
+        g_klog_state.b_messages_formatted + (message_total_length * 1) + message_total_length,
         message_max_length
     );
-    if (memcmp(g_klog_state.b_messages_formatted + (message_max_length * 1), dirty_message_buffer, message_max_length)) {
+    if (memcmp(g_klog_state.b_messages_formatted + (message_total_length * 1), dirty_message_buffer, message_total_length)) {
         printf(
             "Klog formatted message buffer element 1 should be dirty ('K') after logging at info level 1 time, but instead it contains \"%.*s\"\n",
-            message_max_length,
-            g_klog_state.b_messages_formatted + (message_max_length * 1)
+            message_total_length,
+            g_klog_state.b_messages_formatted + (message_total_length * 1)
         );
         return 1;
     }
@@ -413,11 +416,11 @@ int multiple_elements(
         return 1;
     }
 
-    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_max_length)) {
+    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_total_length)) {
         printf(
             "Klog formatted message buffer element 1 should be empty (cleared) after logging at info level 2 times, but instead it contains \"%.*s\"\n",
-            message_max_length,
-            g_klog_state.b_messages_formatted + (message_max_length * 1)
+            message_total_length,
+            g_klog_state.b_messages_formatted + (message_total_length * 1)
         );
         return 1;
     }
@@ -527,10 +530,10 @@ int noop(
 int main(
     void
 ) {
-    /* int result = no_async_param() || single_element() || multiple_elements() || noop(); */
+    int result = no_async_param() || single_element() || multiple_elements() || noop();
     /* int result = no_async_param(); */
     /* int result = single_element(); */
-    int result = multiple_elements();
+    /* int result = multiple_elements(); */
 
     return result;
 }
