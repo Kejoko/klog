@@ -40,6 +40,18 @@ uint32_t klog_format_prefix_length_get(
     return total;
 }
 
+/**
+ * @todo Instead of taking the allocation callback and allocating space for the sanitized version,
+ *      we need to take the output buffer (and its size) via parameter, and just iterate over the
+ *      input s_name parameter and sanitize while we manually copy into the ouptut buffer.
+ *
+ *      This will require a small rethink about how we want to do the file name formatting function
+ *      as it invokes this one. We will probably just need to allocate in that function, then pass
+ *      the newly allocated buffer to this function.
+ *
+ *      We should probably also rename this function to klog_format_sanitize_whitespace or something
+ *      of the sort to denote that it isn't just for logger names.
+ */
 const char* klog_format_logger_name(
     const char* const s_name,
     void* (* const    alloc_cb)(
