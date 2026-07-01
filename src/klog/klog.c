@@ -124,47 +124,47 @@ void klog_initialize(
     );
     g_klog_state.prefix_time_size            = G_klog_time_string_length;
     g_klog_state.prefix_source_location_size = g_klog_config.format.source_location_filename_max_length + 4 + 1; /* 4 digit line number, colon */
-    g_klog_state.prefix_element_index        = 0;
+    g_klog_state.message_element_idx         = 0;
     if (p_klog_async_info) {
-        g_klog_state.prefix_element_count = p_klog_async_info->message_queue_number_elements;
+        g_klog_state.message_element_count = p_klog_async_info->message_queue_number_elements;
     } else {
-        g_klog_state.prefix_element_count = 1;
+        g_klog_state.message_element_count = 1;
     }
     g_klog_state.b_prefixes_file = klog_initialize_buffer(
-        g_klog_state.prefix_element_count,
+        g_klog_state.message_element_count,
         g_klog_state.prefix_file_size,
         '\0',
         true,
         g_klog_config.alloc.alloc_cb
     );
     g_klog_state.b_prefixes_console = klog_initialize_buffer(
-        g_klog_state.prefix_element_count,
+        g_klog_state.message_element_count,
         g_klog_state.prefix_console_size,
         '\0',
         true,
         g_klog_config.alloc.alloc_cb
     );
     g_klog_state.b_prefixes_time = klog_initialize_buffer(
-        g_klog_state.prefix_element_count,
+        g_klog_state.message_element_count,
         g_klog_state.prefix_time_size,
         '$',
         true,
         g_klog_config.alloc.alloc_cb
     );
     g_klog_state.b_prefixes_source_location = klog_initialize_buffer(
-        g_klog_state.prefix_element_count,
+        g_klog_state.message_element_count,
         g_klog_state.prefix_source_location_size,
         '@',
         true,
         g_klog_config.alloc.alloc_cb
     );
 
-    g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length;
-    g_klog_state.b_message_formatted        = klog_initialize_buffer(
-        1,
-        g_klog_state.message_formatted_max_size,
+    g_klog_state.message_formatted_max_size = g_klog_config.format.message_max_length + 1; /* Account for null termination */
+    g_klog_state.b_messages_formatted       = klog_initialize_buffer(
+        g_klog_state.message_element_count,
+        g_klog_state.message_formatted_max_size, /* Each message slot is null terminated */
         '\0',
-        true,
+        false,
         g_klog_config.alloc.alloc_cb
     );
 
@@ -201,8 +201,8 @@ void klog_deinitialize(
     g_klog_state.b_level_strings         = NULL;
     g_klog_state.b_level_strings_colored = NULL;
 
-    g_klog_state.prefix_element_index = 0;
-    g_klog_state.prefix_element_count = 0;
+    g_klog_state.message_element_idx   = 0;
+    g_klog_state.message_element_count = 0;
 
     g_klog_state.prefix_file_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_file);
@@ -221,8 +221,8 @@ void klog_deinitialize(
     g_klog_state.b_prefixes_source_location = NULL;
 
     g_klog_state.message_formatted_max_size = 0;
-    g_klog_config.alloc.free_cb(g_klog_state.b_message_formatted);
-    g_klog_state.b_message_formatted = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_messages_formatted);
+    g_klog_state.b_messages_formatted = NULL;
 
     if (g_klog_state.p_file) {
         fclose(g_klog_state.p_file);
@@ -352,15 +352,17 @@ void klog_log(
     }
 
     /* We are getting the time first, so it's closest to the actual point of invocation */
-    char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.prefix_element_index * g_klog_state.prefix_time_size);
+    char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.message_element_idx * g_klog_state.prefix_time_size);
     memset(s_prefix_time, '\0', g_klog_state.prefix_time_size);
     const KlogString packed_time = g_klog_config.format.use_timestamp ? klog_format_time(s_prefix_time) : (KlogString) { 0, NULL };
 
-    /* Create the input string with the arguments injected */
+    /* Create the input string with the arguments injected - including space for null termination */
+    char* s_message_formatted = g_klog_state.b_messages_formatted
+        + (g_klog_state.message_element_idx * g_klog_state.message_formatted_max_size);
     va_list p_args;
     va_start(p_args, s_format);
     const uint32_t actual_message_length = klog_format_input_message(
-        g_klog_state.b_message_formatted,
+        s_message_formatted,
         g_klog_state.message_formatted_max_size,
         s_format,
         p_args
@@ -381,7 +383,7 @@ void klog_log(
     const KlogString* const p_packed_level_console = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
 
     char* s_prefix_source_location = g_klog_state.b_prefixes_source_location
-        + (g_klog_state.prefix_element_index * g_klog_state.prefix_source_location_size);
+        + (g_klog_state.message_element_idx * g_klog_state.prefix_source_location_size);
     const KlogString packed_source_location = (g_klog_config.format.source_location_filename_max_length && s_filename)
         ? klog_format_source_location(
                 s_prefix_source_location,
@@ -392,8 +394,8 @@ void klog_log(
         : (KlogString) { 0, NULL };
 
     /* Get the pointers to the prefix buffers and reset them in preparation for setting */
-    char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.prefix_element_index * g_klog_state.prefix_file_size);
-    char* s_prefix_console = g_klog_state.b_prefixes_console + (g_klog_state.prefix_element_index * g_klog_state.prefix_console_size);
+    char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_idx * g_klog_state.prefix_file_size);
+    char* s_prefix_console = g_klog_state.b_prefixes_console + (g_klog_state.message_element_idx * g_klog_state.prefix_console_size);
     memset(s_prefix_file,    '\0', g_klog_state.prefix_file_size);
     memset(s_prefix_console, '\0', g_klog_state.prefix_console_size);
 
@@ -418,12 +420,12 @@ void klog_log(
     /* Actually log the message */
     uint32_t i_starting_character = 0;
     while (i_starting_character <= actual_message_length) {
-        const char* const p_newline         = strchr(g_klog_state.b_message_formatted + i_starting_character, '\n');
+        const char* const p_newline         = strchr(s_message_formatted + i_starting_character, '\n');
         const uint32_t    submessage_length = p_newline
-            ? p_newline - (g_klog_state.b_message_formatted + i_starting_character)
+            ? p_newline - (s_message_formatted + i_starting_character)
             : actual_message_length;
 
-        const KlogString packed_message = { submessage_length, g_klog_state.b_message_formatted + i_starting_character };
+        const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
         if (requested_level <= g_klog_config.console.max_level) {
             klog_output_console(&packed_prefix_console, &packed_message);
         }
@@ -435,12 +437,12 @@ void klog_log(
     }
 
     /* Update the index into our ring buffer */
-    g_klog_state.prefix_element_index = g_klog_state.prefix_element_index + 1;
-    if (g_klog_state.prefix_element_index >= g_klog_state.prefix_element_count) {
-        g_klog_state.prefix_element_index = 0;
+    g_klog_state.message_element_idx = g_klog_state.message_element_idx + 1;
+    if (g_klog_state.message_element_idx >= g_klog_state.message_element_count) {
+        g_klog_state.message_element_idx = 0;
     }
 
-    /* Clear the buffer for the next time it is used */
-    memset(g_klog_state.b_message_formatted, 0, g_klog_state.message_formatted_max_size);
+    /* Clear the buffer for the next time it is used - we also re-set the null terminator at the end of the actual message */
+    memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
 #endif
 }

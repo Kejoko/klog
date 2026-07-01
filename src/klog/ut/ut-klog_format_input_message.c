@@ -42,12 +42,13 @@ void print_buffer(
 
 int real_input_zero_length() {
     const uint32_t size_input  = 10;
-    const uint32_t size_output = 0;
+    const uint32_t size_output = 1;
+    const uint32_t size_malloc = size_input + 1;
 
     const char* s_format = "%s";
     const char* s_input  = "0123456789";
-    char*       b_output = malloc(size_input + 1);
-    memset(b_output, 'A', size_input);
+    char*       b_output = malloc(size_malloc);
+    memset(b_output, 'A', size_malloc);
 
     printf("Freshly memset-ed buffer:\n");
     print_buffer(b_output, size_input);
@@ -55,7 +56,7 @@ int real_input_zero_length() {
     const uint32_t result = wrapper(b_output, size_output, s_format, s_input);
 
     printf("Freshly formatted buffer:\n");
-    print_buffer(b_output, size_input);
+    print_buffer(b_output, size_malloc);
 
     if (result != 1) {
         printf("Error in real_input_zero_length(): resulting length is %d, should be 1\n", result);
@@ -69,9 +70,9 @@ int real_input_zero_length() {
         return 1;
     }
 
-    for (uint32_t idx_char = 1; idx_char < size_input; ++idx_char) {
+    for (uint32_t idx_char = 1; idx_char < size_malloc; ++idx_char) {
         if (b_output[idx_char] != 'A') {
-            printf("Error in real_input_zero_length(): Character at index %d should be A\n", idx_char);
+            printf("Error in real_input_zero_length(): Character at index %d should be 'A' but is '%c'\n", idx_char, b_output[idx_char]);
             free(b_output);
             return 1;
         }
@@ -84,20 +85,21 @@ int real_input_zero_length() {
 
 int empty_input_zero_length() {
     const uint32_t size_input  = 0;
-    const uint32_t size_output = 0;
+    const uint32_t size_output = 1;
+    const uint32_t size_malloc = size_input + 1;
 
     const char* s_format = "%s";
     const char* s_input  = "";
-    char*       b_output = malloc(size_input + 1);
-    memset(b_output, 'A', size_input);
+    char*       b_output = malloc(size_malloc);
+    memset(b_output, 'A', size_malloc);
 
     printf("Freshly memset-ed buffer:\n");
-    print_buffer(b_output, size_input);
+    print_buffer(b_output, size_malloc);
 
     const uint32_t result = wrapper(b_output, size_output, s_format, s_input);
 
     printf("Freshly formatted buffer:\n");
-    print_buffer(b_output, size_input);
+    print_buffer(b_output, size_malloc);
 
     if (result != 1) {
         printf("Error in empty_input_zero_length(): resulting length is %d, should be 1\n", result);
@@ -111,14 +113,6 @@ int empty_input_zero_length() {
         return 1;
     }
 
-    for (uint32_t idx_char = 1; idx_char < size_input; ++idx_char) {
-        if (b_output[idx_char] != 'A') {
-            printf("Error in real_input_zero_length(): Character at index %d should be A\n", idx_char);
-            free(b_output);
-            return 1;
-        }
-    }
-
     free(b_output);
 
     return 0;
@@ -127,21 +121,22 @@ int empty_input_zero_length() {
 int empty_input_real_length() {
     const uint32_t size_input  = 0;
     const uint32_t size_output = 10;
+    const uint32_t size_malloc = size_output;
 
     const char* s_format = "%s";
     const char* s_input  = "";
-    char*       b_output = malloc(size_input + 1);
-    memset(b_output, 'A', size_input + 1);
+    char*       b_output = malloc(size_malloc);
+    memset(b_output, 'A', size_malloc);
 
     printf("Freshly memset-ed buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
     const uint32_t result = wrapper(b_output, size_output, s_format, s_input);
 
     printf("Freshly formatted buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
-    if (result != size_input + 1) {
+    if (result != 1) {
         printf("Error in empty_input_real_length(): resulting length is %d, should be %d\n", result, size_input + 1);
         free(b_output);
         return 1;
@@ -153,6 +148,14 @@ int empty_input_real_length() {
         return 1;
     }
 
+    for (uint32_t idx_char = 1; idx_char < size_malloc; ++idx_char) {
+        if (b_output[idx_char] != 'A') {
+            printf("Error in empty_input_real_length(): Character at index %d should be 'A' but is '%c'\n", idx_char, b_output[idx_char]);
+            free(b_output);
+            return 1;
+        }
+    }
+
     free(b_output);
 
     return 0;
@@ -161,19 +164,20 @@ int empty_input_real_length() {
 int shorter_input() {
     const uint32_t size_input  = 5;
     const uint32_t size_output = 10;
+    const uint32_t size_malloc = size_input + 1;
 
     const char* s_format = "%s";
     const char* s_input  = "01234";
     char*       b_output = malloc(size_input + 1);
-    memset(b_output, 'A', size_input + 1);
+    memset(b_output, 'A', size_malloc);
 
     printf("Freshly memset-ed buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
     const uint32_t result = wrapper(b_output, size_output, s_format, s_input);
 
     printf("Freshly formatted buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
     if (result != size_input + 1) {
         printf("Error in shorter_input(): resulting length is %d, should be %d\n", result, size_input + 1);
@@ -201,6 +205,14 @@ int shorter_input() {
         }
     }
 
+    for (uint32_t idx_char = result; idx_char < size_malloc; ++idx_char) {
+        if (b_output[idx_char] != 'A') {
+            printf("Error in shorter_input(): Character at index %d should be 'A' but is '%c'\n", idx_char, b_output[idx_char]);
+            free(b_output);
+            return 1;
+        }
+    }
+
     free(b_output);
 
     return 0;
@@ -209,21 +221,22 @@ int shorter_input() {
 int shorter_input_off_by_one() {
     const uint32_t size_input  = 9;
     const uint32_t size_output = 10;
+    const uint32_t size_malloc = size_output;
 
     const char* s_format = "%s";
     const char* s_input  = "012345678";
-    char*       b_output = malloc(size_input + 1);
-    memset(b_output, 'A', size_input + 1);
+    char*       b_output = malloc(size_malloc);
+    memset(b_output, 'A', size_malloc);
 
     printf("Freshly memset-ed buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
     const uint32_t result = wrapper(b_output, size_output, s_format, s_input);
 
     printf("Freshly formatted buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
-    if (result != size_input + 1) {
+    if (result != size_output) {
         printf("Error in shorter_input_off_by_one(): resulting length is %d, should be %d\n", result, size_input + 1);
         free(b_output);
         return 1;
@@ -236,7 +249,7 @@ int shorter_input_off_by_one() {
     }
 
     const char* s_expected = "012345678";
-    for (uint32_t idx_char = 0; idx_char < result; ++idx_char) {
+    for (uint32_t idx_char = 0; idx_char < size_input; ++idx_char) {
         if (b_output[idx_char] != s_expected[idx_char]) {
             printf(
                 "Error in shorter_input_off_by_one(): Character at index %d is '%c', should be '%c'\n",
@@ -256,35 +269,36 @@ int shorter_input_off_by_one() {
 
 int exact_length_input() {
     const uint32_t size_input  = 10;
-    const uint32_t size_output = 10;
+    const uint32_t size_output = size_input;
+    const uint32_t size_malloc = size_output;
 
     const char* s_format = "%s";
     const char* s_input  = "0123456789";
-    char*       b_output = malloc(size_input + 1);
-    memset(b_output, 'A', size_input + 1);
+    char*       b_output = malloc(size_malloc);
+    memset(b_output, 'A', size_malloc);
 
     printf("Freshly memset-ed buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
     const uint32_t result = wrapper(b_output, size_output, s_format, s_input);
 
     printf("Freshly formatted buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
-    if (result != size_input + 1) {
+    if (result != size_input) {
         printf("Error in exact_length_input(): resulting length is %d, should be %d\n", result, size_input + 1);
         free(b_output);
         return 1;
     }
 
-    if (b_output[size_input] != '\0') {
+    if (b_output[size_input - 1] != '\0') {
         printf("Error in exact_length_input(): Character at index %d should be null terminator\n", size_input);
         free(b_output);
         return 1;
     }
 
     const char* s_expected = "0123456789";
-    for (uint32_t idx_char = 0; idx_char < result; ++idx_char) {
+    for (uint32_t idx_char = 0; idx_char < result - 1; ++idx_char) {
         if (b_output[idx_char] != s_expected[idx_char]) {
             printf(
                 "Error in exact_length_input(): Character at index %d is '%c', should be '%c'\n",
@@ -305,37 +319,39 @@ int exact_length_input() {
 int longer_input() {
     const uint32_t size_input  = 20;
     const uint32_t size_output = 10;
+    const uint32_t size_malloc = size_input;
 
     const char* s_format = "%s";
     /*                 00 + 0123456789            */
     /*                 10 +           0123456789  */
     /*                 20 +                     0 */
     const char* s_input  = "0123456789ABCDEFGHIJK";
-    char*       b_output = malloc(size_input + 1);
-    memset(b_output, 'A', size_input + 1);
+    char*       b_output = malloc(size_malloc);
+    memset(b_output, 'A', size_malloc);
 
     printf("Freshly memset-ed buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
     const uint32_t result = wrapper(b_output, size_output, s_format, s_input);
 
     printf("Freshly formatted buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
-    if (result != size_output + 1) {
-        printf("Error in longer_input(): resulting length is %d, should be %d\n", result, size_output + 1);
+    if (result != size_output) {
+        printf("Error in longer_input(): resulting length is %d, should be %d\n", result, size_output);
         free(b_output);
         return 1;
     }
 
-    if (b_output[size_output] != '\0') {
+    if (b_output[size_output - 1] != '\0') {
         printf("Error in longer_input(): Character at index %d should be null terminator\n", size_output);
         free(b_output);
         return 1;
     }
 
-    const char* s_expected = "0123456789";
-    for (uint32_t idx_char = 0; idx_char < result; ++idx_char) {
+    /* Check all formatted characters (up until the null terminator) */
+    const char* s_expected = "012345678";
+    for (uint32_t idx_char = 0; idx_char < result - 1; ++idx_char) {
         if (b_output[idx_char] != s_expected[idx_char]) {
             printf(
                 "Error in longer_input(): Character at index %d is '%c', should be '%c'\n",
@@ -349,10 +365,10 @@ int longer_input() {
     }
 
     /* Ensure the non-populated characters are as we set them (all As) */
-    for (uint32_t idx_char = result + 1; idx_char < size_input + 1; ++idx_char) {
+    for (uint32_t idx_char = result; idx_char < size_malloc; ++idx_char) {
         if (b_output[idx_char] != 'A') {
             printf(
-                "Error in interesting_format(): Character at index %d is '%c', should be 'A'\n",
+                "Error in longer_input(): Character at index %d is '%c', should be 'A'\n",
                 idx_char,
                 b_output[idx_char]
             );
@@ -369,34 +385,35 @@ int longer_input() {
 int interesting_format() {
     const uint32_t size_input  = 15;
     const uint32_t size_output = 10;
+    const uint32_t size_malloc = size_input;
 
     const char* s_format = "%02d %07X";
-    char*       b_output = malloc(size_input + 1);
-    memset(b_output, 'A', size_input + 1);
+    char*       b_output = malloc(size_malloc);
+    memset(b_output, 'A', size_malloc);
 
     printf("Freshly memset-ed buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
     const uint32_t result = wrapper(b_output, size_output, s_format, 7, 912081); /* 912081 is 0xDEAD1 */
 
     printf("Freshly formatted buffer:\n");
-    print_buffer(b_output, size_input + 1);
+    print_buffer(b_output, size_malloc);
 
-    if (result != size_output + 1) {
+    if (result != size_output) {
         printf("Error in interesting_format(): resulting length is %d, should be %d\n", result, size_output + 1);
         free(b_output);
         return 1;
     }
 
-    if (b_output[size_output] != '\0') {
-        printf("Error in interesting_format(): Character at index %d should be null terminator\n", size_output);
+    if (b_output[size_output - 1] != '\0') {
+        printf("Error in interesting_format(): Character at index %d should be null terminator\n", size_output - 1);
         free(b_output);
         return 1;
     }
 
     /* Ensure the formatted bit is correct */
     const char* s_expected = "07 00DEAD1";
-    for (uint32_t idx_char = 0; idx_char < result; ++idx_char) {
+    for (uint32_t idx_char = 0; idx_char < result - 1; ++idx_char) {
         if (b_output[idx_char] != s_expected[idx_char]) {
             printf(
                 "Error in interesting_format(): Character at index %d is '%c', should be '%c'\n",
@@ -410,7 +427,7 @@ int interesting_format() {
     }
 
     /* Ensure the non-populated characters are as we set them (all As) */
-    for (uint32_t idx_char = result + 1; idx_char < size_input + 1; ++idx_char) {
+    for (uint32_t idx_char = result; idx_char < size_malloc; ++idx_char) {
         if (b_output[idx_char] != 'A') {
             printf(
                 "Error in interesting_format(): Character at index %d is '%c', should be 'A'\n",

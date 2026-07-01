@@ -40,6 +40,18 @@ uint32_t klog_format_prefix_length_get(
     return total;
 }
 
+/**
+ * @todo Instead of taking the allocation callback and allocating space for the sanitized version,
+ *      we need to take the output buffer (and its size) via parameter, and just iterate over the
+ *      input s_name parameter and sanitize while we manually copy into the ouptut buffer.
+ *
+ *      This will require a small rethink about how we want to do the file name formatting function
+ *      as it invokes this one. We will probably just need to allocate in that function, then pass
+ *      the newly allocated buffer to this function.
+ *
+ *      We should probably also rename this function to klog_format_sanitize_whitespace or something
+ *      of the sort to denote that it isn't just for logger names.
+ */
 const char* klog_format_logger_name(
     const char* const s_name,
     void* (* const    alloc_cb)(
@@ -179,25 +191,20 @@ uint32_t klog_format_input_message(
     const char* const s_format,
     va_list           p_args
 ) {
-    /**
-     * We need to make a copy of the args (for the second vsnprintf call) before we consume them with the first vsnprintf call
-     *
-     * NOTE THAT va_copy, va_start MAY HEAP ALLOCATE, AND va_end MAY FREE THE MEMORY DEPENDING ON THE IMPLEMENTATION - SAD
-     */
+    if (size_output == 0) {
+        kdprintf("Trying to format input message with an input buffer of size 0, must be at least 1 byte\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
     va_list p_args_copy;
     va_copy(p_args_copy, p_args);
 
-    /* Calculate the length of the input message */
-    /* +1 for null termination */
-    /* @todo kjk 2026/01/14 Use _vscprintf */
-    const int32_t  input_message_length  = vsnprintf(0, 0, s_format, p_args) + 1;
-    const uint32_t actual_message_length = size_output < (uint32_t)input_message_length ? size_output + 1 : (uint32_t)input_message_length;
+    const int32_t  desired_length   = vsnprintf(b_output, size_output, s_format, p_args_copy) + 1;
+    const uint32_t resulting_length = (uint32_t)desired_length < size_output ? (uint32_t)desired_length : size_output;
 
-    /*  Format the input message with the unused copy of the args */
-    vsnprintf(b_output, actual_message_length, s_format, p_args_copy);
     va_end(p_args_copy);
 
-    return actual_message_length;
+    return resulting_length;
 }
 
 KlogString klog_format_time(

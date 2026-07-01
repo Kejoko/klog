@@ -38,8 +38,9 @@ extern struct KlogState {
     char* b_level_strings;
     char* b_level_strings_colored;
 
-    uint32_t prefix_element_index;
-    uint32_t prefix_element_count;
+    uint32_t message_element_idx;
+    uint32_t message_element_count;
+
     uint32_t prefix_file_size;
     char*    b_prefixes_file;
     uint32_t prefix_console_size;
@@ -50,7 +51,7 @@ extern struct KlogState {
     char*    b_prefixes_source_location;
 
     uint32_t message_formatted_max_size;
-    char*    b_message_formatted;
+    char*    b_messages_formatted;
 
     FILE* p_file;
 
