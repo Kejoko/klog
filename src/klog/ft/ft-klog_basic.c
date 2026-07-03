@@ -74,6 +74,7 @@ int main(
     klog(handle_4_custom, KLOG_LEVEL_INFO, "Multiple formats (one - %d)\ntwo\n\n%s%d\n5", 1, "four", 4);
 #endif
 
+    klog(handle_1, KLOG_LEVEL_INFO, "ALL DONE");
     kdprintf("DEINITIALIZING KLOG\n");
     klog_deinitialize();
 
