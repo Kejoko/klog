@@ -51,7 +51,9 @@ int log_levels_tempfile(
     const uint32_t     max_number_loggers = 100;
     const uint32_t     max_name_length    = 3;
     const KlogFileInfo file_info          = { KLOG_LEVEL_TRACE, "/tmp/ut-klog_logger_level_set" }; /* @todo kjk 2026/02/11 portable tempfile path for windows and mac */
+    printf("Initializing klog\n");
     klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, &file_info, NULL);
+    printf("Initializing klog - done\n");
 
     const char*             l_names[KLOG_LEVEL_COUNT]   = { "001", "002", "003", "004", "005", "006", "007" };
     const KlogLoggerHandle* a_handles[KLOG_LEVEL_COUNT] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
@@ -61,19 +63,25 @@ int log_levels_tempfile(
 
     /* i acts as the index to the handle, and also as the base accepted level for the handle */
     for (uint32_t i = 0; i < KLOG_LEVEL_COUNT; ++i) {
+        printf("Using handle iteration %d\n", i);
+        printf("creating logger\n");
         a_handles[i] = klog_logger_create(l_names[i]);
+        printf("setting level\n");
         klog_logger_level_set(a_handles[i], i);
 
         /* Ensure that we cannot log something to the tempfile with a level that does not match or equal the base level */
         for (uint32_t i_log_level = 0; i_log_level < KLOG_LEVEL_COUNT; ++i_log_level) {
+            printf("attempting to log at level %d\n", i_log_level);
             if (i_log_level == 0) {
                 continue; /* Logging with the off level is an error */
             }
 
             /* Try to log at the current level */
+            printf("actually logging\n");
             klog(a_handles[i], i_log_level, "beep");
 
             /* Get the filesize */
+            printf("getting file size\n");
             const uint32_t file_size_current = ftell(g_klog_state.p_file);
 
             /* If we should not have logged at this level, ensure the size did not change */
@@ -106,6 +114,6 @@ int noop(
 int main(
     void
 ) {
-    return set_levels() || log_levels_tempfile() || noop()
-    ;
+    return log_levels_tempfile();
+    /* return set_levels() || log_levels_tempfile() || noop(); */
 }

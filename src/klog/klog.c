@@ -238,6 +238,7 @@ void klog_deinitialize(
 
 const KlogLoggerHandle* klog_logger_create(
     const char* const s_logger_name
+    /* @todo take the logger name length as a parameter because we can't rely on it being null terminated */
 ) {
 #ifdef KLOG_OFF
     (void)logger_name;
@@ -255,14 +256,13 @@ const KlogLoggerHandle* klog_logger_create(
 
     const uint32_t current_logger_index = g_klog_state.number_loggers_created;
 
-    const char* const s_sanitized_name = klog_format_logger_name(s_logger_name, g_klog_config.alloc.alloc_cb);
-
     const uint32_t logger_name_start_index = current_logger_index * g_klog_config.format.logger_name_max_length;
-    const uint32_t number_chars_to_copy    = strlen(s_sanitized_name) >= g_klog_config.format.logger_name_max_length
-        ? g_klog_config.format.logger_name_max_length /* copy as much as we can fit */
-        : strlen(s_sanitized_name); /* copy it all - NOT including the null terminator (which strlen doesn't count anyways) */
-    memcpy(&g_klog_state.b_logger_names[logger_name_start_index], s_sanitized_name, number_chars_to_copy);
-    g_klog_config.alloc.free_cb((char*)s_sanitized_name);
+    klog_format_logger_name(
+        s_logger_name,
+        strlen(s_logger_name), /* @todo take this via parameter */
+        &g_klog_state.b_logger_names[logger_name_start_index], /* This is initialized to spaces */
+        g_klog_config.format.logger_name_max_length
+    );
 
     g_klog_state.a_logger_levels[current_logger_index] = KLOG_LEVEL_OFF;
 

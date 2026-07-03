@@ -19,11 +19,11 @@ uint32_t klog_format_prefix_length_get(
     const uint32_t source_location_filename_max_length
 );
 
-const char* klog_format_logger_name(
+void klog_format_logger_name(
     const char*    s_name,
-    void* (* const alloc_cb)(
-        size_t size
-    )
+    const uint32_t name_unformatted_length,
+    char*          b_output,
+    const uint32_t max_length
 );
 
 const char* klog_format_file_name_prefix(

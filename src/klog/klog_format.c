@@ -51,23 +51,19 @@ uint32_t klog_format_prefix_length_get(
  *
  *      We should probably also rename this function to klog_format_sanitize_whitespace or something
  *      of the sort to denote that it isn't just for logger names.
+ *
+ *  @brief The output buffer will NOT be null terminated
  */
-const char* klog_format_logger_name(
+void klog_format_logger_name(
     const char* const s_name,
-    void* (* const    alloc_cb)(
-        size_t size
-    )
+    const uint32_t    name_unformatted_length,
+    char*             b_output,
+    const uint32_t    max_length
 ) {
-    /**
-     * Perhaps we should be doing this in place but creating loggers is not where we will
-     * be saving on performance, so mallocing a copy is okay
-     */
+    const uint32_t length_actual = max_length < name_unformatted_length ? max_length : name_unformatted_length;
 
-    const uint32_t length_name      = strlen(s_name);
-    char*          s_sanitized_name = alloc_cb(length_name + 1); /* +1 for null termination */
-
-    for (uint32_t i_input_char = 0; i_input_char < length_name; ++i_input_char) {
-        const char curr_char     = s_name[i_input_char];
+    for (uint32_t i_char = 0; i_char < length_actual; ++i_char) {
+        char       curr_char     = s_name[i_char];
         const bool is_whitespace = (curr_char == '\n')
             || (curr_char == '\t')
             || (curr_char == ' ')
@@ -75,18 +71,16 @@ const char* klog_format_logger_name(
             || (curr_char == '\b')
             || (curr_char == '\0');
         if (is_whitespace) {
-            s_sanitized_name[i_input_char] = '_';
-            continue;
+            curr_char = '_';
         }
 
-        s_sanitized_name[i_input_char] = curr_char;
+        b_output[i_char] = curr_char;
     }
-
-    s_sanitized_name[length_name] = '\0';
-
-    return s_sanitized_name;
 }
 
+/**
+ * @brief The resulting buffer is null terminated
+ */
 const char* klog_format_file_name_prefix(
     const char* const s_name,
     void* (* const    alloc_cb)(
@@ -99,7 +93,13 @@ const char* klog_format_file_name_prefix(
 
     /* @todo kjk 2026/02/12 Should we be doing anything to sanitize filepaths for windows vs linux? Convert "/" to "\\" and vice versa?? */
 
-    return klog_format_logger_name(s_name, alloc_cb);
+    const uint32_t length   = strlen(s_name);
+    char*          b_output = alloc_cb(length + 1);
+    memset(b_output, 0, length + 1);
+
+    klog_format_logger_name(s_name, length, b_output, length);
+
+    return b_output;
 }
 
 KlogString klog_format_message_prefix(
