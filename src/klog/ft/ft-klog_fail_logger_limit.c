@@ -5,6 +5,7 @@
 #include "klog/klog.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "../klog_debug_util.h"
 
@@ -15,7 +16,7 @@ int main(
     KlogFormatInfo format_info = { 6, 100, 20, true, false };
     klog_initialize(2, format_info, NULL, NULL, NULL, NULL);
 
-    const KlogLoggerHandle* handle_1 = klog_logger_create("MyLogger");
+    const KlogLoggerHandle* handle_1 = klog_logger_create("MyLogger", 7);
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");
     klog_logger_level_set(handle_1, KLOG_LEVEL_DEBUG);
     klog(handle_1, KLOG_LEVEL_TRACE, "This should also not appear");
@@ -29,7 +30,7 @@ int main(
     );
 
     kdprintf("Creating second logger\n");
-    const KlogLoggerHandle* handle_2 = klog_logger_create("B");
+    const KlogLoggerHandle* handle_2 = klog_logger_create("B", 1);
     kdprintf("Setting level for second logger\n");
     klog_logger_level_set(handle_2, 6);
     kdprintf("Logging with second logger\n");
@@ -39,7 +40,7 @@ int main(
 
     const char* name_3 = "ABC";
     kdprintf("Creating third logger\n");
-    const KlogLoggerHandle* handle_3 = klog_logger_create(name_3);
+    const KlogLoggerHandle* handle_3 = klog_logger_create(name_3, strlen(name_3));
     kdprintf("Logging with third logger\n");
     klog(handle_3, KLOG_LEVEL_TRACE, "We should fail before we ever get here");
 

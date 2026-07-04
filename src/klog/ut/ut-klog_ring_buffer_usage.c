@@ -72,7 +72,7 @@ int no_async_param(
         return 1;
     }
 
-    const KlogLoggerHandle* p = klog_logger_create("dummy!");
+    const KlogLoggerHandle* p = klog_logger_create("dummy!", 6);
     klog_logger_level_set(p, KLOG_LEVEL_INFO);
     klog_info(p, "test");
 
@@ -174,7 +174,7 @@ int single_element(
         return 1;
     }
 
-    const KlogLoggerHandle* p = klog_logger_create("dummy123");
+    const KlogLoggerHandle* p = klog_logger_create("dummy123", 8);
     klog_logger_level_set(p, KLOG_LEVEL_INFO);
     klog_info(p, "test");
 
@@ -319,7 +319,7 @@ int multiple_elements(
     char* empty_message_buffer = malloc(message_total_length);
     memset(empty_message_buffer, 0, message_total_length);
 
-    const KlogLoggerHandle* p = klog_logger_create("dum");
+    const KlogLoggerHandle* p = klog_logger_create("dum", 3);
     klog_logger_level_set(p, KLOG_LEVEL_INFO);
     klog_info(p, "1234567");
 
@@ -388,7 +388,7 @@ int multiple_elements(
         return 1;
     }
 
-    const KlogLoggerHandle* p2 = klog_logger_create("two");
+    const KlogLoggerHandle* p2 = klog_logger_create("two", 3);
     klog_logger_level_set(p2, KLOG_LEVEL_TRACE);
     klog_trace(p2, "this won't get logged due to the console's min level at debug, and no file logger");
     klog_debug(p2, "test number 2");
@@ -436,7 +436,7 @@ int multiple_elements(
         return 1;
     }
 
-    const KlogLoggerHandle* p3 = klog_logger_create("3");
+    const KlogLoggerHandle* p3 = klog_logger_create("3", 1);
     klog_logger_level_set(p3, KLOG_LEVEL_WARN);
     klog_info(p3, "this won't get logged due to the logger's level");
     klog_error(p3, "test 3");

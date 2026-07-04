@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../klog_debug_util.h"
 
@@ -20,7 +21,7 @@ int main(
     klog_initialize(4, format_info, NULL, &console_info, &file_info, NULL);
 
     kdprintf("CREATING HANDLE\n");
-    const KlogLoggerHandle* handle_1 = klog_logger_create("My Logger");
+    const KlogLoggerHandle* handle_1 = klog_logger_create("My Logger", 8);
     kdprintf("LOGGING BEFORE SETTING LEVEL\n");
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");
     kdprintf("SETTING LEVEL TO DEBUG\n");
@@ -51,12 +52,12 @@ int main(
     klog(handle_1, KLOG_LEVEL_WARN, "DONE LOGGING 3 EMPTY LINES");
 
 #ifndef KLOG_DEBUG
-    const KlogLoggerHandle* handle_2 = klog_logger_create("B");
+    const KlogLoggerHandle* handle_2 = klog_logger_create("B", 1);
     klog_logger_level_set(handle_2, 6);
     klog(handle_2, KLOG_LEVEL_TRACE, "What's up - trace level - second log statement");
 
     const char*             name_3          = "ABC";
-    const KlogLoggerHandle* handle_3        = klog_logger_create(name_3);
+    const KlogLoggerHandle* handle_3        = klog_logger_create(name_3, strlen(name_3));
     const KlogLoggerHandle* handle_3_custom = handle_3;
     klog_logger_level_set(handle_3_custom, KLOG_LEVEL_INFO);
     klog(handle_3_custom, 6, "Logger ABC should not log trace");
@@ -68,12 +69,13 @@ int main(
     klog(handle_3, KLOG_LEVEL_ERROR, "This should be an error!!");
     klog(handle_3, KLOG_LEVEL_FATAL, "THIS SHOULD BE FATAL!!!!!!!!!");
 
-    const KlogLoggerHandle* handle_4_custom = klog_logger_create("123456");
+    const KlogLoggerHandle* handle_4_custom = klog_logger_create("123456", 6);
     klog(handle_4_custom, 5, "Logging with an off logger shouldn't do anything");
     klog_logger_level_set(handle_4_custom, KLOG_LEVEL_INFO);
     klog(handle_4_custom, KLOG_LEVEL_INFO, "Multiple formats (one - %d)\ntwo\n\n%s%d\n5", 1, "four", 4);
 #endif
 
+    klog(handle_1, KLOG_LEVEL_INFO, "ALL DONE");
     kdprintf("DEINITIALIZING KLOG\n");
     klog_deinitialize();
 

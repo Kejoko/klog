@@ -67,11 +67,11 @@ int check(
         return 1;
     }
 
-    /* create loggers because this does some allocation for now */
+    /* create loggers - no allocs or frees */
     printf("Creating logger 0\n");
-    const KlogLoggerHandle* p_handle_0 = klog_logger_create("ABC");
+    const KlogLoggerHandle* p_handle_0 = klog_logger_create("ABC", 3);
     printf("Creating logger 1\n");
-    const KlogLoggerHandle* p_handle_1 = klog_logger_create("DEF");
+    const KlogLoggerHandle* p_handle_1 = klog_logger_create("DEF", 3);
 
     /* logging should introduce no allocs or frees */
     printf("Logging with logger 0\n");
@@ -80,12 +80,12 @@ int check(
     klog(p_handle_1, KLOG_LEVEL_INFO, "Boop \"%s\"\n", "world");
 
     /* check post logger creation values */
-    const uint32_t alloc_counter_created_expected = alloc_counter_init_expected + 2;
+    const uint32_t alloc_counter_created_expected = alloc_counter_init_expected;
     if (g_alloc_counter != alloc_counter_created_expected) {
         printf("Alloc counter is %d after logger creations when it should be %d\n", g_alloc_counter, alloc_counter_created_expected);
         return 1;
     }
-    const uint32_t free_counter_created_expected = free_counter_init_expected + 2;
+    const uint32_t free_counter_created_expected = free_counter_init_expected;
     if (g_free_counter != free_counter_created_expected) {
         printf("Free counter is %d after logger creations when it should be %d\n", g_free_counter, free_counter_created_expected);
         return 1;

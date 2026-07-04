@@ -40,34 +40,33 @@ uint32_t klog_format_prefix_length_get(
     return total;
 }
 
-/**
- * @todo Instead of taking the allocation callback and allocating space for the sanitized version,
- *      we need to take the output buffer (and its size) via parameter, and just iterate over the
- *      input s_name parameter and sanitize while we manually copy into the ouptut buffer.
- *
- *      This will require a small rethink about how we want to do the file name formatting function
- *      as it invokes this one. We will probably just need to allocate in that function, then pass
- *      the newly allocated buffer to this function.
- *
- *      We should probably also rename this function to klog_format_sanitize_whitespace or something
- *      of the sort to denote that it isn't just for logger names.
- */
-const char* klog_format_logger_name(
+void klog_format_logger_name(
     const char* const s_name,
-    void* (* const    alloc_cb)(
-        size_t size
-    )
+    const uint32_t    name_unformatted_length,
+    char*             b_output,
+    const uint32_t    max_length
 ) {
-    /**
-     * Perhaps we should be doing this in place but creating loggers is not where we will
-     * be saving on performance, so mallocing a copy is okay
-     */
+    if (s_name == NULL) {
+        kdprintf("Trying to format logger name, but the provided name is NULL\n");
+        exit(KLOG_EXIT_CODE);
+    }
 
-    const uint32_t length_name      = strlen(s_name);
-    char*          s_sanitized_name = alloc_cb(length_name + 1); /* +1 for null termination */
+    if (name_unformatted_length <= 0) {
+        kdprintf("Trying to format logger name, but the length of the provided name is 0\n");
+        exit(KLOG_EXIT_CODE);
+    }
 
-    for (uint32_t i_input_char = 0; i_input_char < length_name; ++i_input_char) {
-        const char curr_char     = s_name[i_input_char];
+    if (b_output == NULL) {
+        kdprintf("Trying to format logger name, but the provided output buffer is NULL\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
+    memset(b_output, ' ', max_length);
+
+    const uint32_t length_actual = max_length < name_unformatted_length ? max_length : name_unformatted_length;
+
+    for (uint32_t i_char = 0; i_char < length_actual; ++i_char) {
+        char       curr_char     = s_name[i_char];
         const bool is_whitespace = (curr_char == '\n')
             || (curr_char == '\t')
             || (curr_char == ' ')
@@ -75,16 +74,11 @@ const char* klog_format_logger_name(
             || (curr_char == '\b')
             || (curr_char == '\0');
         if (is_whitespace) {
-            s_sanitized_name[i_input_char] = '_';
-            continue;
+            curr_char = '_';
         }
 
-        s_sanitized_name[i_input_char] = curr_char;
+        b_output[i_char] = curr_char;
     }
-
-    s_sanitized_name[length_name] = '\0';
-
-    return s_sanitized_name;
 }
 
 const char* klog_format_file_name_prefix(
@@ -93,13 +87,15 @@ const char* klog_format_file_name_prefix(
         size_t size
     )
 ) {
-    /**
-     * Perhaps we should be doing this in place but creating the file only happens once so, oh well
-     */
-
     /* @todo kjk 2026/02/12 Should we be doing anything to sanitize filepaths for windows vs linux? Convert "/" to "\\" and vice versa?? */
 
-    return klog_format_logger_name(s_name, alloc_cb);
+    const uint32_t length   = strlen(s_name);
+    char*          b_output = alloc_cb(length + 1);
+    memset(b_output, 0, length + 1);
+
+    klog_format_logger_name(s_name, length, b_output, length);
+
+    return b_output;
 }
 
 KlogString klog_format_message_prefix(
