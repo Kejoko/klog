@@ -237,8 +237,8 @@ void klog_deinitialize(
 }
 
 const KlogLoggerHandle* klog_logger_create(
-    const char* const s_logger_name
-    /* @todo take the logger name length as a parameter because we can't rely on it being null terminated */
+    const char* const s_logger_name,
+    const uint32_t    name_length
 ) {
 #ifdef KLOG_OFF
     (void)logger_name;
@@ -254,12 +254,17 @@ const KlogLoggerHandle* klog_logger_create(
         exit(KLOG_EXIT_CODE);
     }
 
+    if (name_length <= 0) {
+        kdprintf("Trying to create klog logger, the length of the provided name is 0\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
     const uint32_t current_logger_index = g_klog_state.number_loggers_created;
 
     const uint32_t logger_name_start_index = current_logger_index * g_klog_config.format.logger_name_max_length;
     klog_format_logger_name(
         s_logger_name,
-        strlen(s_logger_name), /* @todo take this via parameter */
+        name_length,
         &g_klog_state.b_logger_names[logger_name_start_index], /* This is initialized to spaces */
         g_klog_config.format.logger_name_max_length
     );

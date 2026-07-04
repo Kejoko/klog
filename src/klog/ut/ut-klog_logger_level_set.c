@@ -28,7 +28,7 @@ int set_levels(
         char* s_name = malloc(max_name_length + 1);
         sprintf(s_name, "%.3d", i);
 
-        const KlogLoggerHandle* p_handle = klog_logger_create(s_name);
+        const KlogLoggerHandle* p_handle = klog_logger_create(s_name, max_name_length);
         klog_logger_level_set(p_handle, desired_level);
 
         const uint32_t actual_level = g_klog_state.a_logger_levels[p_handle->value];
@@ -65,7 +65,7 @@ int log_levels_tempfile(
     for (uint32_t i = 0; i < KLOG_LEVEL_COUNT; ++i) {
         printf("Using handle iteration %d\n", i);
         printf("creating logger\n");
-        a_handles[i] = klog_logger_create(l_names[i]);
+        a_handles[i] = klog_logger_create(l_names[i], 3);
         printf("setting level\n");
         klog_logger_level_set(a_handles[i], i);
 

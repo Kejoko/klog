@@ -28,7 +28,7 @@ void do_test(
         char* const s_logger_name = malloc(4);
         sprintf(s_logger_name, "%.3d", i);
 
-        a_handles[i] = klog_logger_create(s_logger_name);
+        a_handles[i] = klog_logger_create(s_logger_name, 3);
         klog_logger_level_set(a_handles[i], KLOG_LEVEL_TRACE);
 
         free(s_logger_name);

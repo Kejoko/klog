@@ -103,12 +103,16 @@ void klog_deinitialize(
  * @pre klog has been initialized.
  * @pre There exists fewer than KLOG_MAX_NUMBER_LOGGERS, if a logger for the
  *      given name does not exist.
+ * @pre name_length is greater than 0
  * @param logger_name The name of the logger to create
+ * @param name_length The length of the provided logger name (not including null
+ *      terminator if it is present)
  * @returns KlogLoggerHandle The newly created handle if logger_name did
  *      not already exist, or the retrieved handle if logger_name did exist
  */
 const KlogLoggerHandle* klog_logger_create(
-    const char* s_logger_name
+    const char* s_logger_name,
+    uint32_t    name_length
 );
 
 /**

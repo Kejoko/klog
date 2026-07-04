@@ -29,7 +29,7 @@ int create_single_logger(
         return 1;
     }
 
-    const KlogLoggerHandle* p_handle_0 = klog_logger_create("ABC");
+    const KlogLoggerHandle* p_handle_0 = klog_logger_create("ABC", 3);
     if (g_klog_state.number_loggers_created != 1) {
         printf("Klog reports %d loggers created instead of 1\n", g_klog_state.number_loggers_max);
         return 1;
@@ -65,7 +65,7 @@ int create_multiple_loggers(
         char* s_name = malloc(max_name_length + 1);
         sprintf(s_name, "%.3d", i);
 
-        const KlogLoggerHandle* p_handle = klog_logger_create(s_name);
+        const KlogLoggerHandle* p_handle = klog_logger_create(s_name, max_name_length);
 
         if (g_klog_state.number_loggers_created != (i + 1)) {
             printf("Klog reports %d loggers created instead of %d\n", g_klog_state.number_loggers_max, i + 1);

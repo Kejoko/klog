@@ -69,9 +69,9 @@ int check(
 
     /* create loggers - no allocs or frees */
     printf("Creating logger 0\n");
-    const KlogLoggerHandle* p_handle_0 = klog_logger_create("ABC");
+    const KlogLoggerHandle* p_handle_0 = klog_logger_create("ABC", 3);
     printf("Creating logger 1\n");
-    const KlogLoggerHandle* p_handle_1 = klog_logger_create("DEF");
+    const KlogLoggerHandle* p_handle_1 = klog_logger_create("DEF", 3);
 
     /* logging should introduce no allocs or frees */
     printf("Logging with logger 0\n");
