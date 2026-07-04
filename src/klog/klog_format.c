@@ -60,6 +60,23 @@ void klog_format_logger_name(
     char*             b_output,
     const uint32_t    max_length
 ) {
+    if (s_name == NULL) {
+        kdprintf("Trying to format logger name, but the provided name is NULL\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
+    if (name_unformatted_length <= 0) {
+        kdprintf("Trying to format logger name, but the length of the provided name is 0\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
+    if (b_output == NULL) {
+        kdprintf("Trying to format logger name, but the provided output buffer is NULL\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
+    memset(b_output, ' ', max_length);
+
     const uint32_t length_actual = max_length < name_unformatted_length ? max_length : name_unformatted_length;
 
     for (uint32_t i_char = 0; i_char < length_actual; ++i_char) {
