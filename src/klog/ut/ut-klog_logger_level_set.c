@@ -114,6 +114,5 @@ int noop(
 int main(
     void
 ) {
-    return log_levels_tempfile();
-    /* return set_levels() || log_levels_tempfile() || noop(); */
+    return set_levels() || log_levels_tempfile() || noop();
 }
