@@ -40,20 +40,6 @@ uint32_t klog_format_prefix_length_get(
     return total;
 }
 
-/**
- * @todo Instead of taking the allocation callback and allocating space for the sanitized version,
- *      we need to take the output buffer (and its size) via parameter, and just iterate over the
- *      input s_name parameter and sanitize while we manually copy into the ouptut buffer.
- *
- *      This will require a small rethink about how we want to do the file name formatting function
- *      as it invokes this one. We will probably just need to allocate in that function, then pass
- *      the newly allocated buffer to this function.
- *
- *      We should probably also rename this function to klog_format_sanitize_whitespace or something
- *      of the sort to denote that it isn't just for logger names.
- *
- *  @brief The output buffer will NOT be null terminated
- */
 void klog_format_logger_name(
     const char* const s_name,
     const uint32_t    name_unformatted_length,
@@ -95,19 +81,12 @@ void klog_format_logger_name(
     }
 }
 
-/**
- * @brief The resulting buffer is null terminated
- */
 const char* klog_format_file_name_prefix(
     const char* const s_name,
     void* (* const    alloc_cb)(
         size_t size
     )
 ) {
-    /**
-     * Perhaps we should be doing this in place but creating the file only happens once so, oh well
-     */
-
     /* @todo kjk 2026/02/12 Should we be doing anything to sanitize filepaths for windows vs linux? Convert "/" to "\\" and vice versa?? */
 
     const uint32_t length   = strlen(s_name);

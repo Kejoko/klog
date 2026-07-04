@@ -21,7 +21,7 @@ uint32_t klog_format_prefix_length_get(
 
 /**
  * @brief Format the logger name (convert all whitespaces to underscores)
- * @detail Convert all white spaces to underscores for the given logger name.
+ * @details Convert all white spaces to underscores for the given logger name.
  *      The output is stored in the b_output parameter. If the provided logger
  *      name is shorter than max_length, then the output buffer will be appended
  *      with spaces after the logger name to make a string of max_length characters.
@@ -36,7 +36,8 @@ uint32_t klog_format_prefix_length_get(
  *      name. This is so we don't need to rely upon null terminated logger name strings
  * @param b_output                The output buffer
  * @param max_length              The maximum length of the formatted logger name
- * @returns The formatted logger name is stored in b_output
+ * @returns The formatted logger name is stored in b_output. The output will NOT be
+ *      null terminated
  */
 void klog_format_logger_name(
     const char*    s_name,
@@ -45,6 +46,15 @@ void klog_format_logger_name(
     const uint32_t max_length
 );
 
+/**
+ * @brief Format the file name prefix
+ * @details This uses klog_format_logger_name to perform the formatting
+ * @pre s_name is null terminated
+ * @param s_name   The unformatted file name
+ * @param alloc_cb The allocation callback. This is used for allocating the output
+ *      buffer which stores the formatted file prefix
+ * @returns A null terminated string representing the formatted file name
+ */
 const char* klog_format_file_name_prefix(
     const char*    s_name,
     void* (* const alloc_cb)(
