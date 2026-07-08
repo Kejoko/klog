@@ -15,7 +15,7 @@ Write them yourself, in English, even if your English is bad.
 
 Klog is and always will be maintained by humans, not AI agents of any sort.
 
-[Here are some reasons to reject LLMs](https://codeberg.org/ethical-foss/open-slopware/src/branch/main/why_not_llms.md)
+[Here are some reasons to reject LLMs](https://codeberg.org/ethical-foss/open-slopware/src/branch/main/why_not_llms.md).
 
 # Contributing
 
