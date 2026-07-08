@@ -12,8 +12,7 @@ function(create_example_executable main_file)
 
     set(link_libraries ${ARGN})
 
-    # target_link_libraries(${executable_name} PRIVATE ${link_libraries} UTIL_Logger)
-    target_link_libraries(${executable_name} PRIVATE ${link_libraries})
+    target_link_libraries(${executable_name} PRIVATE ${link_libraries} klog)
 
     set_target_properties(${executable_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/example)
 endfunction()
