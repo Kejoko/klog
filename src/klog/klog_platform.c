@@ -36,7 +36,7 @@ timepoint_t klog_platform_get_current_timepoint(
         p_tm->tm_sec,
         p_tm->tm_min,
         p_tm->tm_hour,
-        p_tm->tm_yday + 1,
+        p_tm->tm_mday,
         p_tm->tm_mon + 1,
         p_tm->tm_year + 1900,
 
