@@ -12,6 +12,47 @@ procid_t klog_platform_get_current_thread_id(
     return syscall(SYS_gettid);
 }
 
+void klog_platform_mutex_initialize(
+    kpl_mutex_t* p_mutex
+) {
+    pthread_mutex_init(p_mutex, NULL);
+}
+
+void klog_platform_mutex_deinitialize(
+    kpl_mutex_t* p_mutex
+) {
+    pthread_mutex_destroy(p_mutex);
+}
+
+void klog_platform_mutex_lock(
+    kpl_mutex_t* p_mutex
+) {
+    pthread_mutex_lock(p_mutex);
+}
+
+void klog_platform_mutex_unlock(
+    kpl_mutex_t* p_mutex
+) {
+    pthread_mutex_unlock(p_mutex);
+}
+
+void klog_platform_thread_create(
+    kpl_thread_t* p_thread,
+    void* (*      thread_body)(
+        void*
+    ),
+    void*         p_arg
+) {
+    pthread_create(p_thread, NULL, thread_body, p_arg);
+}
+
+void klog_platform_thread_join(
+    kpl_thread_t* p_thread,
+    void**        p_ret
+) {
+    pthread_join(*p_thread, p_ret);
+}
+
 const char* klog_platform_get_basename(
     const char* const s_filepath
 ) {

@@ -20,7 +20,7 @@
 
 /* Thread / Process ID ---------------------------------------------------------------------------------------------- */
 
-# include <unistd.h> /* For pid_t */
+# include <unistd.h>      /* For pid_t */
 # include <sys/syscall.h> /* For syscall() */
 
 # ifndef SYS_gettid
@@ -31,6 +31,40 @@ typedef pid_t procid_t;
 
 procid_t klog_platform_get_current_thread_id(
     void
+);
+
+/* Threading -------------------------------------------------------------------------------------------------------- */
+
+# include <pthread.h>
+
+typedef pthread_mutex_t kpl_mutex_t;
+typedef pthread_t       kpl_thread_t;
+
+/* @todo Allow for mutex attributes */
+void klog_platform_mutex_initialize(
+    kpl_mutex_t* p_mutex
+);
+void klog_platform_mutex_deinitialize(
+    kpl_mutex_t* p_mutex
+);
+void klog_platform_mutex_lock(
+    kpl_mutex_t* p_mutex
+);
+void klog_platform_mutex_unlock(
+    kpl_mutex_t* p_mutex
+);
+
+/* @todo Allow for attributes upon thread creation */
+void klog_platform_thread_create(
+    kpl_thread_t* p_thread,
+    void* (*      thread_body)(
+        void*
+    ),
+    void*         p_arg
+);
+void klog_platform_thread_join(
+    kpl_thread_t* p_thread,
+    void**        p_ret
 );
 
 /* Filenames -------------------------------------------------------------------------------------------------------- */
@@ -84,6 +118,6 @@ timepoint_t klog_platform_get_current_timepoint(
     void
 );
 
-#endif
+#endif /* __linux__ */
 
 #endif /* KLOG_PLATFORM_INCLUDED */
