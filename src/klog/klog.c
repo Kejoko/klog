@@ -186,9 +186,11 @@ void klog_initialize(
             klog_platform_thread_create(&g_klog_state.b_threads[idx_thread], klog_thread_body, NULL);
         }
     }
+    g_klog_state.p_mutex_deinitialize       = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
     g_klog_state.p_mutex_formatted_messages = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
     g_klog_state.p_mutex_file               = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
     g_klog_state.p_mutex_console            = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_formatted_messages);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_file);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_console);
@@ -206,6 +208,10 @@ void klog_deinitialize(
         kdprintf("Trying to de-initialize klog, when it is not yet initialized\n");
         exit(KLOG_EXIT_CODE);
     }
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
+    g_klog_state.is_initialized = false;
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
     g_klog_state.number_loggers_max     = 0;
     g_klog_state.number_loggers_created = 0;
@@ -256,21 +262,22 @@ void klog_deinitialize(
         }
         g_klog_config.alloc.free_cb(g_klog_state.b_threads);
     }
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_deinitialize);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_formatted_messages);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_file);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_console);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_deinitialize);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_formatted_messages);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_file);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_console);
     g_klog_state.b_threads                  = NULL;
+    g_klog_state.p_mutex_deinitialize       = NULL;
     g_klog_state.p_mutex_formatted_messages = NULL;
     g_klog_state.p_mutex_file               = NULL;
     g_klog_state.p_mutex_console            = NULL;
 
     /* Need to do this near the end because we need the callbacks for freeing */
     g_klog_config = (struct KlogConfig) { 0 };
-
-    g_klog_state.is_initialized = false;
 #endif
 }
 

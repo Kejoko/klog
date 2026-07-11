@@ -59,6 +59,7 @@ extern struct KlogState {
     bool is_initialized;
 
     kpl_thread_t* b_threads;
+    kpl_mutex_t*  p_mutex_deinitialize;
     kpl_mutex_t*  p_mutex_formatted_messages;
     kpl_mutex_t*  p_mutex_file;
     kpl_mutex_t*  p_mutex_console;
