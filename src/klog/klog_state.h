@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include "klog/klog.h"
+#include "./klog_platform.h"
 
 /**
  * @brief This represents the initial configuraton as set by the user
@@ -38,8 +39,8 @@ extern struct KlogState {
     char* b_level_strings;
     char* b_level_strings_colored;
 
-    uint32_t message_element_idx;
-    uint32_t message_element_count;
+    uint32_t message_element_idx;   /* @todo rename this to denote that it is for producing messages */
+    uint32_t message_element_count; /* @todo rename to denote that this is the max number of messages (the number our buffer can support) */
 
     uint32_t prefix_file_size;
     char*    b_prefixes_file;
@@ -56,6 +57,11 @@ extern struct KlogState {
     FILE* p_file;
 
     bool is_initialized;
+
+    kpl_thread_t* b_threads;
+    kpl_mutex_t*  p_mutex_formatted_messages;
+    kpl_mutex_t*  p_mutex_file;
+    kpl_mutex_t*  p_mutex_console;
 } g_klog_state;
 
 #endif /* KLOG_STATE_INCLUDED */

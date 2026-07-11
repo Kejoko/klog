@@ -16,6 +16,14 @@
 #include "./klog_output.h"
 #include "./klog_format.h"
 
+/* @todo Make this an actual function somewhere appropriate */
+void* klog_thread_body(
+    void* p
+) {
+    (void)p;
+    return NULL;
+}
+
 void klog_initialize(
     const uint32_t               max_number_loggers,
     const KlogFormatInfo         klog_format_info,
@@ -172,6 +180,19 @@ void klog_initialize(
     kdprintf("p_file: %p\n",             (void*)g_klog_state.p_file);
     kdprintf("File max verbosity: %d\n", g_klog_config.file.max_level);
 
+    if (g_klog_config.async.number_backing_threads > 0) {
+        g_klog_state.b_threads = g_klog_config.alloc.alloc_cb(sizeof(kpl_thread_t) * g_klog_config.async.number_backing_threads);
+        for (uint32_t idx_thread = 0; idx_thread < g_klog_config.async.number_backing_threads; ++idx_thread) {
+            klog_platform_thread_create(&g_klog_state.b_threads[idx_thread], klog_thread_body, NULL);
+        }
+    }
+    g_klog_state.p_mutex_formatted_messages = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_file               = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_console            = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_formatted_messages);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_file);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_console);
+
     g_klog_state.is_initialized = true;
 #endif
 }
@@ -228,6 +249,23 @@ void klog_deinitialize(
         fclose(g_klog_state.p_file);
         g_klog_state.p_file = NULL;
     }
+
+    if (g_klog_state.b_threads) {
+        for (uint32_t idx_thread = 0; idx_thread < g_klog_config.async.number_backing_threads; ++idx_thread) {
+            klog_platform_thread_join(&g_klog_state.b_threads[idx_thread], NULL);
+        }
+        g_klog_config.alloc.free_cb(g_klog_state.b_threads);
+    }
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_formatted_messages);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_file);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_console);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_formatted_messages);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_file);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_console);
+    g_klog_state.b_threads                  = NULL;
+    g_klog_state.p_mutex_formatted_messages = NULL;
+    g_klog_state.p_mutex_file               = NULL;
+    g_klog_state.p_mutex_console            = NULL;
 
     /* Need to do this near the end because we need the callbacks for freeing */
     g_klog_config = (struct KlogConfig) { 0 };
