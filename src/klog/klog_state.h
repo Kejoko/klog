@@ -39,8 +39,10 @@ extern struct KlogState {
     char* b_level_strings;
     char* b_level_strings_colored;
 
-    uint32_t message_element_producer_idx; /* @todo rename this to denote that it is for producing messages */
-    uint32_t message_element_count;        /* @todo rename to denote that this is the max number of messages (the number our buffer can support) */
+    uint32_t message_unconsumed_count;
+    uint32_t message_element_producer_idx;
+    uint32_t message_element_consumer_idx;
+    uint32_t message_element_count;
 
     uint32_t prefix_file_size;
     char*    b_prefixes_file;

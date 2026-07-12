@@ -28,7 +28,7 @@ uint32_t klog_format_prefix_length_get(
     if (use_timestamp) {
         total += G_klog_time_string_length + 1; /* 19 digit timestamp + space */
     }
-    total += logger_name_max_length + 2 + 1; /* logger name + brackets + space */
+    total += logger_name_max_length + 2 + 1;     /* logger name + brackets + space */
     total += G_klog_level_string_length + 2 + 1; /* level + brackets + space */
     if (use_color) {
         total += 9;
@@ -118,7 +118,7 @@ KlogString klog_format_message_prefix(
     /**
      * @brief So in total we have:
      *      8[thread id and space] +
-     *      (p_time.length)[timestamp and space] +
+     *      (p_time.length+1)[timestamp and space] +
      *      (p_name.length+3)[logger name, brackets, space] +
      *      (p_level+3)[level name, brackets, space] +
      *      (p_source_location.length+3)[source location, brackets, space]

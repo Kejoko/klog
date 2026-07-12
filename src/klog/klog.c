@@ -23,17 +23,63 @@ void klog_consume(
     void
 ) {
     /* Acquire the mutex */
+    klog_platform_mutex_lock(g_klog_state.p_mutex_formatted_messages);
+
+    if (g_klog_state.message_unconsumed_count < 1) {
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_formatted_messages);
+        return;
+    }
+
+    /* @todo Get this from the global buffer of levels */
+    const enum KlogLevel requested_level = KLOG_LEVEL_TRACE;
+
+    /* @todo Get this length correctly */
+    /* Do we need an additional buffer to set this properly??? */
+    /* Should we use strlen to get this??? This implies the message is null terminated after formatting */
+    const uint32_t actual_message_length = 0;
+
     /* Get the formatted message from the message buffer */
-    /* If logging to console */ {
-        /* Get the console prefix */
-        /* Log to console */
+    char* s_message_formatted = g_klog_state.b_messages_formatted
+        + (g_klog_state.message_element_consumer_idx * g_klog_state.message_formatted_max_size);
+
+    /* Get the console and file prefixes */
+    char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_file_size);
+    char* s_prefix_console = g_klog_state.b_prefixes_console
+        + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_console_size);
+    const KlogString packed_prefix_file    = { g_klog_state.prefix_file_size, s_prefix_file };
+    const KlogString packed_prefix_console = { g_klog_state.prefix_console_size, s_prefix_console };
+
+    uint32_t i_starting_character = 0;
+    while (i_starting_character <= actual_message_length) {
+        const char* const p_newline         = strchr(s_message_formatted + i_starting_character, '\n');
+        const uint32_t    submessage_length = p_newline
+            ? p_newline - (s_message_formatted + i_starting_character)
+            : actual_message_length;
+
+        const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
+        if (requested_level <= g_klog_config.console.max_level) {
+            klog_output_console(&packed_prefix_console, &packed_message);
+        }
+        if (g_klog_state.p_file && (requested_level <= g_klog_config.file.max_level)) {
+            klog_output_file(g_klog_state.p_file, &packed_prefix_file, &packed_message);
+        }
+
+        i_starting_character = i_starting_character + submessage_length + 1;
     }
-    /* If logging to file */ {
-        /* Get the file prefix */
-        /* Log to file */
+
+    /* Clear the buffer for the formatted message we just used */
+    memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
+
+    /* Update the consumer's index into our ring buffer */
+    g_klog_state.message_element_consumer_idx = g_klog_state.message_element_consumer_idx + 1;
+    if (g_klog_state.message_element_consumer_idx >= g_klog_state.message_element_count) {
+        g_klog_state.message_element_consumer_idx = 0;
     }
-    /* Increment the consuming index */
+
+    g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count - 1;
+
     /* Release the mutex */
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_formatted_messages);
 }
 
 void* klog_thread_body(
@@ -166,7 +212,9 @@ void klog_initialize(
     );
     g_klog_state.prefix_time_size             = G_klog_time_string_length;
     g_klog_state.prefix_source_location_size  = g_klog_config.format.source_location_filename_max_length + 4 + 1; /* 4 digit line number, colon */
+    g_klog_state.message_unconsumed_count     = 0;
     g_klog_state.message_element_producer_idx = 0;
+    g_klog_state.message_element_consumer_idx = 0;
     if (p_klog_async_info) {
         g_klog_state.message_element_count = p_klog_async_info->message_queue_number_elements;
     } else {
@@ -283,7 +331,9 @@ void klog_deinitialize(
     g_klog_state.b_level_strings         = NULL;
     g_klog_state.b_level_strings_colored = NULL;
 
+    g_klog_state.message_unconsumed_count     = 0;
     g_klog_state.message_element_producer_idx = 0;
+    g_klog_state.message_element_consumer_idx = 0;
     g_klog_state.message_element_count        = 0;
 
     g_klog_state.prefix_file_size = 0;
@@ -436,6 +486,8 @@ void klog_log(
         return;
     }
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_formatted_messages);
+
     /* We are getting the time first, so it's closest to the actual point of invocation */
     char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_time_size);
     memset(s_prefix_time, '\0', g_klog_state.prefix_time_size);
@@ -503,6 +555,20 @@ void klog_log(
         &packed_source_location
     );
 
+    /* Update the producer's index into our ring buffer */
+    g_klog_state.message_element_producer_idx = g_klog_state.message_element_producer_idx + 1;
+    if (g_klog_state.message_element_producer_idx >= g_klog_state.message_element_count) {
+        g_klog_state.message_element_producer_idx = 0;
+    }
+
+    /* Let everyone know there is another message ready for consumption */
+    /* @todo Error out if we have gotten into a state not in accordance with our buffer full strategy? */
+    g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count + 1;
+
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_formatted_messages);
+
+    /* @todo if no backing threads, invoke consuming function directly, else return */
+
     /* Actually log the message */
     uint32_t i_starting_character = 0;
     while (i_starting_character <= actual_message_length) {
@@ -522,10 +588,10 @@ void klog_log(
         i_starting_character = i_starting_character + submessage_length + 1;
     }
 
-    /* Update the index into our ring buffer */
-    g_klog_state.message_element_producer_idx = g_klog_state.message_element_producer_idx + 1;
-    if (g_klog_state.message_element_producer_idx >= g_klog_state.message_element_count) {
-        g_klog_state.message_element_producer_idx = 0;
+    /* Update the consumer's index into our ring buffer */
+    g_klog_state.message_element_consumer_idx = g_klog_state.message_element_consumer_idx + 1;
+    if (g_klog_state.message_element_consumer_idx >= g_klog_state.message_element_count) {
+        g_klog_state.message_element_consumer_idx = 0;
     }
 
     /* Clear the buffer for the next time it is used - we also re-set the null terminator at the end of the actual message */
