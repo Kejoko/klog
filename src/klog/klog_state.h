@@ -56,6 +56,8 @@ extern struct KlogState {
     uint32_t message_formatted_max_size;
     char*    b_messages_formatted;
 
+    uint32_t* b_message_levels;
+
     FILE* p_file;
 
     bool is_initialized;

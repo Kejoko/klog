@@ -30,17 +30,15 @@ void klog_consume(
         return;
     }
 
-    /* @todo Get this from the global buffer of levels */
-    const enum KlogLevel requested_level = KLOG_LEVEL_TRACE;
-
-    /* @todo Get this length correctly */
-    /* Do we need an additional buffer to set this properly??? */
-    /* Should we use strlen to get this??? This implies the message is null terminated after formatting */
-    const uint32_t actual_message_length = 0;
+    /* Get the level from the global buffer of levels corresponding to messages */
+    const enum KlogLevel requested_level = g_klog_state.b_message_levels[g_klog_state.message_element_consumer_idx];
 
     /* Get the formatted message from the message buffer */
     char* s_message_formatted = g_klog_state.b_messages_formatted
         + (g_klog_state.message_element_consumer_idx * g_klog_state.message_formatted_max_size);
+
+    /* @todo Do we need an additional buffer denoting lengths, for speed up so we don't have to use strlen? */
+    const uint32_t actual_message_length = strlen(s_message_formatted);
 
     /* Get the console and file prefixes */
     char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_file_size);
@@ -67,7 +65,7 @@ void klog_consume(
         i_starting_character = i_starting_character + submessage_length + 1;
     }
 
-    /* Clear the buffer for the formatted message we just used */
+    /* Clear the message buffer for the formatted message we just used */
     memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
 
     /* Update the consumer's index into our ring buffer */
@@ -258,6 +256,17 @@ void klog_initialize(
         g_klog_config.alloc.alloc_cb
     );
 
+    g_klog_state.b_message_levels = g_klog_config.alloc.alloc_cb(
+        sizeof(*g_klog_state.b_message_levels)
+        * g_klog_state.message_element_count
+    );
+    memset(
+        g_klog_state.b_message_levels,
+        0,
+        sizeof(*g_klog_state.b_message_levels)
+        * g_klog_state.message_element_count
+    );
+
     g_klog_state.p_file = klog_initialize_file(p_klog_file_info, g_klog_config.alloc.alloc_cb);
     kdprintf("p_file: %p\n",             (void*)g_klog_state.p_file);
     kdprintf("File max verbosity: %d\n", g_klog_config.file.max_level);
@@ -355,6 +364,9 @@ void klog_deinitialize(
     g_klog_state.message_formatted_max_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_messages_formatted);
     g_klog_state.b_messages_formatted = NULL;
+
+    g_klog_config.alloc.free_cb(g_klog_state.b_message_levels);
+    g_klog_state.b_message_levels = NULL;
 
     if (g_klog_state.p_file) {
         fclose(g_klog_state.p_file);
@@ -555,6 +567,9 @@ void klog_log(
         &packed_source_location
     );
 
+    /* Update the level buffer */
+    g_klog_state.b_message_levels[g_klog_state.message_element_producer_idx] = requested_level;
+
     /* Update the producer's index into our ring buffer */
     g_klog_state.message_element_producer_idx = g_klog_state.message_element_producer_idx + 1;
     if (g_klog_state.message_element_producer_idx >= g_klog_state.message_element_count) {
@@ -569,6 +584,12 @@ void klog_log(
 
     /* @todo if no backing threads, invoke consuming function directly, else return */
 
+# if true
+    (void)actual_message_length;
+    (void)packed_prefix_file;
+    (void)packed_prefix_console;
+    klog_consume();
+# else
     /* Actually log the message */
     uint32_t i_starting_character = 0;
     while (i_starting_character <= actual_message_length) {
@@ -596,5 +617,6 @@ void klog_log(
 
     /* Clear the buffer for the next time it is used - we also re-set the null terminator at the end of the actual message */
     memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
+# endif
 #endif
 }
