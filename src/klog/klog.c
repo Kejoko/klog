@@ -34,7 +34,6 @@ void klog_consume(
         klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_consumer);
         return;
     }
-
 #else
     /* Wait for a producer to produce a message */
     while (true) {
@@ -81,6 +80,13 @@ void klog_consume(
         + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_console_size);
     const KlogString packed_prefix_file    = { g_klog_state.prefix_file_size, s_prefix_file };
     const KlogString packed_prefix_console = { g_klog_state.prefix_console_size, s_prefix_console };
+    printf(
+        "USING     console prefix at index %02d = %p : \"%.*s\"\n",
+        g_klog_state.message_element_consumer_idx,
+        (void*)s_prefix_console,
+        g_klog_state.prefix_console_size,
+        s_prefix_console
+    );
 
     uint32_t i_starting_character = 0;
     while (i_starting_character <= actual_message_length) {
@@ -91,7 +97,8 @@ void klog_consume(
 
         const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
         if (requested_level <= g_klog_config.console.max_level) {
-            klog_output_console(&packed_prefix_console, &packed_message);
+            (void)packed_prefix_console;
+            /* klog_output_console(&packed_prefix_console, &packed_message); */
         }
         if (g_klog_state.p_file && (requested_level <= g_klog_config.file.max_level)) {
             klog_output_file(g_klog_state.p_file, &packed_prefix_file, &packed_message);
@@ -645,6 +652,13 @@ void klog_log(
         &packed_name,
         p_packed_level_console,
         &packed_source_location
+    );
+    printf(
+        "POPULATED console prefix at index %02d = %p : \"%.*s\"\n",
+        g_klog_state.message_element_producer_idx,
+        (void*)s_prefix_console,
+        g_klog_state.prefix_console_size,
+        s_prefix_console
     );
 
     /* Update the level buffer */
