@@ -53,6 +53,15 @@ void klog_platform_thread_join(
     pthread_join(*p_thread, p_ret);
 }
 
+void sleep_usec(
+    const uint32_t usec
+) {
+    struct timespec ts;
+    ts.tv_sec  = usec / 1000000;          /* Whole seconds */
+    ts.tv_nsec = (usec % 1000000) * 1000; /* Remaining nanoseconds */
+    nanosleep(&ts, NULL);
+}
+
 const char* klog_platform_get_basename(
     const char* const s_filepath
 ) {

@@ -19,14 +19,49 @@
 /* @todo Make these actual functions somewhere appropriate */
 /* ====================================================================================================================================== */
 
+uint32_t TOTAL_CONSUMED_COUNT = 0;
+
 void klog_consume(
     void
 ) {
-    /* Acquire the mutex */
-    klog_platform_mutex_lock(g_klog_state.p_mutex_formatted_messages);
+    /* Only one consumer may be in here at a time - so we can wait for the unconsumed count to STRICTLY INCREASE */
+    klog_platform_mutex_lock(g_klog_state.p_mutex_hot_consumer);
+
+#if true
+    klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared);
+    if (g_klog_state.message_unconsumed_count == 0) {
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_consumer);
+        return;
+    }
+
+#else
+    /* Wait for a producer to produce a message */
+    while (true) {
+        klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared);
+        if (g_klog_state.message_unconsumed_count > 0) {
+            /* klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared); */
+            break;
+        }
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+        sleep_usec(100);
+    }
+#endif
+
+    /* Acquire the shared mutex now that we have something to consume */
+    /* klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared); */
+
+    /*
+     *    printf(
+     *     "Consuming message %04d - index %02d (%02d unconsumed messages)\n",
+     *     TOTAL_CONSUMED_COUNT,
+     *     g_klog_state.message_element_consumer_idx,
+     *     g_klog_state.message_unconsumed_count
+     *    );
+     */
 
     if (g_klog_state.message_unconsumed_count < 1) {
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_formatted_messages);
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
         return;
     }
 
@@ -74,10 +109,16 @@ void klog_consume(
         g_klog_state.message_element_consumer_idx = 0;
     }
 
+    if (g_klog_state.message_unconsumed_count < 1) {
+        printf("CONSUMED TOO MANY MESSAGES - HOW????\n");
+    }
+    TOTAL_CONSUMED_COUNT++;
     g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count - 1;
+    /* printf("%d unconsumed messages remaining\n", g_klog_state.message_unconsumed_count); */
 
     /* Release the mutex */
-    klog_platform_mutex_unlock(g_klog_state.p_mutex_formatted_messages);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_consumer);
 }
 
 void* klog_thread_body(
@@ -95,6 +136,7 @@ void* klog_thread_body(
         klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
         /* Acquire the formatted message mutex and invoke the "consnuming function" */
+        klog_consume();
     }
 
     return NULL;
@@ -272,14 +314,14 @@ void klog_initialize(
     kdprintf("File max verbosity: %d\n", g_klog_config.file.max_level);
 
     /* Need to initialize all of our mutexes before the thread starts and tries to use them */
-    g_klog_state.p_mutex_deinitialize       = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_formatted_messages = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_file               = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_console            = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_deinitialize = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_hot_shared   = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_hot_producer = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_hot_consumer = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
     klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
-    klog_platform_mutex_initialize(g_klog_state.p_mutex_formatted_messages);
-    klog_platform_mutex_initialize(g_klog_state.p_mutex_file);
-    klog_platform_mutex_initialize(g_klog_state.p_mutex_console);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_hot_shared);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_hot_producer);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_hot_consumer);
     if (g_klog_config.async.number_backing_threads > 0) {
         g_klog_state.b_threads = g_klog_config.alloc.alloc_cb(sizeof(kpl_thread_t) * g_klog_config.async.number_backing_threads);
         for (uint32_t idx_thread = 0; idx_thread < g_klog_config.async.number_backing_threads; ++idx_thread) {
@@ -301,6 +343,18 @@ void klog_deinitialize(
         exit(KLOG_EXIT_CODE);
     }
 
+    /* Wait for all messages to be consumed */
+    /* printf("Waiting for all messages to be consumed\n"); */
+    while (true) {
+        klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared);
+        if (g_klog_state.message_unconsumed_count == 0) {
+            klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+            break;
+        }
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+        sleep_usec(100);
+    }
+
     klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     g_klog_state.is_initialized = false;
     klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
@@ -312,18 +366,18 @@ void klog_deinitialize(
         g_klog_config.alloc.free_cb(g_klog_state.b_threads);
     }
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_deinitialize);
-    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_formatted_messages);
-    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_file);
-    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_console);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_hot_shared);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_hot_producer);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_hot_consumer);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_deinitialize);
-    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_formatted_messages);
-    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_file);
-    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_console);
-    g_klog_state.b_threads                  = NULL;
-    g_klog_state.p_mutex_deinitialize       = NULL;
-    g_klog_state.p_mutex_formatted_messages = NULL;
-    g_klog_state.p_mutex_file               = NULL;
-    g_klog_state.p_mutex_console            = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_hot_shared);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_hot_producer);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_hot_consumer);
+    g_klog_state.b_threads            = NULL;
+    g_klog_state.p_mutex_deinitialize = NULL;
+    g_klog_state.p_mutex_hot_shared   = NULL;
+    g_klog_state.p_mutex_hot_producer = NULL;
+    g_klog_state.p_mutex_hot_consumer = NULL;
 
     g_klog_state.number_loggers_max     = 0;
     g_klog_state.number_loggers_created = 0;
@@ -454,6 +508,8 @@ void klog_logger_level_set(
 #endif
 }
 
+uint32_t TOTAL_PRODUCED_COUNT = 0;
+
 void klog_log(
     const KlogLoggerHandle* const p_logger_handle,
     const enum KlogLevel          requested_level,
@@ -498,7 +554,31 @@ void klog_log(
         return;
     }
 
-    klog_platform_mutex_lock(g_klog_state.p_mutex_formatted_messages);
+    /* Only one producer may be in here at a time - so we can wait for the unconsumed count to STRICTLY DECREASE */
+    klog_platform_mutex_lock(g_klog_state.p_mutex_hot_producer);
+
+    /* Wait for a consumer to consume a message and free up a message slot */
+    while (true) {
+        klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared);
+        if (g_klog_state.message_unconsumed_count < g_klog_state.message_element_count) {
+            /* klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared); */
+            break;
+        }
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+        sleep_usec(100);
+    }
+
+    /*
+     *    printf(
+     *     "Producing message %04d - index %02d (%02d unconsumed messages)\n",
+     *     TOTAL_PRODUCED_COUNT,
+     *     g_klog_state.message_element_producer_idx,
+     *     g_klog_state.message_unconsumed_count
+     *    );
+     */
+
+    /* Now we know that the unconsumed count is valid for production, and has not gone up since it has gone down BECAUSE WE ARE THE ONLY PRODUCER IN HERE */
+    /* klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared); */
 
     /* We are getting the time first, so it's closest to the actual point of invocation */
     char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_time_size);
@@ -577,10 +657,15 @@ void klog_log(
     }
 
     /* Let everyone know there is another message ready for consumption */
-    /* @todo Error out if we have gotten into a state not in accordance with our buffer full strategy? */
+    TOTAL_PRODUCED_COUNT++;
     g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count + 1;
+    if (g_klog_state.message_unconsumed_count > g_klog_state.message_element_count) {
+        printf("PRODUCED TOO MANY MESSAGES - HOW????\n");
+        exit(1);
+    }
 
-    klog_platform_mutex_unlock(g_klog_state.p_mutex_formatted_messages);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_producer);
 
     /* @todo if no backing threads, invoke consuming function directly, else return */
 
@@ -588,6 +673,11 @@ void klog_log(
     (void)actual_message_length;
     (void)packed_prefix_file;
     (void)packed_prefix_console;
+
+    /* If we have consumer threads, we're done here. Else, consume what we just made */
+    if (g_klog_config.async.number_backing_threads > 0) {
+        return;
+    }
     klog_consume();
 # else
     /* Actually log the message */

@@ -64,9 +64,9 @@ extern struct KlogState {
 
     kpl_thread_t* b_threads;
     kpl_mutex_t*  p_mutex_deinitialize;
-    kpl_mutex_t*  p_mutex_formatted_messages;
-    kpl_mutex_t*  p_mutex_file;
-    kpl_mutex_t*  p_mutex_console;
+    kpl_mutex_t*  p_mutex_hot_shared;
+    kpl_mutex_t*  p_mutex_hot_producer;
+    kpl_mutex_t*  p_mutex_hot_consumer;
 } g_klog_state;
 
 #endif /* KLOG_STATE_INCLUDED */

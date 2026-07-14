@@ -41,6 +41,7 @@ if (KLOG_BUILD_TESTS)
     create_unit_test_plain(ut/ut-klog_logger_level_set.c klog)
     create_unit_test_plain(ut/ut-klog_ring_buffer_usage.c klog)
 
+    create_functional_test(ft/ft-klog_async_1_thread.c klog)
     create_functional_test(ft/ft-klog_basic.c klog)
     create_functional_test(ft/ft-klog_console.c klog)
     create_functional_test(ft/ft-klog_file.c klog)

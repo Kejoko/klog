@@ -67,6 +67,11 @@ void klog_platform_thread_join(
     void**        p_ret
 );
 
+/* Microsecond sleep */
+void sleep_usec(
+    uint32_t usec
+);
+
 /* Filenames -------------------------------------------------------------------------------------------------------- */
 
 # include <libgen.h> /* For basename() */
