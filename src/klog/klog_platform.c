@@ -1,6 +1,8 @@
 #include "./klog_platform.h"
 
+#include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "klog/klog.h"
 
@@ -34,6 +36,59 @@ void klog_platform_mutex_unlock(
     kpl_mutex_t* p_mutex
 ) {
     pthread_mutex_unlock(p_mutex);
+}
+
+void klog_platform_semaphore_initialize(
+    kpl_semaphore_t* p_semaphore,
+    uint32_t         count
+) {
+    int retval = sem_init(p_semaphore, 0, count);
+    if (retval != 0) {
+        kdprintf("Error in klog_platform_semaphore_initialize: sem_init returned %d - errno: %s\n", retval, strerror(errno));
+        exit(KLOG_EXIT_CODE);
+    }
+}
+
+void klog_platform_semaphore_deinitialize(
+    kpl_semaphore_t* p_semaphore
+) {
+    const int retval = sem_destroy(p_semaphore);
+    if (retval != 0) {
+        kdprintf("Error in klog_platform_semaphore_deinitialize: sem_destroy returned %d - errno: %s\n", retval, strerror(errno));
+        exit(KLOG_EXIT_CODE);
+    }
+}
+
+void klog_platform_semaphore_wait(
+    kpl_semaphore_t* p_semaphore
+) {
+    const int retval = sem_wait(p_semaphore);
+    if (retval != 0) {
+        kdprintf("Error in klog_platform_semaphore_wait: sem_wait returned %d - errno: %s\n", retval, strerror(errno));
+        exit(KLOG_EXIT_CODE);
+    }
+}
+
+void klog_platform_semaphore_signal(
+    kpl_semaphore_t* p_semaphore
+) {
+    const int retval = sem_post(p_semaphore);
+    if (retval != 0) {
+        kdprintf("Error in klog_platform_semaphore_signal: sem_post returned %d - errno: %s\n", retval, strerror(errno));
+        exit(KLOG_EXIT_CODE);
+    }
+}
+
+int klog_platform_semaphore_value_get(
+    kpl_semaphore_t* p_semaphore
+) {
+    int       result = 0;
+    const int retval = sem_getvalue(p_semaphore, &result);
+    if (retval != 0) {
+        kdprintf("Error in klog_platform_semaphore_value_get: sem_getvalue returned %d - errno: %s\n", retval, strerror(errno));
+        exit(KLOG_EXIT_CODE);
+    }
+    return result;
 }
 
 void klog_platform_thread_create(

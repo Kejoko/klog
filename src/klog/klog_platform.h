@@ -36,8 +36,10 @@ procid_t klog_platform_get_current_thread_id(
 /* Threading -------------------------------------------------------------------------------------------------------- */
 
 # include <pthread.h>
+# include <semaphore.h>
 
 typedef pthread_mutex_t kpl_mutex_t;
+typedef sem_t           kpl_semaphore_t;
 typedef pthread_t       kpl_thread_t;
 
 /* @todo Allow for mutex attributes */
@@ -52,6 +54,24 @@ void klog_platform_mutex_lock(
 );
 void klog_platform_mutex_unlock(
     kpl_mutex_t* p_mutex
+);
+
+/* @todo Allow for pshared parameter to denote inter-process sharing */
+void klog_platform_semaphore_initialize(
+    kpl_semaphore_t* p_semaphore,
+    uint32_t         count
+);
+void klog_platform_semaphore_deinitialize(
+    kpl_semaphore_t* p_semaphore
+);
+void klog_platform_semaphore_wait(
+    kpl_semaphore_t* p_semaphore
+);
+void klog_platform_semaphore_signal(
+    kpl_semaphore_t* p_semaphore
+);
+int klog_platform_semaphore_value_get(
+    kpl_semaphore_t* p_semaphore
 );
 
 /* @todo Allow for attributes upon thread creation */

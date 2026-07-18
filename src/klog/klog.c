@@ -25,44 +25,24 @@ void klog_consume(
     void
 ) {
     /* Only one consumer may be in here at a time - so we can wait for the unconsumed count to STRICTLY INCREASE */
-    klog_platform_mutex_lock(g_klog_state.p_mutex_hot_consumer);
+    /* printf("Consumer acquiring consumer\n"); */
+    /* klog_platform_mutex_lock(g_klog_state.p_mutex_consumer); */
 
 #if true
-    klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared);
-    if (g_klog_state.message_unconsumed_count == 0) {
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_consumer);
-        return;
-    }
+    /* @todo We will hang forever here if the producing thread is trying to deinitialize and never signals that we need to stop */
+    const int semval_full = klog_platform_semaphore_value_get(g_klog_state.p_semaphore_messages_full);
+    printf("Consumer waiting for the full semaphore with value: %d\n", semval_full);
+    klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_full);
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
 #else
-    /* Wait for a producer to produce a message */
-    while (true) {
-        klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared);
-        if (g_klog_state.message_unconsumed_count > 0) {
-            /* klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared); */
-            break;
-        }
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
-        sleep_usec(100);
+    printf("Consumer acquiring shared\n");
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+    if (g_klog_state.message_unconsumed_count == 0) {
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_consumer);
+        return;
     }
 #endif
-
-    /* Acquire the shared mutex now that we have something to consume */
-    /* klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared); */
-
-    /*
-     *    printf(
-     *     "Consuming message %04d - index %02d (%02d unconsumed messages)\n",
-     *     TOTAL_CONSUMED_COUNT,
-     *     g_klog_state.message_element_consumer_idx,
-     *     g_klog_state.message_unconsumed_count
-     *    );
-     */
-
-    if (g_klog_state.message_unconsumed_count < 1) {
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
-        return;
-    }
 
     /* Get the level from the global buffer of levels corresponding to messages */
     const enum KlogLevel requested_level = g_klog_state.b_message_levels[g_klog_state.message_element_consumer_idx];
@@ -121,11 +101,13 @@ void klog_consume(
     }
     TOTAL_CONSUMED_COUNT++;
     g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count - 1;
-    /* printf("%d unconsumed messages remaining\n", g_klog_state.message_unconsumed_count); */
+    const int semval_empty                = klog_platform_semaphore_value_get(g_klog_state.p_semaphore_messages_empty);
+    printf("Consumer signalling the empty semaphore with value: %d\n", semval_empty);
+    klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_empty);
 
     /* Release the mutex */
-    klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
-    klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_consumer);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+    /* klog_platform_mutex_unlock(g_klog_state.p_mutex_consumer); */
 }
 
 void* klog_thread_body(
@@ -133,8 +115,12 @@ void* klog_thread_body(
 ) {
     (void)p;
 
+    printf("Starting thread body\n");
+
     while (true) {
+        /* @todo we should use a condition variable or something here to denote that we stopped???? */
         /* Check if we should break from the loop */
+        printf("Thread body acquiring deinit lock\n");
         klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
         if (!g_klog_state.is_initialized) {
             klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
@@ -143,7 +129,9 @@ void* klog_thread_body(
         klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
         /* Acquire the formatted message mutex and invoke the "consnuming function" */
+        printf("Thread body invoking consume\n");
         klog_consume();
+        sleep_usec(100);
     }
 
     return NULL;
@@ -320,15 +308,20 @@ void klog_initialize(
     kdprintf("p_file: %p\n",             (void*)g_klog_state.p_file);
     kdprintf("File max verbosity: %d\n", g_klog_config.file.max_level);
 
-    /* Need to initialize all of our mutexes before the thread starts and tries to use them */
     g_klog_state.p_mutex_deinitialize = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_hot_shared   = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_hot_producer = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_hot_consumer = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_shared       = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_producer     = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_consumer     = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
     klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
-    klog_platform_mutex_initialize(g_klog_state.p_mutex_hot_shared);
-    klog_platform_mutex_initialize(g_klog_state.p_mutex_hot_producer);
-    klog_platform_mutex_initialize(g_klog_state.p_mutex_hot_consumer);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_shared);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_producer);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_consumer);
+
+    g_klog_state.p_semaphore_messages_empty = g_klog_config.alloc.alloc_cb(sizeof(kpl_semaphore_t));
+    g_klog_state.p_semaphore_messages_full  = g_klog_config.alloc.alloc_cb(sizeof(kpl_semaphore_t));
+    klog_platform_semaphore_initialize(g_klog_state.p_semaphore_messages_empty, g_klog_state.message_element_count);
+    klog_platform_semaphore_initialize(g_klog_state.p_semaphore_messages_full,  0);
+
     if (g_klog_config.async.number_backing_threads > 0) {
         g_klog_state.b_threads = g_klog_config.alloc.alloc_cb(sizeof(kpl_thread_t) * g_klog_config.async.number_backing_threads);
         for (uint32_t idx_thread = 0; idx_thread < g_klog_config.async.number_backing_threads; ++idx_thread) {
@@ -351,17 +344,30 @@ void klog_deinitialize(
     }
 
     /* Wait for all messages to be consumed */
+# if true
     /* printf("Waiting for all messages to be consumed\n"); */
     while (true) {
-        klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared);
-        if (g_klog_state.message_unconsumed_count == 0) {
-            klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+        const int semval_empty = klog_platform_semaphore_value_get(g_klog_state.p_semaphore_messages_empty);
+        printf("Deinitialization waiting for the empty semaphore with value: %d\n", semval_empty);
+        if (semval_empty == 0) {
             break;
         }
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
         sleep_usec(100);
     }
+    printf("Deinitialization sees that we are empty\n");
+# else
+    while (true) {
+        klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+        if (g_klog_state.message_unconsumed_count == 0) {
+            klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+            break;
+        }
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+        sleep_usec(100);
+    }
+# endif
 
+    printf("Deinitialization function acquiring deinit lock\n");
     klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     g_klog_state.is_initialized = false;
     klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
@@ -373,18 +379,25 @@ void klog_deinitialize(
         g_klog_config.alloc.free_cb(g_klog_state.b_threads);
     }
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_deinitialize);
-    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_hot_shared);
-    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_hot_producer);
-    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_hot_consumer);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_shared);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_producer);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_consumer);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_deinitialize);
-    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_hot_shared);
-    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_hot_producer);
-    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_hot_consumer);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_shared);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_producer);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_consumer);
     g_klog_state.b_threads            = NULL;
     g_klog_state.p_mutex_deinitialize = NULL;
-    g_klog_state.p_mutex_hot_shared   = NULL;
-    g_klog_state.p_mutex_hot_producer = NULL;
-    g_klog_state.p_mutex_hot_consumer = NULL;
+    g_klog_state.p_mutex_shared       = NULL;
+    g_klog_state.p_mutex_producer     = NULL;
+    g_klog_state.p_mutex_consumer     = NULL;
+
+    klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_empty);
+    klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_full);
+    g_klog_config.alloc.free_cb(g_klog_state.p_semaphore_messages_empty);
+    g_klog_config.alloc.free_cb(g_klog_state.p_semaphore_messages_full);
+    g_klog_state.p_semaphore_messages_empty = NULL;
+    g_klog_state.p_semaphore_messages_full  = NULL;
 
     g_klog_state.number_loggers_max     = 0;
     g_klog_state.number_loggers_created = 0;
@@ -562,30 +575,27 @@ void klog_log(
     }
 
     /* Only one producer may be in here at a time - so we can wait for the unconsumed count to STRICTLY DECREASE */
-    klog_platform_mutex_lock(g_klog_state.p_mutex_hot_producer);
+    /* printf("Producer acquiring producer\n"); */
+    /* klog_platform_mutex_lock(g_klog_state.p_mutex_producer); */
 
-    /* Wait for a consumer to consume a message and free up a message slot */
+    /* Wait for a consumer to consume a message and free up a message slot. We need at least one free spot */
+# if true
+    const int semval_empty = klog_platform_semaphore_value_get(g_klog_state.p_semaphore_messages_empty);
+    printf("Producer waiting for the empty semaphore with value: %d\n", semval_empty);
+    klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+# else
     while (true) {
-        klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared);
+        printf("Producer acquiring shared\n");
+        klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
         if (g_klog_state.message_unconsumed_count < g_klog_state.message_element_count) {
-            /* klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared); */
             break;
         }
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
         sleep_usec(100);
     }
-
-    /*
-     *    printf(
-     *     "Producing message %04d - index %02d (%02d unconsumed messages)\n",
-     *     TOTAL_PRODUCED_COUNT,
-     *     g_klog_state.message_element_producer_idx,
-     *     g_klog_state.message_unconsumed_count
-     *    );
-     */
-
-    /* Now we know that the unconsumed count is valid for production, and has not gone up since it has gone down BECAUSE WE ARE THE ONLY PRODUCER IN HERE */
-    /* klog_platform_mutex_lock(g_klog_state.p_mutex_hot_shared); */
+# endif
+    /* Keep the lock as we continue through the rest of this */
 
     /* We are getting the time first, so it's closest to the actual point of invocation */
     char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_time_size);
@@ -677,9 +687,12 @@ void klog_log(
         printf("PRODUCED TOO MANY MESSAGES - HOW????\n");
         exit(1);
     }
+    const int semval_full = klog_platform_semaphore_value_get(g_klog_state.p_semaphore_messages_full);
+    printf("Producer signalling the full semaphore with value: %d\n", semval_full);
+    klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_full);
 
-    klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_shared);
-    klog_platform_mutex_unlock(g_klog_state.p_mutex_hot_producer);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+    /* klog_platform_mutex_unlock(g_klog_state.p_mutex_producer); */
 
     /* @todo if no backing threads, invoke consuming function directly, else return */
 
