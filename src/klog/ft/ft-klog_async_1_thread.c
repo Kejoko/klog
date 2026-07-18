@@ -12,7 +12,7 @@
 int main(
     void
 ) {
-    KlogFormatInfo  format_info  = { 6, 50, 10, true, true };
+    KlogFormatInfo  format_info  = { 1, 50, 0, false, false };
     KlogAsyncInfo   async_info   = { 7, 1 };
     KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
     klog_initialize(4, format_info, &async_info, &console_info, NULL, NULL);
@@ -21,7 +21,7 @@ int main(
     klog_logger_level_set(handle, KLOG_LEVEL_TRACE);
 
     for (uint32_t i = 0; i < NUM_LOG_STATEMENTS; ++i) {
-        klog(handle, KLOG_LEVEL_TRACE, "Log statement %d", i);
+        klog(handle, KLOG_LEVEL_WARN, "Log statement %d", i);
     }
 
     klog_deinitialize();

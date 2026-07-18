@@ -43,6 +43,8 @@ extern struct KlogState {
     uint32_t message_element_producer_idx;
     uint32_t message_element_consumer_idx;
     uint32_t message_element_count;
+    uint32_t message_produced_total_count;
+    uint32_t message_consumed_total_count;
 
     uint32_t prefix_file_size;
     char*    b_prefixes_file;
