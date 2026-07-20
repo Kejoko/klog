@@ -129,7 +129,7 @@ KlogString klog_format_message_prefix(
     /* @todo should we use our prefix_length_get function here? */
     /* @todo should we memset to 0 at the front here instead of the end of klog_log? */
 
-    uint32_t size_total = 0;
+    uint32_t size_total = 1;
     if (p_thread_id) {
         size_total = size_total + 8;
     }
@@ -144,10 +144,6 @@ KlogString klog_format_message_prefix(
     }
     if (p_source_location && p_source_location->length) {
         size_total = size_total + p_source_location->length + 3;
-    }
-
-    if (size_total == 0) {
-        return (KlogString) { 0, s_prefix };
     }
 
     if (!s_prefix) {
@@ -178,7 +174,7 @@ KlogString klog_format_message_prefix(
     }
 
     /* Set the final byte to the null terminator */
-    s_prefix[size_total] = '\0';
+    s_prefix[size_total - 1] = '\0';
 
     return (KlogString) { size_total, s_prefix };
 }
