@@ -6,14 +6,14 @@
 
 #include "../klog_debug_util.h"
 
-#define NUM_LOG_STATEMENTS 20
+#define NUM_LOG_STATEMENTS 2000
 
 /* This is testing klog with max loggers set to 4, and name length set to 6 */
 int main(
     void
 ) {
     KlogFormatInfo  format_info  = { 1, 50, 0, false, false };
-    KlogAsyncInfo   async_info   = { 3, 1 };
+    KlogAsyncInfo   async_info   = { 100, 5 };
     KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
     klog_initialize(4, format_info, &async_info, &console_info, NULL, NULL);
 

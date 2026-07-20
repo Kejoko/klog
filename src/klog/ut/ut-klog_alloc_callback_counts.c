@@ -56,7 +56,7 @@ int check(
     klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, &alloc_info);
 
     /* check post initialization values - not allocating threads here */
-    const uint32_t alloc_counter_init_expected = 15;
+    const uint32_t alloc_counter_init_expected = 17;
     if (g_alloc_counter != alloc_counter_init_expected) {
         printf("Alloc counter is %d after initialization when it should be %d\n", g_alloc_counter, alloc_counter_init_expected);
         return 1;
@@ -100,7 +100,7 @@ int check(
         printf("Alloc counter is %d after deinitializtion when it should be %d\n", g_alloc_counter, alloc_counter_deinit_expected);
         return 1;
     }
-    const uint32_t free_counter_deinit_expected = free_counter_created_expected + 15; /* not freeing threads here  */
+    const uint32_t free_counter_deinit_expected = free_counter_created_expected + 17; /* not freeing threads here  */
     if (g_free_counter != free_counter_deinit_expected) {
         printf("Free counter is %d after deinitialization when it should be %d\n", g_free_counter, free_counter_deinit_expected);
         return 1;

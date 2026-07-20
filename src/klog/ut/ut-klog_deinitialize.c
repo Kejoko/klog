@@ -39,6 +39,8 @@ int check(
     KlogFormatInfo  format_info  = { 6, 100, 10, true, true };
     KlogConsoleInfo console_info = { KLOG_LEVEL_INFO, true };
     KlogFileInfo    file_info    = { KLOG_LEVEL_TRACE, "BASIC\tPREFIX" };
+
+    printf("Initializing klog\n");
     klog_initialize(4, format_info, &async_info, &console_info, &file_info, NULL);
 
     /* Ensure allocation/free callbacks were defaulted correctly */
@@ -68,7 +70,9 @@ int check(
     }
 
     /* Deinitialize */
+    printf("De-initializing klog\n");
     klog_deinitialize();
+    printf("De-initializing klog - DONE\n");
 
     /* Check that we **are** equivelant to null */
     if (memcmp(&g_klog_config, &klog_config_empty, sizeof(klog_config_empty)) != 0) {

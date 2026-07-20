@@ -37,6 +37,8 @@ uint32_t klog_format_prefix_length_get(
         total += source_location_filename_max_length + 2 + 1 + 4 + 1; /* filename + brackets + colon + line + space */
     }
 
+    total += 1; /* Null terminator */
+
     return total;
 }
 

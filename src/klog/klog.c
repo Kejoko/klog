@@ -35,6 +35,8 @@ bool klog_consume(
         if (!g_klog_state.is_initialized) {
             /* We should stop */
             klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
+            klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+            klog_platform_mutex_unlock(g_klog_state.p_mutex_consumer);
             return true;
         }
 
@@ -58,13 +60,6 @@ bool klog_consume(
         + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_console_size);
     const KlogString packed_prefix_file    = { g_klog_state.prefix_file_size, s_prefix_file };
     const KlogString packed_prefix_console = { g_klog_state.prefix_console_size, s_prefix_console };
-    /* printf( */
-    /*     "USING     console prefix at index %02d = %p : \"%.*s\"\n", */
-    /*     g_klog_state.message_element_consumer_idx, */
-    /*     (void*)s_prefix_console, */
-    /*     g_klog_state.prefix_console_size, */
-    /*     s_prefix_console */
-    /* ); */
 
     uint32_t i_starting_character = 0;
     while (i_starting_character <= actual_message_length) {
@@ -75,7 +70,6 @@ bool klog_consume(
 
         const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
         if (requested_level <= g_klog_config.console.max_level) {
-            (void)packed_prefix_console;
             klog_output_console(&packed_prefix_console, &packed_message);
         }
         if (g_klog_state.p_file && (requested_level <= g_klog_config.file.max_level)) {
@@ -96,7 +90,7 @@ bool klog_consume(
     }
 
     if (g_klog_state.message_unconsumed_count < 1) {
-        printf("CONSUMED TOO MANY MESSAGES - HOW????\n");
+        kdprintf("klog_consume consumed too many messages\n");
         exit(1);
     }
     g_klog_state.message_consumed_total_count++;
@@ -623,13 +617,6 @@ void klog_log(
         p_packed_level_console,
         &packed_source_location
     );
-    /*  printf( */
-    /*      "POPULATED console prefix at index %02d = %p : \"%.*s\"\n", */
-    /*      g_klog_state.message_element_producer_idx, */
-    /*      (void*)s_prefix_console, */
-    /*      g_klog_state.prefix_console_size, */
-    /*      s_prefix_console */
-    /*  ); */
 
     /* Update the level buffer */
     g_klog_state.b_message_levels[g_klog_state.message_element_producer_idx] = requested_level;
@@ -644,7 +631,11 @@ void klog_log(
     g_klog_state.message_produced_total_count++;
     g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count + 1;
     if (g_klog_state.message_unconsumed_count > g_klog_state.message_element_count) {
-        printf("PRODUCED TOO MANY MESSAGES - HOW????\n");
+        kdprintf(
+            "klog_log produced too many messages (%d unconsumed messages when we only have space for %d)\n",
+            g_klog_state.message_unconsumed_count,
+            g_klog_state.message_element_count
+        );
         exit(1);
     }
 
