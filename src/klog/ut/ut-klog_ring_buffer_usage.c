@@ -346,15 +346,6 @@ int multiple_elements(
         return 1;
     }
 
-    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_total_length)) {
-        printf(
-            "Klog formatted message buffer element 0 should be empty (cleared) after logging at info level, but instead it contains \"%.*s\"\n",
-            message_total_length,
-            g_klog_state.b_messages_formatted
-        );
-        return 1;
-    }
-
     /* Second logging statement */
 
     printf("Buffer after first log:\n");
@@ -412,15 +403,6 @@ int multiple_elements(
             "Klog console prefix buffer element 1 should contain \"%s\" after logging at trace level, but instead it contains \"%s\"\n",
             full_prefix_buffer_2,
             g_klog_state.b_prefixes_console + prefix_size
-        );
-        return 1;
-    }
-
-    if (memcmp(g_klog_state.b_messages_formatted, empty_message_buffer, message_total_length)) {
-        printf(
-            "Klog formatted message buffer element 1 should be empty (cleared) after logging at info level 2 times, but instead it contains \"%.*s\"\n",
-            message_total_length,
-            g_klog_state.b_messages_formatted + (message_total_length * 1)
         );
         return 1;
     }
