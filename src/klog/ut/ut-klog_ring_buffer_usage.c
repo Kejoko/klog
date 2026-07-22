@@ -82,19 +82,19 @@ int no_async_param(
         return 1;
     }
 
-    char* full_prefix_buffer = "[dummy!] [info ] ";
-    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer, prefix_size)) {
+    char* full_prefix_buffer_dum_info = "[dummy!] [info ] ";
+    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer_dum_info, prefix_size)) {
         printf(
             "Klog file prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_info,
             g_klog_state.b_prefixes_file
         );
         return 1;
     }
-    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer, prefix_size)) {
+    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer_dum_info, prefix_size)) {
         printf(
             "Klog console prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_info,
             g_klog_state.b_prefixes_console
         );
         return 1;
@@ -184,19 +184,19 @@ int single_element(
         return 1;
     }
 
-    char* full_prefix_buffer = "[dummy123] [info ] ";
-    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer, prefix_size)) {
+    char* full_prefix_buffer_dum_info = "[dummy123] [info ] ";
+    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer_dum_info, prefix_size)) {
         printf(
             "Klog file prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_info,
             g_klog_state.b_prefixes_file
         );
         return 1;
     }
-    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer, prefix_size)) {
+    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer_dum_info, prefix_size)) {
         printf(
             "Klog console prefix buffer should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_info,
             g_klog_state.b_prefixes_console
         );
         return 1;
@@ -345,6 +345,10 @@ int multiple_elements(
         printf("Klog total produced message element count should be 1 after the first log\n");
         return 1;
     }
+    if (g_klog_state.b_message_levels[0] != KLOG_LEVEL_INFO) {
+        printf("Klog level buffer should contain KLOG_LEVEL_INFO at index 0 after the first log\n");
+        return 1;
+    }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
     klog_platform_sleep_usec(100); /* Short sleep to allow async threads to log */
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
@@ -358,19 +362,19 @@ int multiple_elements(
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
-    char* full_prefix_buffer = "[dum] [info ] ";
-    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer, prefix_size)) {
+    char* full_prefix_buffer_dum_info = "[dum] [info ] ";
+    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer_dum_info, prefix_size)) {
         printf(
             "Klog file prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_info,
             g_klog_state.b_prefixes_file
         );
         return 1;
     }
-    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer, prefix_size)) {
+    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer_dum_info, prefix_size)) {
         printf(
             "Klog console prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_info,
             g_klog_state.b_prefixes_console
         );
         return 1;
@@ -421,6 +425,10 @@ int multiple_elements(
     }
     if (g_klog_state.message_produced_total_count != 2) {
         printf("Klog total produced message element count should be 2 after the second log\n");
+        return 1;
+    }
+    if (g_klog_state.b_message_levels[1] != KLOG_LEVEL_DEBUG) {
+        printf("Klog level buffer should contain KLOG_LEVEL_DEBUG at index 1 after the second log\n");
         return 1;
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
@@ -479,6 +487,10 @@ int multiple_elements(
         printf("Klog total produced message element count should be 3 after the third log\n");
         return 1;
     }
+    if (g_klog_state.b_message_levels[2] != KLOG_LEVEL_ERROR) {
+        printf("Klog level buffer should contain KLOG_LEVEL_ERROR at index 2 after the third log\n");
+        return 1;
+    }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
     klog_platform_sleep_usec(1000); /* Short sleep to allow async threads to log */
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
@@ -512,24 +524,24 @@ int multiple_elements(
 
     /* Fourth logging statement */
 
-    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer, prefix_size)) {
+    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer_dum_info, prefix_size)) {
         printf(
             "Klog file prefix buffer element 0 should contain \"%s\" before logging after overflow at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_info,
             g_klog_state.b_prefixes_file
         );
         return 1;
     }
-    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer, prefix_size)) {
+    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer_dum_info, prefix_size)) {
         printf(
             "Klog console prefix buffer element 0 should contain \"%s\" before logging after overflow at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_info,
             g_klog_state.b_prefixes_file
         );
         return 1;
     }
 
-    klog_info(p, "test, again!");
+    klog_fatal(p, "test, again!");
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     if (g_klog_state.message_element_producer_idx != 1) {
@@ -538,6 +550,10 @@ int multiple_elements(
     }
     if (g_klog_state.message_produced_total_count != 4) {
         printf("Klog total produced message element count should be 4 after the fourth log\n");
+        return 1;
+    }
+    if (g_klog_state.b_message_levels[0] != KLOG_LEVEL_FATAL) {
+        printf("Klog level buffer should contain KLOG_LEVEL_FATAL at index 0 after the fourth log\n");
         return 1;
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
@@ -553,18 +569,19 @@ int multiple_elements(
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
-    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer, prefix_size)) {
+    char* full_prefix_buffer_dum_fatal = "[dum] [FATAL] ";
+    if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer_dum_fatal, prefix_size)) {
         printf(
             "Klog file prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_fatal,
             g_klog_state.b_prefixes_file
         );
         return 1;
     }
-    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer, prefix_size)) {
+    if (memcmp(g_klog_state.b_prefixes_console, full_prefix_buffer_dum_fatal, prefix_size)) {
         printf(
             "Klog console prefix buffer element 0 should contain \"%s\" after logging at info level, but instead it contains \"%s\"\n",
-            full_prefix_buffer,
+            full_prefix_buffer_dum_fatal,
             g_klog_state.b_prefixes_console
         );
         return 1;
