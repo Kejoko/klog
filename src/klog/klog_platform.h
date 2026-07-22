@@ -88,7 +88,7 @@ void klog_platform_thread_join(
 );
 
 /* Microsecond sleep */
-void sleep_usec(
+void klog_platform_sleep_usec(
     uint32_t usec
 );
 

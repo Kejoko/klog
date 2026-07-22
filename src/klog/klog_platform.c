@@ -108,7 +108,7 @@ void klog_platform_thread_join(
     pthread_join(*p_thread, p_ret);
 }
 
-void sleep_usec(
+void klog_platform_sleep_usec(
     const uint32_t usec
 ) {
     struct timespec ts;

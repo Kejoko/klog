@@ -6,6 +6,7 @@
 
 #include "../klog_state.h"
 #include "../klog_format.h"
+#include "../klog_platform.h"
 
 int no_async_param(
     void
@@ -223,7 +224,19 @@ int multiple_elements(
     klog_initialize(num_loggers, format_info, &async_info, &console_info, NULL, NULL);
 
     if (g_klog_state.message_element_producer_idx != 0) {
-        printf("Klog message element index should be 0 before anything is logged\n");
+        printf("Klog producer message element index should be 0 before anything is logged\n");
+        return 1;
+    }
+    if (g_klog_state.message_produced_total_count != 0) {
+        printf("Klog total produced message element count should be 0 before anything is logged\n");
+        return 1;
+    }
+    if (g_klog_state.message_element_consumer_idx != 0) {
+        printf("Klog consumer message element index should be 0 before anything is logged\n");
+        return 1;
+    }
+    if (g_klog_state.message_consumed_total_count != 0) {
+        printf("Klog total consumed message element count should be 0 before anything is logged\n");
         return 1;
     }
 
@@ -323,10 +336,27 @@ int multiple_elements(
     klog_logger_level_set(p, KLOG_LEVEL_INFO);
     klog_info(p, "1234567");
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     if (g_klog_state.message_element_producer_idx != 1) {
-        printf("Klog message element index should be 1 after the first log\n");
+        printf("Klog producer message element index should be 1 after the first log\n");
         return 1;
     }
+    if (g_klog_state.message_produced_total_count != 1) {
+        printf("Klog total produced message element count should be 1 after the first log\n");
+        return 1;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+    klog_platform_sleep_usec(100); /* Short sleep to allow async threads to log */
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+    if (g_klog_state.message_element_consumer_idx != 1) {
+        printf("Klog consumer message element index should be 1 after the first log\n");
+        return 1;
+    }
+    if (g_klog_state.message_consumed_total_count != 1) {
+        printf("Klog total consumed message element count should be 1 after the first log\n");
+        return 1;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
     char* full_prefix_buffer = "[dum] [info ] ";
     if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer, prefix_size)) {
@@ -384,10 +414,27 @@ int multiple_elements(
     klog_trace(p2, "this won't get logged due to the console's min level at debug, and no file logger");
     klog_debug(p2, "test number 2");
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     if (g_klog_state.message_element_producer_idx != 2) {
         printf("Klog message element index should be 2 after the second log\n");
         return 1;
     }
+    if (g_klog_state.message_produced_total_count != 2) {
+        printf("Klog total produced message element count should be 2 after the second log\n");
+        return 1;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+    klog_platform_sleep_usec(100); /* Short sleep to allow async threads to log */
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+    if (g_klog_state.message_element_consumer_idx != 2) {
+        printf("Klog consumer message element index should be 2 after the second log\n");
+        return 1;
+    }
+    if (g_klog_state.message_consumed_total_count != 2) {
+        printf("Klog total consumed message element count should be 2 after the second log\n");
+        return 1;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
     char* full_prefix_buffer_2 = "[two] [debug] ";
     if (memcmp(g_klog_state.b_prefixes_file + prefix_size, full_prefix_buffer_2, prefix_size)) {
@@ -423,10 +470,27 @@ int multiple_elements(
     klog_info(p3, "this won't get logged due to the logger's level");
     klog_error(p3, "test 3");
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     if (g_klog_state.message_element_producer_idx != 0) {
         printf("Klog message element index should be 0 after the third log due to overflow\n");
         return 1;
     }
+    if (g_klog_state.message_produced_total_count != 3) {
+        printf("Klog total produced message element count should be 3 after the third log\n");
+        return 1;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+    klog_platform_sleep_usec(1000); /* Short sleep to allow async threads to log */
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+    if (g_klog_state.message_element_consumer_idx != 0) {
+        printf("Klog consumer message element index should be 0 after the third log due to overflow\n");
+        return 1;
+    }
+    if (g_klog_state.message_consumed_total_count != 3) {
+        printf("Klog total consumed message element count should be 3 after the third log\n");
+        return 1;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
     char* full_prefix_buffer_3 = "[3  ] [ERROR] ";
     if (memcmp(g_klog_state.b_prefixes_file + prefix_size * 2, full_prefix_buffer_3, prefix_size)) {
@@ -467,10 +531,27 @@ int multiple_elements(
 
     klog_info(p, "test, again!");
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     if (g_klog_state.message_element_producer_idx != 1) {
-        printf("Klog message element index should be 1 after the first log\n");
+        printf("Klog message element index should be 1 after the fourth log due to overflow\n");
         return 1;
     }
+    if (g_klog_state.message_produced_total_count != 4) {
+        printf("Klog total produced message element count should be 4 after the fourth log\n");
+        return 1;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+    klog_platform_sleep_usec(1000); /* Short sleep to allow async threads to log */
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+    if (g_klog_state.message_element_consumer_idx != 1) {
+        printf("Klog consumer message element index should be 1 after the fourth log due to overflow\n");
+        return 1;
+    }
+    if (g_klog_state.message_consumed_total_count != 4) {
+        printf("Klog total consumed message element count should be 4 after the fourth log\n");
+        return 1;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
     if (memcmp(g_klog_state.b_prefixes_file, full_prefix_buffer, prefix_size)) {
         printf(
