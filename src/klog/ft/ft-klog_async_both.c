@@ -6,17 +6,18 @@
 
 #include "../klog_debug_util.h"
 
-#define NUM_LOG_STATEMENTS 20
+#define NUM_LOG_STATEMENTS 50
 
 int main(
     void
 ) {
-    KlogFormatInfo  format_info  = { 1, 50, 0, false, false };
+    KlogFormatInfo  format_info  = { 7, 50, 0, false, false };
     KlogAsyncInfo   async_info   = { 3, 1 };
     KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
-    klog_initialize(4, format_info, &async_info, &console_info, NULL, NULL);
+    KlogFileInfo    file_info    = { KLOG_LEVEL_TRACE, "klog_async_both" };
+    klog_initialize(4, format_info, &async_info, &console_info, &file_info, NULL);
 
-    const KlogLoggerHandle* handle = klog_logger_create("async1", 6);
+    const KlogLoggerHandle* handle = klog_logger_create("general", 7);
     klog_logger_level_set(handle, KLOG_LEVEL_TRACE);
 
     for (uint32_t i = 0; i < NUM_LOG_STATEMENTS; ++i) {
