@@ -6,10 +6,22 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "klog/klog.h"
+
 typedef struct {
     uint32_t          length;
     const char* const s;
 } KlogString;
+
+char* klog_format_filename(
+    const KlogFileInfo* const p_klog_file_info,
+    void* (* const            alloc_cb)(
+        size_t size
+    ),
+    void (*                   free_cb)(
+        void*
+    )
+);
 
 uint32_t klog_format_prefix_length_get(
     const bool     use_thread_id,

@@ -13,6 +13,50 @@
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
 
+char* klog_format_filename(
+    const KlogFileInfo* const p_klog_file_info,
+    void* (* const            alloc_cb)(
+        size_t size
+    ),
+    void (*                   free_cb)(
+        void*
+    )
+) {
+    if (p_klog_file_info == NULL) {
+        kdprintf("Not initializing output file\n");
+        return NULL;
+    }
+
+    const timepoint_t timepoint = klog_platform_get_current_timepoint();
+
+    /* This is a null terminated string with all whitespace removed */
+    const char* const s_sanitized_prefix = klog_format_file_name_prefix(p_klog_file_info->s_filename_prefix, alloc_cb);
+
+    /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS_SSSS.log */
+    /* Extra chars                  : 00+     123456789                 */
+    /*                                10+              0123456789       */
+    /*                                20+                        012345 */
+    const uint32_t prefix_length        = strlen(s_sanitized_prefix) + 1; /* +1 for null terminator */
+    const uint32_t full_filename_length = prefix_length + 25 + 1;         /* +1 for null terminator */
+    char* const    full_filename        = alloc_cb(full_filename_length);
+    sprintf(
+        full_filename,
+        "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log",
+        s_sanitized_prefix, /* %s expects a null terminated string */
+        timepoint.year,
+        timepoint.month,
+        timepoint.day_month,
+        timepoint.hour,
+        timepoint.minute,
+        timepoint.second,
+        timepoint.microsecond / 1000
+    );
+
+    free_cb((char*)s_sanitized_prefix);
+
+    return full_filename;
+}
+
 uint32_t klog_format_prefix_length_get(
     const bool     use_thread_id,
     const bool     use_timestamp,

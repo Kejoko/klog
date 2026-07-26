@@ -54,10 +54,7 @@ char* klog_initialize_colored_level_strings_buffer(
 );
 
 FILE* klog_initialize_file(
-    const KlogFileInfo* p_klog_file_info,
-    void* (* const      alloc_cb)(
-        size_t size
-    )
+    const char* const filename_string
 );
 
 #endif /* KLOG_INITIALIZE_INCLUDED */
