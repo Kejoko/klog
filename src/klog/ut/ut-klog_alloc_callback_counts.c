@@ -51,18 +51,27 @@ int check(
     const uint32_t max_number_loggers = 2;
     const uint32_t max_name_length    = 3;
 
-    const KlogAsyncInfo async_info = { 20, 5 };
-    const KlogAllocInfo alloc_info = { &malloc_wrapper, &free_wrapper };
+    const KlogAsyncInfo   async_info   = { 20, 5 };
+    const KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
+    const KlogFileInfo    file_info    = { KLOG_LEVEL_TRACE, "alloc_callback_counts" };
+    const KlogAllocInfo   alloc_info   = { &malloc_wrapper, &free_wrapper };
 
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, &async_info, NULL, NULL, &alloc_info);
+    klog_initialize(
+        max_number_loggers,
+        (KlogFormatInfo) { max_name_length, 10, 0, false, false },
+        &async_info,
+        &console_info,
+        &file_info,
+        &alloc_info
+    );
 
     /* check post initialization values - not allocating threads here */
-    const uint32_t alloc_counter_init_expected = 18;
+    const uint32_t alloc_counter_init_expected = 20;
     if (g_alloc_counter != alloc_counter_init_expected) {
         printf("Alloc counter is %d after initialization when it should be %d\n", g_alloc_counter, alloc_counter_init_expected);
         return 1;
     }
-    const uint32_t free_counter_init_expected = 0;
+    const uint32_t free_counter_init_expected = 1; /* for the filename initialization */
     if (g_free_counter != free_counter_init_expected) {
         printf("Free counter is %d after initialization when it should be %d\n", g_free_counter, free_counter_init_expected);
         return 1;
@@ -101,7 +110,7 @@ int check(
         printf("Alloc counter is %d after deinitializtion when it should be %d\n", g_alloc_counter, alloc_counter_deinit_expected);
         return 1;
     }
-    const uint32_t free_counter_deinit_expected = free_counter_created_expected + 18;
+    const uint32_t free_counter_deinit_expected = free_counter_created_expected + 19;
     if (g_free_counter != free_counter_deinit_expected) {
         printf("Free counter is %d after deinitialization when it should be %d\n", g_free_counter, free_counter_deinit_expected);
         return 1;
