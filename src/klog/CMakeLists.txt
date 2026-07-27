@@ -52,5 +52,5 @@ if (KLOG_BUILD_TESTS)
     create_functional_test(ft/ft-klog_fail_logger_limit.c klog EXPECT_FAILURE IGNORE_MEMORY)
     create_functional_test(ft/ft-klog_fail_level.c klog EXPECT_FAILURE IGNORE_MEMORY)
 
-    # create_functional_test(ft/ft-klog_stress_st_sync.c klog)
+    create_profiling_test(pt/pt-klog_sync_vs_async.c klog)
 endif ()
