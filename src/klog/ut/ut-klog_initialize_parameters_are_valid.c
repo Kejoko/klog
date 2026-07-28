@@ -50,6 +50,50 @@ int no_message_length(
     return 0;
 }
 
+int no_message_queue_elements(
+    void
+) {
+    KlogAsyncInfo async_info = { 0, 10 };
+    if (
+        klog_initialize_are_parameters_valid(
+            false,
+            10,
+            (KlogFormatInfo) { 10, 0, 0, false, false },
+            &async_info,
+            NULL,
+            NULL,
+            NULL
+        )
+    ) {
+        printf("Parameters should be invalid when KlogAsyncInfo pointer is provided but message_queue_number_elements is 0\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+int no_backing_threads(
+    void
+) {
+    KlogAsyncInfo async_info = { 10, 0 };
+    if (
+        klog_initialize_are_parameters_valid(
+            false,
+            10,
+            (KlogFormatInfo) { 10, 0, 0, false, false },
+            &async_info,
+            NULL,
+            NULL,
+            NULL
+        )
+    ) {
+        printf("Parameters should be invalid when KlogAsyncInfo pointer is provided but number_backing_threads is 0\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 int no_alloc_cb(
     void
 ) {
@@ -102,8 +146,10 @@ int main(
 ) {
     const int result = already_initialized()
         || no_loggers()
+        || no_logger_name_length()
         || no_message_length()
-        || no_message_length()
+        || no_message_queue_elements()
+        || no_backing_threads()
         || no_alloc_cb()
         || no_free_cb()
         || valid()
