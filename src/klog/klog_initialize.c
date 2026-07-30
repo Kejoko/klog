@@ -200,16 +200,16 @@ char* klog_initialize_colored_level_strings_buffer(
 }
 
 FILE* klog_initialize_file(
-    const char* const filename_string
+    const char* const s_filename
 ) {
-    if (filename_string == NULL) {
+    if (s_filename == NULL) {
         kdprintf("Not initializing output file\n");
         return NULL;
     }
 
-    FILE* const p_file = fopen(filename_string, "w");
+    FILE* const p_file = fopen(s_filename, "w");
     if (!p_file) {
-        kdprintf("Failed to create log file at %s\n", filename_string);
+        kdprintf("Failed to create log file at %s\n", s_filename);
         exit(KLOG_EXIT_CODE);
     }
     kdprintf("Created output file pointer at %p\n", (void*)p_file);
