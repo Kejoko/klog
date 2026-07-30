@@ -17,25 +17,96 @@ procid_t klog_platform_get_current_thread_id(
 void klog_platform_mutex_initialize(
     kpl_mutex_t* p_mutex
 ) {
-    pthread_mutex_init(p_mutex, NULL);
+    int result = pthread_mutex_init(p_mutex, NULL); /* "pthread_mutex_init() always returns 0" - from the man page ????? */
+    if (result == EBUSY) {
+        kdprintf("pthread_mutex_init returned %d: Mutex is already initialized\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EAGAIN) {
+        kdprintf("pthread_mutex_init returned %d: Insufficient resources to initialize another mutex\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == ENOMEM) {
+        kdprintf("pthread_mutex_init returned %d: Insufficient memory exists to initialize another mutex\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EINVAL) {
+        kdprintf("pthread_mutex_init returned %d: Attributes are invalid\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EPERM) {
+        kdprintf(
+            "pthread_mutex_init returned %d: Caller doesn't have permission for the operation\n",
+            result
+        );
+        exit(KLOG_EXIT_CODE);
+    }
 }
 
 void klog_platform_mutex_deinitialize(
     kpl_mutex_t* p_mutex
 ) {
-    pthread_mutex_destroy(p_mutex);
+    int result = pthread_mutex_destroy(p_mutex);
+    if (result == EBUSY) {
+        kdprintf("pthread_mutex_destroy returned %d: Attempt to destroy mutex while it is locked\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EINVAL) {
+        kdprintf("pthread_mutex_destroy returned %d: The mutex specified is invalid\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
 }
 
 void klog_platform_mutex_lock(
     kpl_mutex_t* p_mutex
 ) {
-    pthread_mutex_lock(p_mutex);
+    int result = pthread_mutex_lock(p_mutex);
+    if (result == EINVAL) {
+        kdprintf("pthread_mutex_lock returned %d: Mutex is not initialized\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EBUSY) {
+        kdprintf("pthread_mutex_lock returned %d: Mutex couldn't be acquired because it was already locked\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EAGAIN) {
+        kdprintf("pthread_mutex_lock returned %d: Maximum number of recursive locks has been exceeded\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EDEADLK) {
+        kdprintf("pthread_mutex_lock returned %d: Deadlock condition was detected, or current thread already owns mutex\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EPERM) {
+        kdprintf("pthread_mutex_lock returned %d: Current thread does not own the mutex\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
 }
 
 void klog_platform_mutex_unlock(
     kpl_mutex_t* p_mutex
 ) {
-    pthread_mutex_unlock(p_mutex);
+    int result = pthread_mutex_unlock(p_mutex);
+    if (result == EINVAL) {
+        kdprintf("pthread_mutex_unlock returned %d: Mutex is not initialized\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EBUSY) {
+        kdprintf("pthread_mutex_unlock returned %d: Mutex is already locked\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EAGAIN) {
+        kdprintf("pthread_mutex_unlock returned %d: Maximum number of recursive locks has been exceeded\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EDEADLK) {
+        kdprintf("pthread_mutex_unlock returned %d: Deadlock condition was detected, or current thread already owns mutex\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EPERM) {
+        kdprintf("pthread_mutex_unlock returned %d: Current thread does not own the mutex\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
 }
 
 void klog_platform_semaphore_initialize(
@@ -98,14 +169,41 @@ void klog_platform_thread_create(
     ),
     void*         p_arg
 ) {
-    pthread_create(p_thread, NULL, thread_body, p_arg);
+    int result = pthread_create(p_thread, NULL, thread_body, p_arg);
+    if (result == EAGAIN) {
+        kdprintf("pthread_create returned %d: Insufficient resources to create another thread\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EINVAL) {
+        kdprintf("pthread_create returned %d: Invalid thread attribute settings\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EPERM) {
+        kdprintf(
+            "pthread_create returned %d: No permission to set the scheduling policy and parameters specified in thread attribute settings\n",
+            result
+        );
+        exit(KLOG_EXIT_CODE);
+    }
 }
 
 void klog_platform_thread_join(
     kpl_thread_t* p_thread,
     void**        p_ret
 ) {
-    pthread_join(*p_thread, p_ret);
+    int result = pthread_join(*p_thread, p_ret);
+    if (result == EDEADLK) {
+        kdprintf("pthread_join returned %d: A deadlock was detected, or we are trying to join the calling thread (ourself)\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == EINVAL) {
+        kdprintf("pthread_join returned %d: The thread we are trying to join is not a joinable thread\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
+    if (result == ESRCH) {
+        kdprintf("pthread_join returned %d: No thread with the specified ID could be found\n", result);
+        exit(KLOG_EXIT_CODE);
+    }
 }
 
 void klog_platform_sleep_usec(
