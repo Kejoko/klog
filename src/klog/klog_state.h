@@ -60,7 +60,7 @@ extern struct KlogState {
 
     uint32_t* b_message_levels;
 
-    char* filename_string;
+    char* s_filename;
     FILE* p_file;
 
     bool is_initialized;

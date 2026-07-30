@@ -33,10 +33,10 @@ char* populate_file(
     }
 
     /* Copy the filename and return it for later use */
-    const uint32_t filename_length = strlen(g_klog_state.filename_string);
+    const uint32_t filename_length = strlen(g_klog_state.s_filename);
     char*          filename_copy   = malloc(filename_length + 1);
     filename_copy[filename_length] = '\0'; /* null terminator */
-    memcpy(filename_copy, g_klog_state.filename_string, filename_length);
+    memcpy(filename_copy, g_klog_state.s_filename, filename_length);
     printf("Filename =  %s\n", filename_copy);
 
     /* Deinitialize klog */

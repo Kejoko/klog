@@ -350,7 +350,7 @@ int multiple_elements(
         return 1;
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
-    klog_platform_sleep_usec(100); /* Short sleep to allow async threads to log */
+    klog_platform_sleep_usec(1000); /* Short sleep to allow async threads to log */
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     if (g_klog_state.message_element_consumer_idx != 1) {
         printf("Klog consumer message element index should be 1 after the first log\n");
@@ -432,7 +432,7 @@ int multiple_elements(
         return 1;
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
-    klog_platform_sleep_usec(100); /* Short sleep to allow async threads to log */
+    klog_platform_sleep_usec(1000); /* Short sleep to allow async threads to log */
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     if (g_klog_state.message_element_consumer_idx != 2) {
         printf("Klog consumer message element index should be 2 after the second log\n");

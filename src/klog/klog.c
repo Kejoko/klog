@@ -292,8 +292,8 @@ void klog_initialize(
         * g_klog_state.message_element_count
     );
 
-    g_klog_state.filename_string = klog_format_filename(p_klog_file_info, g_klog_config.alloc.alloc_cb, g_klog_config.alloc.free_cb);
-    g_klog_state.p_file          = klog_initialize_file(g_klog_state.filename_string);
+    g_klog_state.s_filename = klog_format_filename(p_klog_file_info, g_klog_config.alloc.alloc_cb, g_klog_config.alloc.free_cb);
+    g_klog_state.p_file     = klog_initialize_file(g_klog_state.s_filename);
 
     g_klog_state.p_mutex_deinitialize = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
     g_klog_state.p_mutex_shared       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
@@ -409,9 +409,9 @@ void klog_deinitialize(
     g_klog_config.alloc.free_cb(g_klog_state.b_message_levels);
     g_klog_state.b_message_levels = NULL;
 
-    if (g_klog_state.filename_string) {
-        g_klog_config.alloc.free_cb(g_klog_state.filename_string);
-        g_klog_state.filename_string = NULL;
+    if (g_klog_state.s_filename) {
+        g_klog_config.alloc.free_cb(g_klog_state.s_filename);
+        g_klog_state.s_filename = NULL;
     }
     if (g_klog_state.p_file) {
         fclose(g_klog_state.p_file);
