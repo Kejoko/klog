@@ -12,7 +12,10 @@ void run(
     const KlogFormatInfo format_info = { 4, 20, 0, false, false };
     const KlogAsyncInfo  async_info  = { 100, num_threads };
     const KlogFileInfo   file_info   = { KLOG_LEVEL_TRACE, "klog_sync_vs_async" };
-    klog_initialize(1, format_info, &async_info, NULL, &file_info, NULL);
+
+    const KlogAsyncInfo* p_async_info = (num_threads > 0) ? &async_info : NULL;
+
+    klog_initialize(1, format_info, p_async_info, NULL, &file_info, NULL);
 
     const KlogLoggerHandle* p_handle = klog_logger_create("name", 4);
     klog_logger_level_set(p_handle, KLOG_LEVEL_TRACE);
