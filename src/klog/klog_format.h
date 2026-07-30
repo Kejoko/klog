@@ -13,6 +13,10 @@ typedef struct {
     const char* const s;
 } KlogString;
 
+/**
+ * @brief This removes the whitespace from the provided prefix, and returns a newly
+ * allocated null terminated string containing the sanitized prefix and a timestamp.
+ */
 char* klog_format_filename(
     const KlogFileInfo* const p_klog_file_info,
     void* (* const            alloc_cb)(
