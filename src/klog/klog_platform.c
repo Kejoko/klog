@@ -15,7 +15,7 @@ procid_t klog_platform_get_current_thread_id(
 }
 
 void klog_platform_mutex_initialize(
-    kpl_mutex_t* p_mutex
+    klog_platform_mutex_t* p_mutex
 ) {
     int result = pthread_mutex_init(p_mutex, NULL); /* "pthread_mutex_init() always returns 0" - from the man page ????? */
     if (result == EBUSY) {
@@ -44,7 +44,7 @@ void klog_platform_mutex_initialize(
 }
 
 void klog_platform_mutex_deinitialize(
-    kpl_mutex_t* p_mutex
+    klog_platform_mutex_t* p_mutex
 ) {
     int result = pthread_mutex_destroy(p_mutex);
     if (result == EBUSY) {
@@ -58,7 +58,7 @@ void klog_platform_mutex_deinitialize(
 }
 
 void klog_platform_mutex_lock(
-    kpl_mutex_t* p_mutex
+    klog_platform_mutex_t* p_mutex
 ) {
     int result = pthread_mutex_lock(p_mutex);
     if (result == EINVAL) {
@@ -84,7 +84,7 @@ void klog_platform_mutex_lock(
 }
 
 void klog_platform_mutex_unlock(
-    kpl_mutex_t* p_mutex
+    klog_platform_mutex_t* p_mutex
 ) {
     int result = pthread_mutex_unlock(p_mutex);
     if (result == EINVAL) {
@@ -110,8 +110,8 @@ void klog_platform_mutex_unlock(
 }
 
 void klog_platform_semaphore_initialize(
-    kpl_semaphore_t* p_semaphore,
-    uint32_t         count
+    klog_platform_semaphore_t* p_semaphore,
+    uint32_t                   count
 ) {
     int retval = sem_init(p_semaphore, 0, count);
     if (retval != 0) {
@@ -121,7 +121,7 @@ void klog_platform_semaphore_initialize(
 }
 
 void klog_platform_semaphore_deinitialize(
-    kpl_semaphore_t* p_semaphore
+    klog_platform_semaphore_t* p_semaphore
 ) {
     const int retval = sem_destroy(p_semaphore);
     if (retval != 0) {
@@ -131,7 +131,7 @@ void klog_platform_semaphore_deinitialize(
 }
 
 void klog_platform_semaphore_wait(
-    kpl_semaphore_t* p_semaphore
+    klog_platform_semaphore_t* p_semaphore
 ) {
     const int retval = sem_wait(p_semaphore);
     if (retval != 0) {
@@ -141,7 +141,7 @@ void klog_platform_semaphore_wait(
 }
 
 void klog_platform_semaphore_signal(
-    kpl_semaphore_t* p_semaphore
+    klog_platform_semaphore_t* p_semaphore
 ) {
     const int retval = sem_post(p_semaphore);
     if (retval != 0) {
@@ -151,7 +151,7 @@ void klog_platform_semaphore_signal(
 }
 
 int klog_platform_semaphore_value_get(
-    kpl_semaphore_t* p_semaphore
+    klog_platform_semaphore_t* p_semaphore
 ) {
     int       result = 0;
     const int retval = sem_getvalue(p_semaphore, &result);
@@ -163,11 +163,11 @@ int klog_platform_semaphore_value_get(
 }
 
 void klog_platform_thread_create(
-    kpl_thread_t* p_thread,
-    void* (*      thread_body)(
+    klog_platform_thread_t* p_thread,
+    void* (*                thread_body)(
         void*
     ),
-    void*         p_arg
+    void*                   p_arg
 ) {
     int result = pthread_create(p_thread, NULL, thread_body, p_arg);
     if (result == EAGAIN) {
@@ -188,8 +188,8 @@ void klog_platform_thread_create(
 }
 
 void klog_platform_thread_join(
-    kpl_thread_t* p_thread,
-    void**        p_ret
+    klog_platform_thread_t* p_thread,
+    void**                  p_ret
 ) {
     int result = pthread_join(*p_thread, p_ret);
     if (result == EDEADLK) {

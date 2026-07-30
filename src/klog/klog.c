@@ -295,22 +295,22 @@ void klog_initialize(
     g_klog_state.filename_string = klog_format_filename(p_klog_file_info, g_klog_config.alloc.alloc_cb, g_klog_config.alloc.free_cb);
     g_klog_state.p_file          = klog_initialize_file(g_klog_state.filename_string);
 
-    g_klog_state.p_mutex_deinitialize = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_shared       = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_producer     = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
-    g_klog_state.p_mutex_consumer     = g_klog_config.alloc.alloc_cb(sizeof(kpl_mutex_t));
+    g_klog_state.p_mutex_deinitialize = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_shared       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_producer     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_consumer     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
     klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_shared);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_producer);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_consumer);
 
-    g_klog_state.p_semaphore_messages_empty = g_klog_config.alloc.alloc_cb(sizeof(kpl_semaphore_t));
-    g_klog_state.p_semaphore_messages_full  = g_klog_config.alloc.alloc_cb(sizeof(kpl_semaphore_t));
+    g_klog_state.p_semaphore_messages_empty = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_semaphore_t));
+    g_klog_state.p_semaphore_messages_full  = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_semaphore_t));
     klog_platform_semaphore_initialize(g_klog_state.p_semaphore_messages_empty, g_klog_state.message_element_count);
     klog_platform_semaphore_initialize(g_klog_state.p_semaphore_messages_full,  0);
 
     if (g_klog_config.async.number_backing_threads > 0) {
-        g_klog_state.b_threads = g_klog_config.alloc.alloc_cb(sizeof(kpl_thread_t) * g_klog_config.async.number_backing_threads);
+        g_klog_state.b_threads = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_thread_t) * g_klog_config.async.number_backing_threads);
         for (uint32_t idx_thread = 0; idx_thread < g_klog_config.async.number_backing_threads; ++idx_thread) {
             klog_platform_thread_create(&g_klog_state.b_threads[idx_thread], klog_thread_body, NULL);
         }

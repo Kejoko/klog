@@ -38,53 +38,53 @@ procid_t klog_platform_get_current_thread_id(
 # include <pthread.h>
 # include <semaphore.h>
 
-typedef pthread_mutex_t kpl_mutex_t;
-typedef sem_t           kpl_semaphore_t;
-typedef pthread_t       kpl_thread_t;
+typedef pthread_mutex_t klog_platform_mutex_t;
+typedef sem_t           klog_platform_semaphore_t;
+typedef pthread_t       klog_platform_thread_t;
 
 /* @todo Allow for mutex attributes */
 void klog_platform_mutex_initialize(
-    kpl_mutex_t* p_mutex
+    klog_platform_mutex_t* p_mutex
 );
 void klog_platform_mutex_deinitialize(
-    kpl_mutex_t* p_mutex
+    klog_platform_mutex_t* p_mutex
 );
 void klog_platform_mutex_lock(
-    kpl_mutex_t* p_mutex
+    klog_platform_mutex_t* p_mutex
 );
 void klog_platform_mutex_unlock(
-    kpl_mutex_t* p_mutex
+    klog_platform_mutex_t* p_mutex
 );
 
 /* @todo Allow for pshared parameter to denote inter-process sharing */
 void klog_platform_semaphore_initialize(
-    kpl_semaphore_t* p_semaphore,
-    uint32_t         count
+    klog_platform_semaphore_t* p_semaphore,
+    uint32_t                   count
 );
 void klog_platform_semaphore_deinitialize(
-    kpl_semaphore_t* p_semaphore
+    klog_platform_semaphore_t* p_semaphore
 );
 void klog_platform_semaphore_wait(
-    kpl_semaphore_t* p_semaphore
+    klog_platform_semaphore_t* p_semaphore
 );
 void klog_platform_semaphore_signal(
-    kpl_semaphore_t* p_semaphore
+    klog_platform_semaphore_t* p_semaphore
 );
 int klog_platform_semaphore_value_get(
-    kpl_semaphore_t* p_semaphore
+    klog_platform_semaphore_t* p_semaphore
 );
 
 /* @todo Allow for attributes upon thread creation */
 void klog_platform_thread_create(
-    kpl_thread_t* p_thread,
-    void* (*      thread_body)(
+    klog_platform_thread_t* p_thread,
+    void* (*                thread_body)(
         void*
     ),
-    void*         p_arg
+    void*                   p_arg
 );
 void klog_platform_thread_join(
-    kpl_thread_t* p_thread,
-    void**        p_ret
+    klog_platform_thread_t* p_thread,
+    void**                  p_ret
 );
 
 /* Microsecond sleep */

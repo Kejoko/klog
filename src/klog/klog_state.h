@@ -65,13 +65,13 @@ extern struct KlogState {
 
     bool is_initialized;
 
-    kpl_thread_t*    b_threads;
-    kpl_mutex_t*     p_mutex_deinitialize;
-    kpl_mutex_t*     p_mutex_shared;
-    kpl_mutex_t*     p_mutex_producer;
-    kpl_mutex_t*     p_mutex_consumer;
-    kpl_semaphore_t* p_semaphore_messages_empty;
-    kpl_semaphore_t* p_semaphore_messages_full;
+    klog_platform_thread_t*    b_threads;
+    klog_platform_mutex_t*     p_mutex_deinitialize;
+    klog_platform_mutex_t*     p_mutex_shared;
+    klog_platform_mutex_t*     p_mutex_producer;
+    klog_platform_mutex_t*     p_mutex_consumer;
+    klog_platform_semaphore_t* p_semaphore_messages_empty;
+    klog_platform_semaphore_t* p_semaphore_messages_full;
 } g_klog_state;
 
 #endif /* KLOG_STATE_INCLUDED */
