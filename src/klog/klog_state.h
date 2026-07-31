@@ -47,18 +47,24 @@ extern struct KlogState {
     uint32_t message_consumed_total_count;
 
     uint32_t prefix_file_size;
-    char*    b_prefixes_file;
+    char*    b_prefixes_file; /* Need copy */
+    char*    b_prefixes_file_staging;
     uint32_t prefix_console_size;
-    char*    b_prefixes_console;
+    char*    b_prefixes_console; /* Need copy */
+    char*    b_prefixes_console_staging;
     uint32_t prefix_time_size;
     char*    b_prefixes_time;
     uint32_t prefix_source_location_size;
     char*    b_prefixes_source_location;
 
-    uint32_t message_formatted_max_size;
-    char*    b_messages_formatted;
+    uint32_t  message_formatted_max_size;
+    char*     b_messages_formatted; /* Need copy */
+    char*     b_messages_formatted_staging;
+    uint32_t* b_message_lengths; /* Need copy */
+    uint32_t* b_message_lengths_staging;
 
-    uint32_t* b_message_levels;
+    uint32_t* b_message_levels; /* Need copy */
+    uint32_t* b_message_levels_staging;
 
     char* s_filename;
     FILE* p_file;

@@ -70,6 +70,7 @@ bool klog_async_consume(
 
     /* @todo Do we need an additional buffer denoting lengths, for speed up so we don't have to use strlen? */
     const uint32_t actual_message_length = strlen(s_message_formatted);
+    /* const uint32_t actual_message_length = g_klog_state.g_message_lengths[g_klog_state.message_element_consumer_idx]; */
 
     /* Get the console and file prefixes */
     char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_file_size);
@@ -95,10 +96,6 @@ bool klog_async_consume(
 
         i_starting_character = i_starting_character + submessage_length + 1;
     }
-
-    /* Clear the message buffer for the formatted message we just used */
-    /* @todo We shouldn't do this here - this should be done in the producer so we don't need to worry about staying sync-ed after outputting */
-    memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
 
     /* Update the consumer's index into our ring buffer */
     g_klog_state.message_element_consumer_idx = g_klog_state.message_element_consumer_idx + 1;

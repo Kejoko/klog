@@ -144,7 +144,21 @@ void klog_initialize(
         true,
         g_klog_config.alloc.alloc_cb
     );
+    g_klog_state.b_prefixes_file_staging = klog_initialize_buffer(
+        g_klog_state.message_element_count,
+        g_klog_state.prefix_file_size,
+        '\0',
+        true,
+        g_klog_config.alloc.alloc_cb
+    );
     g_klog_state.b_prefixes_console = klog_initialize_buffer(
+        g_klog_state.message_element_count,
+        g_klog_state.prefix_console_size,
+        '\0',
+        true,
+        g_klog_config.alloc.alloc_cb
+    );
+    g_klog_state.b_prefixes_console_staging = klog_initialize_buffer(
         g_klog_state.message_element_count,
         g_klog_state.prefix_console_size,
         '\0',
@@ -174,15 +188,52 @@ void klog_initialize(
         false,
         g_klog_config.alloc.alloc_cb
     );
+    g_klog_state.b_messages_formatted_staging = klog_initialize_buffer(
+        g_klog_state.message_element_count,
+        g_klog_state.message_formatted_max_size, /* Each message slot is null terminated */
+        '\0',
+        false,
+        g_klog_config.alloc.alloc_cb
+    );
+    g_klog_state.b_message_lengths = g_klog_config.alloc.alloc_cb(
+        sizeof(*g_klog_state.b_message_lengths)
+        * g_klog_state.message_element_count
+    );
+    g_klog_state.b_message_lengths_staging = g_klog_config.alloc.alloc_cb(
+        sizeof(*g_klog_state.b_message_lengths_staging)
+        * g_klog_state.message_element_count
+    );
+    memset(
+        g_klog_state.b_message_lengths,
+        0,
+        sizeof(*g_klog_state.b_message_lengths)
+        * g_klog_state.message_element_count
+    );
+    memset(
+        g_klog_state.b_message_lengths_staging,
+        0,
+        sizeof(*g_klog_state.b_message_lengths_staging)
+        * g_klog_state.message_element_count
+    );
 
     g_klog_state.b_message_levels = g_klog_config.alloc.alloc_cb(
         sizeof(*g_klog_state.b_message_levels)
+        * g_klog_state.message_element_count
+    );
+    g_klog_state.b_message_levels_staging = g_klog_config.alloc.alloc_cb(
+        sizeof(*g_klog_state.b_message_levels_staging)
         * g_klog_state.message_element_count
     );
     memset(
         g_klog_state.b_message_levels,
         0,
         sizeof(*g_klog_state.b_message_levels)
+        * g_klog_state.message_element_count
+    );
+    memset(
+        g_klog_state.b_message_levels_staging,
+        0,
+        sizeof(*g_klog_state.b_message_levels_staging)
         * g_klog_state.message_element_count
     );
 
@@ -282,11 +333,15 @@ void klog_deinitialize(
 
     g_klog_state.prefix_file_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_file);
-    g_klog_state.b_prefixes_file = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_file_staging);
+    g_klog_state.b_prefixes_file         = NULL;
+    g_klog_state.b_prefixes_file_staging = NULL;
 
     g_klog_state.prefix_console_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_console);
-    g_klog_state.b_prefixes_console = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_console_staging);
+    g_klog_state.b_prefixes_console         = NULL;
+    g_klog_state.b_prefixes_console_staging = NULL;
 
     g_klog_state.prefix_time_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_time);
@@ -298,10 +353,18 @@ void klog_deinitialize(
 
     g_klog_state.message_formatted_max_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_messages_formatted);
-    g_klog_state.b_messages_formatted = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_messages_formatted_staging);
+    g_klog_state.b_messages_formatted         = NULL;
+    g_klog_state.b_messages_formatted_staging = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_message_lengths);
+    g_klog_config.alloc.free_cb(g_klog_state.b_message_lengths_staging);
+    g_klog_state.b_message_lengths         = NULL;
+    g_klog_state.b_message_lengths_staging = NULL;
 
     g_klog_config.alloc.free_cb(g_klog_state.b_message_levels);
-    g_klog_state.b_message_levels = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_message_levels_staging);
+    g_klog_state.b_message_levels         = NULL;
+    g_klog_state.b_message_levels_staging = NULL;
 
     if (g_klog_state.s_filename) {
         g_klog_config.alloc.free_cb(g_klog_state.s_filename);
@@ -456,6 +519,8 @@ void klog_log(
     /* Create the input string with the arguments injected - including space for null termination */
     char* s_message_formatted = g_klog_state.b_messages_formatted
         + (g_klog_state.message_element_producer_idx * g_klog_state.message_formatted_max_size);
+    /* Clear the message buffer for the formatted message we just used */
+    memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
     va_list p_args;
     va_start(p_args, s_format);
     const uint32_t actual_message_length = klog_format_input_message(
