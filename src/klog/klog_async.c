@@ -27,7 +27,6 @@ void* klog_async_thread_body(
     (void)p;
 
     while (true) {
-        /* Acquire the formatted message mutex and invoke the "consnuming function" and stop if we should */
         bool should_stop = klog_async_consume();
         if (should_stop) {
             break;
