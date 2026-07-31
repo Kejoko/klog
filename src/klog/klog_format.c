@@ -13,6 +13,50 @@
 #include "./klog_debug_util.h"
 #include "./klog_platform.h"
 
+char* klog_format_filename(
+    const KlogFileInfo* const p_klog_file_info,
+    void* (* const            alloc_cb)(
+        size_t size
+    ),
+    void (*                   free_cb)(
+        void*
+    )
+) {
+    if (p_klog_file_info == NULL) {
+        kdprintf("Not initializing output file\n");
+        return NULL;
+    }
+
+    const timepoint_t timepoint = klog_platform_get_current_timepoint();
+
+    /* This is a null terminated string with all whitespace removed */
+    const char* const s_sanitized_prefix = klog_format_file_name_prefix(p_klog_file_info->s_filename_prefix, alloc_cb);
+
+    /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS_SSSS.log */
+    /* Extra chars                  : 00+     123456789                 */
+    /*                                10+              0123456789       */
+    /*                                20+                        012345 */
+    const uint32_t prefix_length        = strlen(s_sanitized_prefix) + 1; /* +1 for null terminator */
+    const uint32_t full_filename_length = prefix_length + 25 + 1;         /* +1 for null terminator */
+    char* const    full_filename        = alloc_cb(full_filename_length);
+    sprintf(
+        full_filename,
+        "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log",
+        s_sanitized_prefix, /* %s expects a null terminated string */
+        timepoint.year,
+        timepoint.month,
+        timepoint.day_month,
+        timepoint.hour,
+        timepoint.minute,
+        timepoint.second,
+        timepoint.microsecond / 1000
+    );
+
+    free_cb((char*)s_sanitized_prefix);
+
+    return full_filename;
+}
+
 uint32_t klog_format_prefix_length_get(
     const bool     use_thread_id,
     const bool     use_timestamp,
@@ -28,7 +72,7 @@ uint32_t klog_format_prefix_length_get(
     if (use_timestamp) {
         total += G_klog_time_string_length + 1; /* 19 digit timestamp + space */
     }
-    total += logger_name_max_length + 2 + 1; /* logger name + brackets + space */
+    total += logger_name_max_length + 2 + 1;     /* logger name + brackets + space */
     total += G_klog_level_string_length + 2 + 1; /* level + brackets + space */
     if (use_color) {
         total += 9;
@@ -36,6 +80,8 @@ uint32_t klog_format_prefix_length_get(
     if (source_location_filename_max_length > 0) {
         total += source_location_filename_max_length + 2 + 1 + 4 + 1; /* filename + brackets + colon + line + space */
     }
+
+    total += 1; /* Null terminator */
 
     return total;
 }
@@ -118,7 +164,7 @@ KlogString klog_format_message_prefix(
     /**
      * @brief So in total we have:
      *      8[thread id and space] +
-     *      (p_time.length)[timestamp and space] +
+     *      (p_time.length+1)[timestamp and space] +
      *      (p_name.length+3)[logger name, brackets, space] +
      *      (p_level+3)[level name, brackets, space] +
      *      (p_source_location.length+3)[source location, brackets, space]
@@ -127,7 +173,7 @@ KlogString klog_format_message_prefix(
     /* @todo should we use our prefix_length_get function here? */
     /* @todo should we memset to 0 at the front here instead of the end of klog_log? */
 
-    uint32_t size_total = 0;
+    uint32_t size_total = 1;
     if (p_thread_id) {
         size_total = size_total + 8;
     }
@@ -142,10 +188,6 @@ KlogString klog_format_message_prefix(
     }
     if (p_source_location && p_source_location->length) {
         size_total = size_total + p_source_location->length + 3;
-    }
-
-    if (size_total == 0) {
-        return (KlogString) { 0, s_prefix };
     }
 
     if (!s_prefix) {
@@ -176,7 +218,7 @@ KlogString klog_format_message_prefix(
     }
 
     /* Set the final byte to the null terminator */
-    s_prefix[size_total] = '\0';
+    s_prefix[size_total - 1] = '\0';
 
     return (KlogString) { size_total, s_prefix };
 }

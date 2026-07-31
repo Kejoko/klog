@@ -19,7 +19,7 @@ int length_0(
     const char* s = "[hello] [fatal] ";
     /*  00+          123456789          */
     /*  10+                   0123456   */
-    const uint32_t expected = strlen(s);
+    const uint32_t expected = strlen(s) + 1;
 
     const uint32_t actual = klog_format_prefix_length_get(false, false, 5, false, 0);
 
@@ -38,7 +38,7 @@ int length_color(
     /*  00+          123456789                              */
     /*  10+                   012345    6789                */
     /*  20+                                 01234    5678   */
-    const uint32_t expected = strlen(s);
+    const uint32_t expected = strlen(s) + 1;
 
     const uint32_t actual = klog_format_prefix_length_get(false, false, 10, true, 0);
 
@@ -54,7 +54,7 @@ int length_source_location(
     void
 ) {
     const char*    s        = "[hel] [\x1b[33mWARN \x1b[0m] [aaaaBBBBccccDDDD:9999] ";
-    const uint32_t expected = strlen(s);
+    const uint32_t expected = strlen(s) + 1;
 
     const uint32_t actual = klog_format_prefix_length_get(false, false, 3, true, 16);
 
@@ -70,7 +70,7 @@ int length_timestamp(
     void
 ) {
     const char*    s        = "ddd:hh:mm:ss:uuuuuu [123456789] [debug] [aaaabbbb:9999] ";
-    const uint32_t expected = strlen(s);
+    const uint32_t expected = strlen(s) + 1;
 
     const uint32_t actual = klog_format_prefix_length_get(false, true, 9, false, 8);
 
@@ -86,7 +86,7 @@ int length_thread_id(
     void
 ) {
     const char*    s        = "1234567 ddd:hh:mm:ss:uuuuuu [123456789] [warn ] ";
-    const uint32_t expected = strlen(s);
+    const uint32_t expected = strlen(s) + 1;
 
     const uint32_t actual = klog_format_prefix_length_get(true, true, 9, false, 0);
 
@@ -102,7 +102,7 @@ int length_all(
     void
 ) {
     const char*    s        = "1234567 ddd:hh:mm:ss:uuuuuu [logger] [\x1b[31mERROR\x1b[0m] [12345  :   1] ";
-    const uint32_t expected = strlen(s);
+    const uint32_t expected = strlen(s) + 1;
 
     const uint32_t actual = klog_format_prefix_length_get(true, true, 6, true, 7);
 
@@ -117,24 +117,28 @@ int length_all(
 int none(
     void
 ) {
-    KlogString result = klog_format_message_prefix(NULL, NULL, NULL, NULL, NULL, NULL);
+    char*      buffer = malloc(1);
+    KlogString result = klog_format_message_prefix(buffer, NULL, NULL, NULL, NULL, NULL);
 
-    if (result.length != 0) {
-        printf("Resulting KlogString's length should be 0 when nothing is given to the prefix\n");
+    if (result.length != 1) {
+        printf("Resulting KlogString's length should be 1 when nothing is given to the prefix so we can have the null terminator\n");
         return 1;
     }
 
-    if (result.s != NULL) {
-        printf("Resulting KlogString's string should be NULL when nothing is given to the prefix\n");
+    if (result.s != buffer) {
+        printf("Resulting KlogString's string should be the same as the input buffer\n");
         return 1;
     }
 
+    free(buffer);
     return 0;
 }
 
 int empty_strings(
     void
 ) {
+    char* buffer = malloc(1);
+
     const char* s_time      = "mustard!";
     KlogString  packed_time = { 0, s_time };
 
@@ -147,17 +151,19 @@ int empty_strings(
     const char* s_source_location      = "googoo";
     KlogString  packed_source_location = { 0, s_source_location };
 
-    KlogString result = klog_format_message_prefix(NULL, NULL, &packed_time, &packed_name, &packed_level, &packed_source_location);
+    KlogString result = klog_format_message_prefix(buffer, NULL, &packed_time, &packed_name, &packed_level, &packed_source_location);
 
-    if (result.length != 0) {
-        printf("Resulting KlogString's length should be 0 when nothing is given to the prefix\n");
+    if (result.length != 1) {
+        printf("Resulting KlogString's length should be 1 when nothing is given to the prefix\n");
         return 1;
     }
 
-    if (result.s != NULL) {
-        printf("Resulting KlogString's string should be NULL when nothing is given to the prefix\n");
+    if (result.s != buffer) {
+        printf("Resulting KlogString's string should be the same as the input buffer\n");
         return 1;
     }
+
+    free(buffer);
 
     return 0;
 }
@@ -165,10 +171,10 @@ int empty_strings(
 int just_thread_id(
     void
 ) {
-    const uint32_t length_expected = 8;
+    const uint32_t length_expected = 9;
     const uint32_t thread_id       = 1234;
 
-    char*      s      = malloc(length_expected + 1);
+    char*      s      = malloc(length_expected);
     KlogString result = klog_format_message_prefix(s, &thread_id, NULL, NULL, NULL, NULL);
 
     if (result.length != length_expected) {
@@ -211,8 +217,8 @@ int just_time(
     const char*    s_provided      = "0123456789";
     KlogString     packed_time     = { length_provided, s_provided };
 
-    const uint32_t length_expected = length_provided + 1;
-    char*          s               = malloc(length_expected + 1);
+    const uint32_t length_expected = length_provided + 1 + 1; /* +1 for space, +1 for null char */
+    char*          s               = malloc(length_expected);
     KlogString     result          = klog_format_message_prefix(s, NULL, &packed_time, NULL, NULL, NULL);
 
     if (result.length != length_expected) {
@@ -255,8 +261,8 @@ int just_name(
     const char*    s_provided      = "LOGGER";
     KlogString     packed_name     = { length_provided, s_provided };
 
-    const uint32_t length_expected = length_provided + 3;
-    char*          s               = malloc(length_expected + 1);
+    const uint32_t length_expected = length_provided + 3 + 1; /* +3 for space and square brackets, +1 for null char */
+    char*          s               = malloc(length_expected);
     KlogString     result          = klog_format_message_prefix(s, NULL, NULL, &packed_name, NULL, NULL);
 
     if (result.length != length_expected) {
@@ -295,12 +301,13 @@ int just_name(
 int just_level(
     void
 ) {
+    /*                                12345678901234567890 */
     const uint32_t length_provided = 20;
     const char*    s_provided      = "AAAAbbbbCCCCdddd    ";
     KlogString     packed_level    = { length_provided, s_provided };
 
-    const uint32_t length_expected = length_provided + 3;
-    char*          s               = malloc(length_expected + 1);
+    const uint32_t length_expected = length_provided + 3 + 1; /* +3 for square brackets and space, +1 for null char*/
+    char*          s               = malloc(length_expected);
     KlogString     result          = klog_format_message_prefix(s, NULL, NULL, NULL, &packed_level, NULL);
 
     if (result.length != length_expected) {
@@ -343,8 +350,8 @@ int just_source_location(
     const char*    s_provided             = "X:2";
     KlogString     packed_source_location = { length_provided, s_provided };
 
-    const uint32_t length_expected = length_provided + 3;
-    char*          s               = malloc(length_expected + 1);
+    const uint32_t length_expected = length_provided + 3 + 1; /* +3 for square brackets and space, +1 for null char */
+    char*          s               = malloc(length_expected);
     KlogString     result          = klog_format_message_prefix(s, NULL, NULL, NULL, NULL, &packed_source_location);
 
     if (result.length != length_expected) {
@@ -393,8 +400,8 @@ int subset_1(
     const char*    s_name               = " HOHO xD Rawr ";
     KlogString     packed_name          = { name_length_provided, s_name };
 
-    const uint32_t length_expected = 8 + (time_length_provided + 1) + (name_length_provided + 3);
-    char*          s               = malloc(length_expected + 1);
+    const uint32_t length_expected = 8 + (time_length_provided + 1) + (name_length_provided + 3) + 1;
+    char*          s               = malloc(length_expected);
     KlogString     result          = klog_format_message_prefix(s, &thread_id, &packed_time, &packed_name, NULL, NULL);
 
     if (result.length != length_expected) {
@@ -441,8 +448,8 @@ int subset_2(
     const char*    s_level               = "UP!";
     KlogString     packed_level          = { level_length_provided, s_level };
 
-    const uint32_t length_expected = (time_length_provided + 1) + (name_length_provided + 3) + (level_length_provided + 3);
-    char*          s               = malloc(length_expected + 1);
+    const uint32_t length_expected = (time_length_provided + 1) + (name_length_provided + 3) + (level_length_provided + 3) + 1;
+    char*          s               = malloc(length_expected);
     KlogString     result          = klog_format_message_prefix(s, NULL, &packed_time, &packed_name, &packed_level, NULL);
 
     if (result.length != length_expected) {
@@ -489,8 +496,8 @@ int subset_3(
     const char*    s_source_location               = "  hehehe  ";
     KlogString     packed_source_location          = { source_location_length_provided, s_source_location };
 
-    const uint32_t length_expected = (name_length_provided + 3) + (level_length_provided + 3) + (source_location_length_provided + 3);
-    char*          s               = malloc(length_expected + 1);
+    const uint32_t length_expected = (name_length_provided + 3) + (level_length_provided + 3) + (source_location_length_provided + 3) + 1;
+    char*          s               = malloc(length_expected);
     KlogString     result          = klog_format_message_prefix(s, NULL, NULL, &packed_name, &packed_level, &packed_source_location);
 
     if (result.length != length_expected) {
@@ -544,8 +551,8 @@ int everything(
     KlogString     packed_source_location          = { source_location_length_provided, s_source_location };
 
     const uint32_t length_expected = 8 + (time_length_provided + 1) + (name_length_provided + 3) + (level_length_provided + 3)
-        + (source_location_length_provided + 3);
-    char*      s      = malloc(length_expected + 1);
+        + (source_location_length_provided + 3) + 1;
+    char*      s      = malloc(length_expected);
     KlogString result = klog_format_message_prefix(
         s,
         &thread_id,
@@ -604,8 +611,8 @@ int shortened_strings(
     KlogString     packed_source_location          = { source_location_length_provided, s_source_location };
 
     const uint32_t length_expected = (time_length_provided + 1) + (name_length_provided + 3) + (level_length_provided + 3)
-        + (source_location_length_provided + 3);
-    char*      s      = malloc(length_expected + 1);
+        + (source_location_length_provided + 3) + 1;
+    char*      s      = malloc(length_expected);
     KlogString result = klog_format_message_prefix(
         s,
         NULL,
@@ -664,8 +671,8 @@ int nominal_parameters(
     const KlogString packed_source_location = klog_format_source_location(b_source_location, 15, s_filename, line_number);
 
     const uint32_t length_expected = 8 + (packed_time.length + 1) + (packed_name.length + 3) + (packed_level.length + 3)
-        + (packed_source_location.length + 3);
-    char*      s      = malloc(length_expected + 1);
+        + (packed_source_location.length + 3) + 1;
+    char*      s      = malloc(length_expected);
     KlogString result = klog_format_message_prefix(
         s,
         &thread_id,
@@ -735,25 +742,27 @@ int noop(
 int main(
     void
 ) {
-    return length_0()
-           || length_color()
-           || length_source_location()
-           || length_timestamp()
-           || length_thread_id()
-           || length_all()
-           || none()
-           || empty_strings()
-           || just_thread_id()
-           || just_time()
-           || just_name()
-           || just_level()
-           || just_source_location()
-           || subset_1()
-           || subset_2()
-           || subset_3()
-           || everything()
-           || shortened_strings()
-           || nominal_parameters()
-           || noop()
+    int result = length_0()
+        || length_color()
+        || length_source_location()
+        || length_timestamp()
+        || length_thread_id()
+        || length_all()
+        || none()
+        || empty_strings()
+        || just_thread_id()
+        || just_time()
+        || just_name()
+        || just_level()
+        || just_source_location()
+        || subset_1()
+        || subset_2()
+        || subset_3()
+        || everything()
+        || shortened_strings()
+        || nominal_parameters()
+        || noop()
     ;
+
+    return result;
 }

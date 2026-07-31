@@ -71,14 +71,21 @@ bool klog_initialize_are_parameters_valid(
     }
 
     if (p_klog_async_info) {
-        /* @todo kjk 2026/01/21 Validate async info */
         /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parmaeters_are_valid.c */
+        if (p_klog_async_info->message_queue_number_elements == 0) {
+            kdprintf("Trying to initialize klog with an async message queue of size 0\n");
+            return false;
+        }
+        if (p_klog_async_info->number_backing_threads == 0) {
+            kdprintf("Trying to initialize klog with async information, but using 0 backing threads\n");
+            return false;
+        }
     }
 
     if (p_klog_file_info) {
         /* @todo kjk 2026/01/21 Validate file info */
         /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parmaeters_are_valid.c */
-        /* Make sure filename prefix is valid */
+        /* @todo kjk 2026/07/28 Make sure filename prefix is valid */
     }
 
     if (p_klog_alloc_info) {
@@ -193,49 +200,19 @@ char* klog_initialize_colored_level_strings_buffer(
 }
 
 FILE* klog_initialize_file(
-    const KlogFileInfo* const p_klog_file_info,
-    void* (* const            alloc_cb)(
-        size_t size
-    )
+    const char* const s_filename
 ) {
-    if (p_klog_file_info == NULL) {
+    if (s_filename == NULL) {
         kdprintf("Not initializing output file\n");
         return NULL;
     }
 
-    const timepoint_t timepoint = klog_platform_get_current_timepoint();
-
-    /* This is a null terminated string with all whitespace removed */
-    const char* const s_sanitized_prefix = klog_format_file_name_prefix(p_klog_file_info->s_filename_prefix, alloc_cb);
-
-    /* Filename's are formatted like: <prefix>_YYYYMMDD_HHMMSS_SSSS.log */
-    /* Extra chars                  : 00+     123456789                 */
-    /*                                10+              0123456789       */
-    /*                                20+                        012345 */
-    const uint32_t prefix_length        = strlen(s_sanitized_prefix) + 1; /* +1 for null terminator */
-    const uint32_t full_filename_length = prefix_length + 25 + 1; /* +1 for null terminator */
-    char* const    full_filename        = alloc_cb(full_filename_length);
-    sprintf(
-        full_filename,
-        "%s_%.4d%.2d%.2d_%.2d%.2d%.2d_%.4d.log",
-        s_sanitized_prefix, /* %s expects a null terminated string */
-        timepoint.year,
-        timepoint.month,
-        timepoint.day_month,
-        timepoint.hour,
-        timepoint.minute,
-        timepoint.second,
-        timepoint.microsecond / 1000
-    );
-
-    FILE* const p_file = fopen(full_filename, "w");
+    FILE* const p_file = fopen(s_filename, "w");
     if (!p_file) {
-        kdprintf("Failed to create log file at %s\n", full_filename);
+        kdprintf("Failed to create log file at %s\n", s_filename);
         exit(KLOG_EXIT_CODE);
     }
     kdprintf("Created output file pointer at %p\n", (void*)p_file);
 
-    free((char*)s_sanitized_prefix);
-    free(full_filename);
     return p_file;
 }

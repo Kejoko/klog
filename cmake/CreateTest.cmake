@@ -102,3 +102,11 @@ endfunction()
 function(create_functional_test main_file)
     create_test(${main_file} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ft ${ARGN})
 endfunction()
+
+# --------------------------------------------------------------------------- #
+# Profiling Tests                                                             #
+# --------------------------------------------------------------------------- #
+
+function(create_profiling_test main_file)
+    create_test(${main_file} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/pt ${ARGN})
+endfunction()

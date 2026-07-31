@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "./klog_state.h"
+#include "./klog_async.h"
 #include "./klog_constants.h"
 #include "./klog_handle.h"
 #include "./klog_platform.h"
@@ -45,6 +46,8 @@ void klog_initialize(
     ) {
         exit(KLOG_EXIT_CODE);
     }
+
+    g_klog_state.is_initialized = true; /* Set this upfront (before threads) so they don't hang while waiting for it */
 
     g_klog_config.format = klog_format_info;
     if (p_klog_async_info) {
@@ -122,9 +125,13 @@ void klog_initialize(
         g_klog_config.console.use_color,
         g_klog_config.format.source_location_filename_max_length
     );
-    g_klog_state.prefix_time_size            = G_klog_time_string_length;
-    g_klog_state.prefix_source_location_size = g_klog_config.format.source_location_filename_max_length + 4 + 1; /* 4 digit line number, colon */
-    g_klog_state.message_element_idx         = 0;
+    g_klog_state.prefix_time_size             = G_klog_time_string_length;
+    g_klog_state.prefix_source_location_size  = g_klog_config.format.source_location_filename_max_length + 4 + 1; /* 4 digit line number, colon */
+    g_klog_state.message_unconsumed_count     = 0;
+    g_klog_state.message_element_producer_idx = 0;
+    g_klog_state.message_element_consumer_idx = 0;
+    g_klog_state.message_produced_total_count = 0;
+    g_klog_state.message_consumed_total_count = 0;
     if (p_klog_async_info) {
         g_klog_state.message_element_count = p_klog_async_info->message_queue_number_elements;
     } else {
@@ -168,11 +175,40 @@ void klog_initialize(
         g_klog_config.alloc.alloc_cb
     );
 
-    g_klog_state.p_file = klog_initialize_file(p_klog_file_info, g_klog_config.alloc.alloc_cb);
-    kdprintf("p_file: %p\n",             (void*)g_klog_state.p_file);
-    kdprintf("File max verbosity: %d\n", g_klog_config.file.max_level);
+    g_klog_state.b_message_levels = g_klog_config.alloc.alloc_cb(
+        sizeof(*g_klog_state.b_message_levels)
+        * g_klog_state.message_element_count
+    );
+    memset(
+        g_klog_state.b_message_levels,
+        0,
+        sizeof(*g_klog_state.b_message_levels)
+        * g_klog_state.message_element_count
+    );
 
-    g_klog_state.is_initialized = true;
+    g_klog_state.s_filename = klog_format_filename(p_klog_file_info, g_klog_config.alloc.alloc_cb, g_klog_config.alloc.free_cb);
+    g_klog_state.p_file     = klog_initialize_file(g_klog_state.s_filename);
+
+    g_klog_state.p_mutex_deinitialize = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_shared       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_producer     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_consumer     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_shared);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_producer);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_consumer);
+
+    g_klog_state.p_semaphore_messages_empty = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_semaphore_t));
+    g_klog_state.p_semaphore_messages_full  = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_semaphore_t));
+    klog_platform_semaphore_initialize(g_klog_state.p_semaphore_messages_empty, g_klog_state.message_element_count);
+    klog_platform_semaphore_initialize(g_klog_state.p_semaphore_messages_full,  0);
+
+    if (g_klog_config.async.number_backing_threads > 0) {
+        g_klog_state.b_threads = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_thread_t) * g_klog_config.async.number_backing_threads);
+        for (uint32_t idx_thread = 0; idx_thread < g_klog_config.async.number_backing_threads; ++idx_thread) {
+            klog_platform_thread_create(&g_klog_state.b_threads[idx_thread], klog_async_thread_body, NULL);
+        }
+    }
 #endif
 }
 
@@ -181,10 +217,46 @@ void klog_deinitialize(
 ) {
 #ifdef KLOG_OFF
 #else
+    klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to de-initialize klog, when it is not yet initialized\n");
         exit(KLOG_EXIT_CODE);
     }
+
+    g_klog_state.is_initialized = false;
+
+    /* Ensure each of the consumers goes through the semaphore wait, into the check */
+    for (uint32_t idx_consumer = 0; idx_consumer < g_klog_config.async.number_backing_threads; ++idx_consumer) {
+        klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_full);
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
+
+    if (g_klog_state.b_threads) {
+        for (uint32_t idx_thread = 0; idx_thread < g_klog_config.async.number_backing_threads; ++idx_thread) {
+            klog_platform_thread_join(&g_klog_state.b_threads[idx_thread], NULL);
+        }
+        g_klog_config.alloc.free_cb(g_klog_state.b_threads);
+    }
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_deinitialize);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_shared);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_producer);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_consumer);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_deinitialize);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_shared);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_producer);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_consumer);
+    g_klog_state.b_threads            = NULL;
+    g_klog_state.p_mutex_deinitialize = NULL;
+    g_klog_state.p_mutex_shared       = NULL;
+    g_klog_state.p_mutex_producer     = NULL;
+    g_klog_state.p_mutex_consumer     = NULL;
+
+    klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_empty);
+    klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_full);
+    g_klog_config.alloc.free_cb(g_klog_state.p_semaphore_messages_empty);
+    g_klog_config.alloc.free_cb(g_klog_state.p_semaphore_messages_full);
+    g_klog_state.p_semaphore_messages_empty = NULL;
+    g_klog_state.p_semaphore_messages_full  = NULL;
 
     g_klog_state.number_loggers_max     = 0;
     g_klog_state.number_loggers_created = 0;
@@ -201,8 +273,12 @@ void klog_deinitialize(
     g_klog_state.b_level_strings         = NULL;
     g_klog_state.b_level_strings_colored = NULL;
 
-    g_klog_state.message_element_idx   = 0;
-    g_klog_state.message_element_count = 0;
+    g_klog_state.message_unconsumed_count     = 0;
+    g_klog_state.message_element_producer_idx = 0;
+    g_klog_state.message_element_consumer_idx = 0;
+    g_klog_state.message_element_count        = 0;
+    g_klog_state.message_produced_total_count = 0;
+    g_klog_state.message_consumed_total_count = 0;
 
     g_klog_state.prefix_file_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_file);
@@ -224,6 +300,13 @@ void klog_deinitialize(
     g_klog_config.alloc.free_cb(g_klog_state.b_messages_formatted);
     g_klog_state.b_messages_formatted = NULL;
 
+    g_klog_config.alloc.free_cb(g_klog_state.b_message_levels);
+    g_klog_state.b_message_levels = NULL;
+
+    if (g_klog_state.s_filename) {
+        g_klog_config.alloc.free_cb(g_klog_state.s_filename);
+        g_klog_state.s_filename = NULL;
+    }
     if (g_klog_state.p_file) {
         fclose(g_klog_state.p_file);
         g_klog_state.p_file = NULL;
@@ -231,8 +314,6 @@ void klog_deinitialize(
 
     /* Need to do this near the end because we need the callbacks for freeing */
     g_klog_config = (struct KlogConfig) { 0 };
-
-    g_klog_state.is_initialized = false;
 #endif
 }
 
@@ -327,10 +408,14 @@ void klog_log(
     (void)line_number;
     (void)format;
 #else
+    klog_platform_mutex_lock(g_klog_state.p_mutex_producer);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(KLOG_EXIT_CODE);
     }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
     if (p_logger_handle->value >= g_klog_state.number_loggers_created) {
         kdprintf("Trying to log with logger %d, when only %d loggers exist\n", p_logger_handle->value, g_klog_state.number_loggers_created);
@@ -344,26 +429,33 @@ void klog_log(
 
     if (requested_level == 0) {
         kdprintf("Trying to log with the level set to OFF\n");
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
         return;
     }
     if ((requested_level > g_klog_config.console.max_level) && (requested_level > g_klog_config.file.max_level)) {
         kdprintf("Trying to log with a level that neither console nor file accept\n");
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
         return;
     }
 
     if (requested_level > g_klog_state.a_logger_levels[p_logger_handle->value]) {
         kdprintf("Trying to log with a level more verbose than the requested logger allows\n");
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
         return;
     }
 
+    klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+
     /* We are getting the time first, so it's closest to the actual point of invocation */
-    char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.message_element_idx * g_klog_state.prefix_time_size);
+    char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_time_size);
     memset(s_prefix_time, '\0', g_klog_state.prefix_time_size);
     const KlogString packed_time = g_klog_config.format.use_timestamp ? klog_format_time(s_prefix_time) : (KlogString) { 0, NULL };
 
     /* Create the input string with the arguments injected - including space for null termination */
     char* s_message_formatted = g_klog_state.b_messages_formatted
-        + (g_klog_state.message_element_idx * g_klog_state.message_formatted_max_size);
+        + (g_klog_state.message_element_producer_idx * g_klog_state.message_formatted_max_size);
     va_list p_args;
     va_start(p_args, s_format);
     const uint32_t actual_message_length = klog_format_input_message(
@@ -388,7 +480,7 @@ void klog_log(
     const KlogString* const p_packed_level_console = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
 
     char* s_prefix_source_location = g_klog_state.b_prefixes_source_location
-        + (g_klog_state.message_element_idx * g_klog_state.prefix_source_location_size);
+        + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_source_location_size);
     const KlogString packed_source_location = (g_klog_config.format.source_location_filename_max_length && s_filename)
         ? klog_format_source_location(
                 s_prefix_source_location,
@@ -399,8 +491,9 @@ void klog_log(
         : (KlogString) { 0, NULL };
 
     /* Get the pointers to the prefix buffers and reset them in preparation for setting */
-    char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_idx * g_klog_state.prefix_file_size);
-    char* s_prefix_console = g_klog_state.b_prefixes_console + (g_klog_state.message_element_idx * g_klog_state.prefix_console_size);
+    char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_file_size);
+    char* s_prefix_console = g_klog_state.b_prefixes_console
+        + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_console_size);
     memset(s_prefix_file,    '\0', g_klog_state.prefix_file_size);
     memset(s_prefix_console, '\0', g_klog_state.prefix_console_size);
 
@@ -422,32 +515,41 @@ void klog_log(
         &packed_source_location
     );
 
-    /* Actually log the message */
-    uint32_t i_starting_character = 0;
-    while (i_starting_character <= actual_message_length) {
-        const char* const p_newline         = strchr(s_message_formatted + i_starting_character, '\n');
-        const uint32_t    submessage_length = p_newline
-            ? p_newline - (s_message_formatted + i_starting_character)
-            : actual_message_length;
+    /* Update the level buffer */
+    g_klog_state.b_message_levels[g_klog_state.message_element_producer_idx] = requested_level;
 
-        const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
-        if (requested_level <= g_klog_config.console.max_level) {
-            klog_output_console(&packed_prefix_console, &packed_message);
-        }
-        if (g_klog_state.p_file && (requested_level <= g_klog_config.file.max_level)) {
-            klog_output_file(g_klog_state.p_file, &packed_prefix_file, &packed_message);
-        }
-
-        i_starting_character = i_starting_character + submessage_length + 1;
+    /* Update the producer's index into our ring buffer */
+    g_klog_state.message_element_producer_idx = g_klog_state.message_element_producer_idx + 1;
+    if (g_klog_state.message_element_producer_idx >= g_klog_state.message_element_count) {
+        g_klog_state.message_element_producer_idx = 0;
     }
 
-    /* Update the index into our ring buffer */
-    g_klog_state.message_element_idx = g_klog_state.message_element_idx + 1;
-    if (g_klog_state.message_element_idx >= g_klog_state.message_element_count) {
-        g_klog_state.message_element_idx = 0;
+    /* Let everyone know there is another message ready for consumption */
+    g_klog_state.message_produced_total_count++;
+    g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count + 1;
+    if (g_klog_state.message_unconsumed_count > g_klog_state.message_element_count) {
+        kdprintf(
+            "klog_log produced too many messages (%d unconsumed messages when we only have space for %d)\n",
+            g_klog_state.message_unconsumed_count,
+            g_klog_state.message_element_count
+        );
+        exit(1);
     }
 
-    /* Clear the buffer for the next time it is used - we also re-set the null terminator at the end of the actual message */
-    memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+
+    klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_full);
+
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
+
+    (void)actual_message_length;
+    (void)packed_prefix_file;
+    (void)packed_prefix_console;
+
+    /* If we have consumer threads, we're done here. Else, consume what we just made */
+    if (g_klog_config.async.number_backing_threads > 0) {
+        return;
+    }
+    klog_async_consume();
 #endif
 }

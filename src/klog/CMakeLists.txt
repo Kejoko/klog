@@ -8,6 +8,8 @@ add_library(
     klog.c
     klog_state.h
     klog_state.c
+    klog_async.h
+    klog_async.c
     klog_constants.h
     klog_constants.c
     klog_handle.h
@@ -29,6 +31,7 @@ target_compile_definitions(klog PUBLIC ${KLOG_COMPILE_DEFINITIONS})
 
 if (KLOG_BUILD_TESTS)
     create_unit_test_plain(ut/ut-klog_alloc_callback_counts.c klog)
+    create_unit_test_plain(ut/ut-klog_async_message_ordering.c klog)
     create_unit_test_plain(ut/ut-klog_deinitialize.c klog)
     create_unit_test_plain(ut/ut-klog_format_input_message.c klog)
     create_unit_test_plain(ut/ut-klog_format_logger_name.c klog)
@@ -41,6 +44,9 @@ if (KLOG_BUILD_TESTS)
     create_unit_test_plain(ut/ut-klog_logger_level_set.c klog)
     create_unit_test_plain(ut/ut-klog_ring_buffer_usage.c klog)
 
+    create_functional_test(ft/ft-klog_async_1_thread.c klog)
+    create_functional_test(ft/ft-klog_async_5_threads.c klog)
+    create_functional_test(ft/ft-klog_async_both.c klog)
     create_functional_test(ft/ft-klog_basic.c klog)
     create_functional_test(ft/ft-klog_console.c klog)
     create_functional_test(ft/ft-klog_file.c klog)
@@ -48,5 +54,5 @@ if (KLOG_BUILD_TESTS)
     create_functional_test(ft/ft-klog_fail_logger_limit.c klog EXPECT_FAILURE IGNORE_MEMORY)
     create_functional_test(ft/ft-klog_fail_level.c klog EXPECT_FAILURE IGNORE_MEMORY)
 
-    # create_functional_test(ft/ft-klog_stress_st_sync.c klog)
+    create_profiling_test(pt/pt-klog_sync_vs_async.c klog)
 endif ()

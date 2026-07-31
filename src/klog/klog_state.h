@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include "klog/klog.h"
+#include "./klog_platform.h"
 
 /**
  * @brief This represents the initial configuraton as set by the user
@@ -38,8 +39,12 @@ extern struct KlogState {
     char* b_level_strings;
     char* b_level_strings_colored;
 
-    uint32_t message_element_idx;
+    uint32_t message_unconsumed_count;
+    uint32_t message_element_producer_idx;
+    uint32_t message_element_consumer_idx;
     uint32_t message_element_count;
+    uint32_t message_produced_total_count;
+    uint32_t message_consumed_total_count;
 
     uint32_t prefix_file_size;
     char*    b_prefixes_file;
@@ -53,9 +58,20 @@ extern struct KlogState {
     uint32_t message_formatted_max_size;
     char*    b_messages_formatted;
 
+    uint32_t* b_message_levels;
+
+    char* s_filename;
     FILE* p_file;
 
     bool is_initialized;
+
+    klog_platform_thread_t*    b_threads;
+    klog_platform_mutex_t*     p_mutex_deinitialize;
+    klog_platform_mutex_t*     p_mutex_shared;
+    klog_platform_mutex_t*     p_mutex_producer;
+    klog_platform_mutex_t*     p_mutex_consumer;
+    klog_platform_semaphore_t* p_semaphore_messages_empty;
+    klog_platform_semaphore_t* p_semaphore_messages_full;
 } g_klog_state;
 
 #endif /* KLOG_STATE_INCLUDED */

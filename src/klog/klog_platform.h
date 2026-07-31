@@ -20,7 +20,7 @@
 
 /* Thread / Process ID ---------------------------------------------------------------------------------------------- */
 
-# include <unistd.h> /* For pid_t */
+# include <unistd.h>      /* For pid_t */
 # include <sys/syscall.h> /* For syscall() */
 
 # ifndef SYS_gettid
@@ -31,6 +31,65 @@ typedef pid_t procid_t;
 
 procid_t klog_platform_get_current_thread_id(
     void
+);
+
+/* Threading -------------------------------------------------------------------------------------------------------- */
+
+# include <pthread.h>
+# include <semaphore.h>
+
+typedef pthread_mutex_t klog_platform_mutex_t;
+typedef sem_t           klog_platform_semaphore_t;
+typedef pthread_t       klog_platform_thread_t;
+
+/* @todo Allow for mutex attributes */
+void klog_platform_mutex_initialize(
+    klog_platform_mutex_t* p_mutex
+);
+void klog_platform_mutex_deinitialize(
+    klog_platform_mutex_t* p_mutex
+);
+void klog_platform_mutex_lock(
+    klog_platform_mutex_t* p_mutex
+);
+void klog_platform_mutex_unlock(
+    klog_platform_mutex_t* p_mutex
+);
+
+/* @todo Allow for pshared parameter to denote inter-process sharing */
+void klog_platform_semaphore_initialize(
+    klog_platform_semaphore_t* p_semaphore,
+    uint32_t                   count
+);
+void klog_platform_semaphore_deinitialize(
+    klog_platform_semaphore_t* p_semaphore
+);
+void klog_platform_semaphore_wait(
+    klog_platform_semaphore_t* p_semaphore
+);
+void klog_platform_semaphore_signal(
+    klog_platform_semaphore_t* p_semaphore
+);
+int klog_platform_semaphore_value_get(
+    klog_platform_semaphore_t* p_semaphore
+);
+
+/* @todo Allow for attributes upon thread creation */
+void klog_platform_thread_create(
+    klog_platform_thread_t* p_thread,
+    void* (*                thread_body)(
+        void*
+    ),
+    void*                   p_arg
+);
+void klog_platform_thread_join(
+    klog_platform_thread_t* p_thread,
+    void**                  p_ret
+);
+
+/* Microsecond sleep */
+void klog_platform_sleep_usec(
+    uint32_t usec
 );
 
 /* Filenames -------------------------------------------------------------------------------------------------------- */
@@ -84,6 +143,6 @@ timepoint_t klog_platform_get_current_timepoint(
     void
 );
 
-#endif
+#endif /* __linux__ */
 
 #endif /* KLOG_PLATFORM_INCLUDED */
