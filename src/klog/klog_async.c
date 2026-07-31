@@ -68,9 +68,7 @@ bool klog_async_consume(
     char* s_message_formatted = g_klog_state.b_messages_formatted
         + (g_klog_state.message_element_consumer_idx * g_klog_state.message_formatted_max_size);
 
-    /* @todo Do we need an additional buffer denoting lengths, for speed up so we don't have to use strlen? */
-    const uint32_t actual_message_length = strlen(s_message_formatted);
-    /* const uint32_t actual_message_length = g_klog_state.g_message_lengths[g_klog_state.message_element_consumer_idx]; */
+    const uint32_t actual_message_length = g_klog_state.b_message_lengths[g_klog_state.message_element_consumer_idx];
 
     /* Get the console and file prefixes */
     char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_file_size);

@@ -530,6 +530,8 @@ void klog_log(
         p_args
     );
     va_end(p_args);
+    /* Update the length buffer */
+    g_klog_state.b_message_lengths[g_klog_state.message_element_producer_idx] = actual_message_length;
 
     /* Get the information to create the message prefix */
     const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
