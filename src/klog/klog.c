@@ -457,8 +457,6 @@ void klog_log(
     (void)line_number;
     (void)format;
 #else
-    /* klog_platform_mutex_lock(g_klog_state.p_mutex_producer); */
-
     klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
@@ -478,18 +476,15 @@ void klog_log(
 
     if (requested_level == 0) {
         kdprintf("Trying to log with the level set to OFF\n");
-        /* klog_platform_mutex_unlock(g_klog_state.p_mutex_producer); */
         return;
     }
     if ((requested_level > g_klog_config.console.max_level) && (requested_level > g_klog_config.file.max_level)) {
         kdprintf("Trying to log with a level that neither console nor file accept\n");
-        /* klog_platform_mutex_unlock(g_klog_state.p_mutex_producer); */
         return;
     }
 
     if (requested_level > g_klog_state.a_logger_levels[p_logger_handle->value]) {
         kdprintf("Trying to log with a level more verbose than the requested logger allows\n");
-        /* klog_platform_mutex_unlock(g_klog_state.p_mutex_producer); */
         return;
     }
 
@@ -593,8 +588,6 @@ void klog_log(
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
     klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_full);
-
-    /* klog_platform_mutex_unlock(g_klog_state.p_mutex_producer); */
 
     (void)actual_message_length;
     (void)packed_prefix_file;
