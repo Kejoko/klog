@@ -245,13 +245,13 @@ int multiple_elements(
         return 1;
     }
 
-    const uint32_t prefix_size = klog_format_prefix_length_get(false, false, logger_name_length, false, 0);
-    if (g_klog_state.prefix_file_size != prefix_size) {
-        printf("Klog file prefix size should be %d, but actually is %d\n", prefix_size, g_klog_state.prefix_console_size);
+    const uint32_t prefix_size = klog_format_prefix_length_get(false, false, logger_name_length, false, 0) + 1;
+    if (g_klog_state.prefix_file_size != prefix_size - 1) {
+        printf("Klog file prefix size should be %d, but actually is %d\n", prefix_size - 1, g_klog_state.prefix_console_size);
         return 1;
     }
-    if (g_klog_state.prefix_console_size != prefix_size) {
-        printf("Klog console prefix size should be %d, but actually is %d\n", prefix_size, g_klog_state.prefix_console_size);
+    if (g_klog_state.prefix_console_size != prefix_size - 1) {
+        printf("Klog console prefix size should be %d, but actually is %d\n", prefix_size - 1, g_klog_state.prefix_console_size);
         return 1;
     }
 
