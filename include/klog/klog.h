@@ -31,7 +31,7 @@ typedef struct {
 
 typedef struct {
     uint32_t message_queue_number_elements;
-    uint32_t number_backing_threads;
+    uint32_t number_backing_threads; /* If this is gt 1, ordering of messages is not enforced */
 } KlogAsyncInfo;
 
 typedef struct {

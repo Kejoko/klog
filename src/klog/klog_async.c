@@ -39,8 +39,6 @@ void* klog_async_thread_body(
 bool klog_async_consume(
     void
 ) {
-    klog_platform_mutex_lock(g_klog_state.p_mutex_consumer);
-
     klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_full);
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
@@ -53,7 +51,6 @@ bool klog_async_consume(
             /* We should stop */
             klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
             klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
-            klog_platform_mutex_unlock(g_klog_state.p_mutex_consumer);
             return true;
         }
 
@@ -132,8 +129,6 @@ bool klog_async_consume(
 
         i_starting_character = i_starting_character + submessage_length + 1;
     }
-
-    klog_platform_mutex_unlock(g_klog_state.p_mutex_consumer);
 
     return false;
 }
