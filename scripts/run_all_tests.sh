@@ -16,7 +16,26 @@ BGYELLOW=$(tput setab 3)
 BGMAGENTA=$(tput setab 5)
 NORMAL=$(tput sgr0) # Resets all attributes
 
-# Error / success messages
+# -------------------------------------------------------------------------------------------------------------------- #
+# Get CL argument for whether or not we should pre-document the executable we are about to run                         #
+# -------------------------------------------------------------------------------------------------------------------- #
+
+should_pre_print=0
+while getopts "v" opt; do
+    case ${opt} in
+        v)
+            should_pre_print=1
+            ;;
+        \?)
+            exit 1
+            ;;
+    esac
+done
+
+# -------------------------------------------------------------------------------------------------------------------- #
+# Error and success messages, need the pre print flag for spacing                                                      #
+# -------------------------------------------------------------------------------------------------------------------- #
+
 # These look bad when declared here but they are all aligned for nicely printing
 P_EF="${FGRED}PASSED      (should fail)${NORMAL}"
 ME_EF="${FGYELLOW}MEMERR      (should fail)${NORMAL}"
@@ -24,6 +43,15 @@ F_EF="${NORMAL}failed      (should fail)${NORMAL}"
 P_EP="${NORMAL}passed      (should pass)${NORMAL}"
 ME_EP="${FGYELLOW}MEMERR      (should pass)${NORMAL}"
 F_EP="${FGRED}FAILED      (should pass)${NORMAL}"
+
+if [ $should_pre_print -eq 0 ]; then
+    P_EF="${FGRED}PASSED (should fail)${NORMAL}"
+    ME_EF="${FGYELLOW}MEMERR (should fail)${NORMAL}"
+    F_EF="${NORMAL}failed (should fail)${NORMAL}"
+    P_EP="${NORMAL}passed (should pass)${NORMAL}"
+    ME_EP="${FGYELLOW}MEMERR (should pass)${NORMAL}"
+    F_EP="${FGRED}FAILED (should pass)${NORMAL}"
+fi
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # Where we actually store the results (initialize an empty list)                                                       #
@@ -61,12 +89,14 @@ run_test_update_failed_commands () {
     local arg_test_name=$(basename "$arg_test_command")
 
     # Align this output with our error/pass result outputs
-    if [ "$arg_is_valgrind" -eq 0 ]; then
-        #    "passed      (should pass) : "
-        echo "executing                 : $arg_test_name"
-    else
-        #    "passed      (should pass) : "
-        echo "valgrinding               : $arg_test_name"
+    if [ $should_pre_print -eq 1 ]; then
+      if [ "$arg_is_valgrind" -eq 0 ]; then
+          #    "passed      (should pass) : "
+          echo "executing                 : $arg_test_name"
+      else
+          #    "passed      (should pass) : "
+          echo "valgrinding               : $arg_test_name"
+      fi
     fi
 
     $command_to_run > /dev/null 2>&1
@@ -99,8 +129,12 @@ run_test_update_failed_commands () {
             did_expected=0
         fi
     fi
-    
-    echo "$result_message : $arg_test_name"
+   
+    if [ "$arg_is_valgrind" -eq 0 ]; then
+        echo "$result_message : $arg_test_name"
+    else
+        echo "$result_message : $arg_test_name - valgrind"
+    fi
 
     if [ "$did_expected" -eq 1 ]; then
         return 0
