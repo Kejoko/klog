@@ -74,8 +74,8 @@ int check(
     }
     const uint32_t line_size          = g_prefix_length + g_message_digit_count + 1; /* 12 for prefix, 4 for the digits + 1 for newline */
     const uint32_t file_size_expected = line_size * g_num_messages;
-    if (file_size != file_size_expected) {
-        printf("Actual file size (%d) != expecte file size (%d)\n", file_size, file_size_expected);
+    if ((uint32_t)file_size != file_size_expected) {
+        printf("Actual file size (%d) != expected file size (%d)\n", file_size, file_size_expected);
         return 1;
     }
 

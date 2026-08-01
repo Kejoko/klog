@@ -199,29 +199,15 @@ void klog_initialize(
         sizeof(*g_klog_state.b_message_lengths)
         * g_klog_state.message_element_count
     );
-    g_klog_state.b_message_lengths_staging = g_klog_config.alloc.alloc_cb(
-        sizeof(*g_klog_state.b_message_lengths_staging)
-        * g_klog_state.message_element_count
-    );
     memset(
         g_klog_state.b_message_lengths,
         0,
         sizeof(*g_klog_state.b_message_lengths)
         * g_klog_state.message_element_count
     );
-    memset(
-        g_klog_state.b_message_lengths_staging,
-        0,
-        sizeof(*g_klog_state.b_message_lengths_staging)
-        * g_klog_state.message_element_count
-    );
 
     g_klog_state.b_message_levels = g_klog_config.alloc.alloc_cb(
         sizeof(*g_klog_state.b_message_levels)
-        * g_klog_state.message_element_count
-    );
-    g_klog_state.b_message_levels_staging = g_klog_config.alloc.alloc_cb(
-        sizeof(*g_klog_state.b_message_levels_staging)
         * g_klog_state.message_element_count
     );
     memset(
@@ -230,24 +216,22 @@ void klog_initialize(
         sizeof(*g_klog_state.b_message_levels)
         * g_klog_state.message_element_count
     );
-    memset(
-        g_klog_state.b_message_levels_staging,
-        0,
-        sizeof(*g_klog_state.b_message_levels_staging)
-        * g_klog_state.message_element_count
-    );
 
     g_klog_state.s_filename = klog_format_filename(p_klog_file_info, g_klog_config.alloc.alloc_cb, g_klog_config.alloc.free_cb);
     g_klog_state.p_file     = klog_initialize_file(g_klog_state.s_filename);
 
-    g_klog_state.p_mutex_deinitialize = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_shared       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_producer     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_consumer     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_deinitialize   = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_shared         = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_producer       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_consumer       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_output_console = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_output_file    = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
     klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_shared);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_producer);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_consumer);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_output_console);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_output_file);
 
     g_klog_state.p_semaphore_messages_empty = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_semaphore_t));
     g_klog_state.p_semaphore_messages_full  = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_semaphore_t));
@@ -292,15 +276,21 @@ void klog_deinitialize(
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_shared);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_producer);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_consumer);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_output_console);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_output_file);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_deinitialize);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_shared);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_producer);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_consumer);
-    g_klog_state.b_threads            = NULL;
-    g_klog_state.p_mutex_deinitialize = NULL;
-    g_klog_state.p_mutex_shared       = NULL;
-    g_klog_state.p_mutex_producer     = NULL;
-    g_klog_state.p_mutex_consumer     = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_output_console);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_output_file);
+    g_klog_state.b_threads              = NULL;
+    g_klog_state.p_mutex_deinitialize   = NULL;
+    g_klog_state.p_mutex_shared         = NULL;
+    g_klog_state.p_mutex_producer       = NULL;
+    g_klog_state.p_mutex_consumer       = NULL;
+    g_klog_state.p_mutex_output_console = NULL;
+    g_klog_state.p_mutex_output_file    = NULL;
 
     klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_empty);
     klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_full);
@@ -357,14 +347,10 @@ void klog_deinitialize(
     g_klog_state.b_messages_formatted         = NULL;
     g_klog_state.b_messages_formatted_staging = NULL;
     g_klog_config.alloc.free_cb(g_klog_state.b_message_lengths);
-    g_klog_config.alloc.free_cb(g_klog_state.b_message_lengths_staging);
-    g_klog_state.b_message_lengths         = NULL;
-    g_klog_state.b_message_lengths_staging = NULL;
+    g_klog_state.b_message_lengths = NULL;
 
     g_klog_config.alloc.free_cb(g_klog_state.b_message_levels);
-    g_klog_config.alloc.free_cb(g_klog_state.b_message_levels_staging);
-    g_klog_state.b_message_levels         = NULL;
-    g_klog_state.b_message_levels_staging = NULL;
+    g_klog_state.b_message_levels = NULL;
 
     if (g_klog_state.s_filename) {
         g_klog_config.alloc.free_cb(g_klog_state.s_filename);
@@ -558,9 +544,10 @@ void klog_log(
         : (KlogString) { 0, NULL };
 
     /* Get the pointers to the prefix buffers and reset them in preparation for setting */
-    char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_file_size);
+    char* s_prefix_file = g_klog_state.b_prefixes_file
+        + (g_klog_state.message_element_producer_idx * (g_klog_state.prefix_file_size + 1));
     char* s_prefix_console = g_klog_state.b_prefixes_console
-        + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_console_size);
+        + (g_klog_state.message_element_producer_idx * (g_klog_state.prefix_console_size + 1));
     memset(s_prefix_file,    '\0', g_klog_state.prefix_file_size);
     memset(s_prefix_console, '\0', g_klog_state.prefix_console_size);
 

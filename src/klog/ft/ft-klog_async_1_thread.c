@@ -6,7 +6,7 @@
 
 #include "../klog_debug_util.h"
 
-#define NUM_LOG_STATEMENTS 20
+#define NUM_LOG_STATEMENTS 30
 
 int main(
     void

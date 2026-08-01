@@ -60,11 +60,8 @@ extern struct KlogState {
     uint32_t  message_formatted_max_size;
     char*     b_messages_formatted; /* Need copy */
     char*     b_messages_formatted_staging;
-    uint32_t* b_message_lengths; /* Need copy */
-    uint32_t* b_message_lengths_staging;
-
-    uint32_t* b_message_levels; /* Need copy */
-    uint32_t* b_message_levels_staging;
+    uint32_t* b_message_lengths;
+    uint32_t* b_message_levels;
 
     char* s_filename;
     FILE* p_file;
@@ -76,6 +73,8 @@ extern struct KlogState {
     klog_platform_mutex_t*     p_mutex_shared;
     klog_platform_mutex_t*     p_mutex_producer;
     klog_platform_mutex_t*     p_mutex_consumer;
+    klog_platform_mutex_t*     p_mutex_output_console;
+    klog_platform_mutex_t*     p_mutex_output_file;
     klog_platform_semaphore_t* p_semaphore_messages_empty;
     klog_platform_semaphore_t* p_semaphore_messages_full;
 } g_klog_state;
