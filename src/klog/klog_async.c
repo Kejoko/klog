@@ -47,6 +47,8 @@ bool klog_async_consume(
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
 
+    /* @todo kjk 2026/08/01 I think we can make this stopping logic better */
+    /* @todo Move these variable accesses behind a "stop" lock? */
     if (g_klog_state.message_produced_total_count == g_klog_state.message_consumed_total_count) {
         /* We have logged everything we should have - up to this point. Should we stop?? */
         if (should_deinit) {
@@ -56,13 +58,20 @@ bool klog_async_consume(
         }
     }
 
-    /* Copy everything from the producer's buffers to our staging buffers, let the producer know it can go again */
+    /* @todo This can move out of the shared block behind a consumer specific lock */
+    /* Get our current consuming index and update the next consumer's index into the ring buffers */
     const uint32_t message_element_consumer_idx = g_klog_state.message_element_consumer_idx;
-    const uint32_t offset_file                  = (g_klog_state.prefix_file_size + 1) * message_element_consumer_idx;
-    const uint32_t offset_console               = (g_klog_state.prefix_console_size + 1) * message_element_consumer_idx;
-    const uint32_t offset_messages_formatted    = g_klog_state.message_formatted_max_size * message_element_consumer_idx;
-    enum KlogLevel requested_level              = 0;
-    uint32_t       actual_message_length        = 0;
+    g_klog_state.message_element_consumer_idx   = g_klog_state.message_element_consumer_idx + 1;
+    if (g_klog_state.message_element_consumer_idx >= g_klog_state.message_element_count) {
+        g_klog_state.message_element_consumer_idx = 0;
+    }
+
+    /* Copy everything from the producer's buffers to our staging buffers, let the producer know it can go again */
+    const uint32_t offset_file               = (g_klog_state.prefix_file_size + 1) * message_element_consumer_idx;
+    const uint32_t offset_console            = (g_klog_state.prefix_console_size + 1) * message_element_consumer_idx;
+    const uint32_t offset_messages_formatted = g_klog_state.message_formatted_max_size * message_element_consumer_idx;
+    enum KlogLevel requested_level           = 0;
+    uint32_t       actual_message_length     = 0;
     {
         /* These operations are done in the same order as in the producer, so we can have a higher degree of parellelism */
         requested_level = g_klog_state.b_message_levels[message_element_consumer_idx];
@@ -87,11 +96,7 @@ bool klog_async_consume(
             g_klog_state.prefix_console_size + 1
         );
 
-        /* Update the consumer's index into our ring buffer */
-        g_klog_state.message_element_consumer_idx = g_klog_state.message_element_consumer_idx + 1;
-        if (g_klog_state.message_element_consumer_idx >= g_klog_state.message_element_count) {
-            g_klog_state.message_element_consumer_idx = 0;
-        }
+        /* @todo Can these things go behind the "stop" lock that the message_produced_total_count and message_consumed_total_count will go behind? */
         if (g_klog_state.message_unconsumed_count < 1) {
             kdprintf("klog_async_consume consumed too many messages\n");
             exit(1);

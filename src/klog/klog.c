@@ -570,12 +570,14 @@ void klog_log(
         &packed_source_location
     );
 
+    /* @todo This can move outside the shared block into a producer specific lock */
     /* Update the producer's index into our ring buffer */
     g_klog_state.message_element_producer_idx = g_klog_state.message_element_producer_idx + 1;
     if (g_klog_state.message_element_producer_idx >= g_klog_state.message_element_count) {
         g_klog_state.message_element_producer_idx = 0;
     }
 
+    /* @todo Move these variable accesses behind a "stop" lock? */
     /* Let everyone know there is another message ready for consumption */
     g_klog_state.message_produced_total_count++;
     g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count + 1;
