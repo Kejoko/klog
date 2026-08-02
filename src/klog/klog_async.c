@@ -46,8 +46,11 @@ bool klog_async_consume(
     klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
-    /* @todo kjk 2026/08/01 I think we can make this stopping logic better */
-    /* @todo Move these variable accesses behind a "stop" lock? */
+    /**
+     * The variables in here which are actually shared amongst producer and consumer:
+     *  - message_produced_total_count
+     *  - message_unconsumed_count
+     */
     if (g_klog_state.message_produced_total_count == g_klog_state.message_consumed_total_count) {
         /* We have logged everything we should have - up to this point. Should we stop?? */
         if (should_deinit) {
@@ -56,6 +59,12 @@ bool klog_async_consume(
             return true;
         }
     }
+    if (g_klog_state.message_unconsumed_count < 1) {
+        kdprintf("klog_async_consume consumed too many messages\n");
+        exit(1);
+    }
+    g_klog_state.message_consumed_total_count++;
+    g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count - 1;
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_consumer);
@@ -108,16 +117,6 @@ bool klog_async_consume(
             g_klog_state.prefix_console_size + 1
         );
         klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_console);
-
-        klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
-        /* @todo Can these things go behind the "stop" lock that the message_produced_total_count and message_consumed_total_count will go behind? */
-        if (g_klog_state.message_unconsumed_count < 1) {
-            kdprintf("klog_async_consume consumed too many messages\n");
-            exit(1);
-        }
-        g_klog_state.message_consumed_total_count++;
-        g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count - 1;
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
         klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_empty);
     }
