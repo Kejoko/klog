@@ -646,6 +646,12 @@ void klog_log(
         return;
     }
 
+    /**
+     * @brief We are still leveraging the consumer's function here because we need to guard against
+     *      the case where this klog_log function is being invoked from multiple threads without a
+     *      backing consumer. This will prevent any weirdness from happening if two threads are
+     *      both trying to produce logs at the same time
+     */
     klog_async_consume();
 #endif
 }
