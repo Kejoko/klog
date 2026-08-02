@@ -54,6 +54,11 @@ char* klog_format_filename(
 
     free_cb((char*)s_sanitized_prefix);
 
+    if (full_filename == NULL) {
+        kdprintf("The resulting formatted filename is NULL for some reason\n");
+        exit(KLOG_EXIT_CODE);
+    }
+
     return full_filename;
 }
 
