@@ -41,21 +41,19 @@ bool klog_async_consume(
 ) {
     klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_full);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
+    const bool should_deinit = !g_klog_state.is_initialized;
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
+
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
 
     if (g_klog_state.message_produced_total_count == g_klog_state.message_consumed_total_count) {
         /* We have logged everything we should have - up to this point. Should we stop?? */
-        klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
-
-        if (!g_klog_state.is_initialized) {
+        if (should_deinit) {
             /* We should stop */
-            klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
             klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
             return true;
         }
-
-        /* Let's keep going */
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
     }
 
     /* Copy everything from the producer's buffers to our staging buffers, let the producer know it can go again */
@@ -63,24 +61,30 @@ bool klog_async_consume(
     const uint32_t offset_file                  = (g_klog_state.prefix_file_size + 1) * message_element_consumer_idx;
     const uint32_t offset_console               = (g_klog_state.prefix_console_size + 1) * message_element_consumer_idx;
     const uint32_t offset_messages_formatted    = g_klog_state.message_formatted_max_size * message_element_consumer_idx;
-    /* Get the level and length from the shared buffers of corresponding to messages - no need for staging buffer for 1 word */
-    const enum KlogLevel requested_level       = g_klog_state.b_message_levels[message_element_consumer_idx];
-    const uint32_t       actual_message_length = g_klog_state.b_message_lengths[message_element_consumer_idx];
+    enum KlogLevel requested_level              = 0;
+    uint32_t       actual_message_length        = 0;
     {
+        /* These operations are done in the same order as in the producer, so we can have a higher degree of parellelism */
+        requested_level = g_klog_state.b_message_levels[message_element_consumer_idx];
+
+        memcpy(
+            g_klog_state.b_messages_formatted_staging + offset_messages_formatted,
+            g_klog_state.b_messages_formatted + offset_messages_formatted,
+            g_klog_state.message_formatted_max_size
+        );
+
+        actual_message_length = g_klog_state.b_message_lengths[message_element_consumer_idx];
+
         memcpy(
             g_klog_state.b_prefixes_file_staging + offset_file,
             g_klog_state.b_prefixes_file + offset_file,
             g_klog_state.prefix_file_size + 1
         );
+
         memcpy(
             g_klog_state.b_prefixes_console_staging + offset_console,
             g_klog_state.b_prefixes_console + offset_console,
             g_klog_state.prefix_console_size + 1
-        );
-        memcpy(
-            g_klog_state.b_messages_formatted_staging + offset_messages_formatted,
-            g_klog_state.b_messages_formatted + offset_messages_formatted,
-            g_klog_state.message_formatted_max_size
         );
 
         /* Update the consumer's index into our ring buffer */

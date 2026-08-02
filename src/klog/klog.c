@@ -488,14 +488,43 @@ void klog_log(
         return;
     }
 
-    klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
-
-    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
-
     /* We are getting the time first, so it's closest to the actual point of invocation */
     char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_time_size);
     memset(s_prefix_time, '\0', g_klog_state.prefix_time_size);
     const KlogString packed_time = g_klog_config.format.use_timestamp ? klog_format_time(s_prefix_time) : (KlogString) { 0, NULL };
+
+    /* Get the information to create the message prefixes */
+    const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
+    const uint32_t    logger_name_index = p_logger_handle->value * g_klog_config.format.logger_name_max_length;
+    const char* const s_logger_name     = &(g_klog_state.b_logger_names[logger_name_index]); /* Will eventually need to go behind a mutex for logger modifications */
+    const char* const s_level           = &(g_klog_state.b_level_strings[G_klog_level_string_length * requested_level]);
+    const char* const s_level_colored   = &(g_klog_state.b_level_strings_colored[G_klog_colored_level_string_length * requested_level]);
+
+    /* More message prefixe prep */
+    const uint32_t* const   p_thread_id            = g_klog_config.format.use_thread_id ? &thread_id : NULL;
+    const KlogString        packed_name            = { g_klog_config.format.logger_name_max_length, s_logger_name };
+    const KlogString        packed_level_color     = { G_klog_colored_level_string_length, s_level_colored };
+    const KlogString        packed_level_file      = { G_klog_level_string_length, s_level };
+    const KlogString* const p_packed_level_console = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
+
+    /* Source location for the message prefix */
+    char* s_prefix_source_location = g_klog_state.b_prefixes_source_location
+        + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_source_location_size);
+    const KlogString packed_source_location = (g_klog_config.format.source_location_filename_max_length && s_filename)
+        ? klog_format_source_location(
+                s_prefix_source_location,
+                g_klog_config.format.source_location_filename_max_length,
+                s_filename,
+                line_number
+            )
+        : (KlogString) { 0, NULL };
+
+    klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+
+    /* Update the level buffer */
+    g_klog_state.b_message_levels[g_klog_state.message_element_producer_idx] = requested_level;
 
     /* Create the input string with the arguments injected - including space for null termination */
     char* s_message_formatted = g_klog_state.b_messages_formatted
@@ -511,42 +540,14 @@ void klog_log(
         p_args
     );
     va_end(p_args);
+
     /* Update the length buffer */
     g_klog_state.b_message_lengths[g_klog_state.message_element_producer_idx] = actual_message_length;
 
-    /* Get the information to create the message prefix */
-    const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
-    const uint32_t    logger_name_index = p_logger_handle->value * g_klog_config.format.logger_name_max_length;
-    const char* const s_logger_name     = &(g_klog_state.b_logger_names[logger_name_index]);
-    const char* const s_level           = &(g_klog_state.b_level_strings[G_klog_level_string_length * requested_level]);
-    const char* const s_level_colored   = &(g_klog_state.b_level_strings_colored[G_klog_colored_level_string_length * requested_level]);
-
-    const uint32_t* const   p_thread_id            = g_klog_config.format.use_thread_id ? &thread_id : NULL;
-    const KlogString        packed_name            = { g_klog_config.format.logger_name_max_length, s_logger_name };
-    const KlogString        packed_level_color     = { G_klog_colored_level_string_length, s_level_colored };
-    const KlogString        packed_level_file      = { G_klog_level_string_length, s_level };
-    const KlogString* const p_packed_level_console = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
-
-    char* s_prefix_source_location = g_klog_state.b_prefixes_source_location
-        + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_source_location_size);
-    const KlogString packed_source_location = (g_klog_config.format.source_location_filename_max_length && s_filename)
-        ? klog_format_source_location(
-                s_prefix_source_location,
-                g_klog_config.format.source_location_filename_max_length,
-                s_filename,
-                line_number
-            )
-        : (KlogString) { 0, NULL };
-
-    /* Get the pointers to the prefix buffers and reset them in preparation for setting */
+    /* Actually create the file prefix */
     char* s_prefix_file = g_klog_state.b_prefixes_file
         + (g_klog_state.message_element_producer_idx * (g_klog_state.prefix_file_size + 1));
-    char* s_prefix_console = g_klog_state.b_prefixes_console
-        + (g_klog_state.message_element_producer_idx * (g_klog_state.prefix_console_size + 1));
-    memset(s_prefix_file,    '\0', g_klog_state.prefix_file_size);
-    memset(s_prefix_console, '\0', g_klog_state.prefix_console_size);
-
-    /* Actually create the prefixes. We create one for the file and one for the console in case the console is using color */
+    memset(s_prefix_file, '\0', g_klog_state.prefix_file_size);
     const KlogString packed_prefix_file = klog_format_message_prefix(
         s_prefix_file,
         p_thread_id,
@@ -555,6 +556,11 @@ void klog_log(
         &packed_level_file,
         &packed_source_location
     );
+
+    /* Actually create the console prefix */
+    char* s_prefix_console = g_klog_state.b_prefixes_console
+        + (g_klog_state.message_element_producer_idx * (g_klog_state.prefix_console_size + 1));
+    memset(s_prefix_console, '\0', g_klog_state.prefix_console_size);
     const KlogString packed_prefix_console = klog_format_message_prefix(
         s_prefix_console,
         p_thread_id,
@@ -563,9 +569,6 @@ void klog_log(
         p_packed_level_console,
         &packed_source_location
     );
-
-    /* Update the level buffer */
-    g_klog_state.b_message_levels[g_klog_state.message_element_producer_idx] = requested_level;
 
     /* Update the producer's index into our ring buffer */
     g_klog_state.message_element_producer_idx = g_klog_state.message_element_producer_idx + 1;
