@@ -538,12 +538,15 @@ void klog_log(
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
 
-    /* @todo LOCK TIME BUFFER DOWN */
+    /**
+     * @brief We don't need to put a lock around the b_prefixes_time here, because it is gauranteed that only one
+     *      producer can be here with this specific message_element_producer_idx at a time. So no two producers can possibly
+     *      be modifying the same part of this buffer, and the consumer doesn't look in here, so we are safe.
+     */
     /* We are getting the time first, so it's closest to the actual point of invocation */
     char* s_prefix_time = g_klog_state.b_prefixes_time + (message_element_producer_idx * g_klog_state.prefix_time_size);
     memset(s_prefix_time, '\0', g_klog_state.prefix_time_size);
     const KlogString packed_time = g_klog_config.format.use_timestamp ? klog_format_time(s_prefix_time) : (KlogString) { 0, NULL };
-    /* @todo UNLOCK TIME BUFFER */
 
     /* Get the information to create the message prefixes */
     const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
@@ -559,7 +562,11 @@ void klog_log(
     const KlogString        packed_level_file      = { G_klog_level_string_length, s_level };
     const KlogString* const p_packed_level_console = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
 
-    /* @todo LOCK SOURCE LOCATION BUFFER DOWN */
+    /**
+     * @brief We don't need to put a lock around the b_prefixes_source_location here, because it is gauranteed that only one
+     *      producer can be here with this specific message_element_producer_idx at a time. So no two producers can possibly
+     *      be modifying the same part of this buffer, and the consumer doesn't look in here, so we are safe.
+     */
     /* Source location for the message prefix */
     char* s_prefix_source_location = g_klog_state.b_prefixes_source_location
         + (message_element_producer_idx * g_klog_state.prefix_source_location_size);
@@ -571,7 +578,6 @@ void klog_log(
                 line_number
             )
         : (KlogString) { 0, NULL };
-    /* @todo UNLOCK SOURCE LOCATION */
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_message_levels);
     /* Update the level buffer */
