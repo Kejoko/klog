@@ -645,6 +645,7 @@ void klog_log(
     if (g_klog_config.async.number_backing_threads > 0) {
         return;
     }
+
     klog_async_consume();
 #endif
 }

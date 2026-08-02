@@ -130,27 +130,18 @@ bool klog_async_consume(
     const KlogString packed_prefix_file    = { g_klog_state.prefix_file_size, s_prefix_file };
     const KlogString packed_prefix_console = { g_klog_state.prefix_console_size, s_prefix_console };
 
-    uint32_t i_starting_character = 0;
-    while (i_starting_character <= actual_message_length) {
-        const char* const p_newline         = strchr(s_message_formatted + i_starting_character, '\n');
-        const uint32_t    submessage_length = p_newline
-            ? p_newline - (s_message_formatted + i_starting_character)
-            : actual_message_length;
-
-        const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
-        if (requested_level <= g_klog_config.console.max_level) {
-            klog_platform_mutex_lock(g_klog_state.p_mutex_output_console);
-            klog_output_console(&packed_prefix_console, &packed_message);
-            klog_platform_mutex_unlock(g_klog_state.p_mutex_output_console);
-        }
-        if (g_klog_state.p_file && (requested_level <= g_klog_config.file.max_level)) {
-            klog_platform_mutex_lock(g_klog_state.p_mutex_output_file);
-            klog_output_file(g_klog_state.p_file, &packed_prefix_file, &packed_message);
-            klog_platform_mutex_unlock(g_klog_state.p_mutex_output_file);
-        }
-
-        i_starting_character = i_starting_character + submessage_length + 1;
-    }
+    klog_output(
+        actual_message_length,
+        s_message_formatted,
+        packed_prefix_console,
+        packed_prefix_file,
+        requested_level,
+        g_klog_config.console.max_level,
+        g_klog_config.file.max_level,
+        g_klog_state.p_file,
+        g_klog_state.p_mutex_output_console,
+        g_klog_state.p_mutex_output_file
+    );
 
     return false;
 }
