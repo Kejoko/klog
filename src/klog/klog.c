@@ -220,13 +220,23 @@ void klog_initialize(
     g_klog_state.s_filename = klog_format_filename(p_klog_file_info, g_klog_config.alloc.alloc_cb, g_klog_config.alloc.free_cb);
     g_klog_state.p_file     = klog_initialize_file(g_klog_state.s_filename);
 
-    g_klog_state.p_mutex_deinitialize   = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_shared         = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_producer       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_consumer       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_output_console = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_output_file    = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_deinitialize       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_message_levels     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_messages_formatted = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_message_lengths    = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_prefixes_file      = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_prefixes_console   = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_shared             = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_producer           = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_consumer           = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_output_console     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_output_file        = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
     klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_message_levels);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_messages_formatted);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_message_lengths);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_prefixes_file);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_prefixes_console);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_shared);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_producer);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_consumer);
@@ -273,24 +283,39 @@ void klog_deinitialize(
         g_klog_config.alloc.free_cb(g_klog_state.b_threads);
     }
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_deinitialize);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_message_levels);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_messages_formatted);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_message_lengths);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_prefixes_file);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_prefixes_console);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_shared);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_producer);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_consumer);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_output_console);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_output_file);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_deinitialize);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_message_levels);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_messages_formatted);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_message_lengths);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_prefixes_file);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_prefixes_console);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_shared);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_producer);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_consumer);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_output_console);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_output_file);
-    g_klog_state.b_threads              = NULL;
-    g_klog_state.p_mutex_deinitialize   = NULL;
-    g_klog_state.p_mutex_shared         = NULL;
-    g_klog_state.p_mutex_producer       = NULL;
-    g_klog_state.p_mutex_consumer       = NULL;
-    g_klog_state.p_mutex_output_console = NULL;
-    g_klog_state.p_mutex_output_file    = NULL;
+    g_klog_state.b_threads                  = NULL;
+    g_klog_state.p_mutex_deinitialize       = NULL;
+    g_klog_state.p_mutex_message_levels     = NULL;
+    g_klog_state.p_mutex_messages_formatted = NULL;
+    g_klog_state.p_mutex_message_lengths    = NULL;
+    g_klog_state.p_mutex_prefixes_file      = NULL;
+    g_klog_state.p_mutex_prefixes_console   = NULL;
+    g_klog_state.p_mutex_shared             = NULL;
+    g_klog_state.p_mutex_producer           = NULL;
+    g_klog_state.p_mutex_consumer           = NULL;
+    g_klog_state.p_mutex_output_console     = NULL;
+    g_klog_state.p_mutex_output_file        = NULL;
 
     klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_empty);
     klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_full);
@@ -521,11 +546,12 @@ void klog_log(
 
     klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
 
-    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
-
+    klog_platform_mutex_lock(g_klog_state.p_mutex_message_levels);
     /* Update the level buffer */
     g_klog_state.b_message_levels[g_klog_state.message_element_producer_idx] = requested_level;
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_message_levels);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_messages_formatted);
     /* Create the input string with the arguments injected - including space for null termination */
     char* s_message_formatted = g_klog_state.b_messages_formatted
         + (g_klog_state.message_element_producer_idx * g_klog_state.message_formatted_max_size);
@@ -540,10 +566,14 @@ void klog_log(
         p_args
     );
     va_end(p_args);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_messages_formatted);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_message_lengths);
     /* Update the length buffer */
     g_klog_state.b_message_lengths[g_klog_state.message_element_producer_idx] = actual_message_length;
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_message_lengths);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_prefixes_file);
     /* Actually create the file prefix */
     char* s_prefix_file = g_klog_state.b_prefixes_file
         + (g_klog_state.message_element_producer_idx * (g_klog_state.prefix_file_size + 1));
@@ -556,7 +586,9 @@ void klog_log(
         &packed_level_file,
         &packed_source_location
     );
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_file);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_prefixes_console);
     /* Actually create the console prefix */
     char* s_prefix_console = g_klog_state.b_prefixes_console
         + (g_klog_state.message_element_producer_idx * (g_klog_state.prefix_console_size + 1));
@@ -569,14 +601,18 @@ void klog_log(
         p_packed_level_console,
         &packed_source_location
     );
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_console);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_producer);
     /* @todo This can move outside the shared block into a producer specific lock */
     /* Update the producer's index into our ring buffer */
     g_klog_state.message_element_producer_idx = g_klog_state.message_element_producer_idx + 1;
     if (g_klog_state.message_element_producer_idx >= g_klog_state.message_element_count) {
         g_klog_state.message_element_producer_idx = 0;
     }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     /* @todo Move these variable accesses behind a "stop" lock? */
     /* Let everyone know there is another message ready for consumption */
     g_klog_state.message_produced_total_count++;
@@ -589,7 +625,6 @@ void klog_log(
         );
         exit(1);
     }
-
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
     klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_full);

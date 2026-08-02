@@ -46,7 +46,6 @@ bool klog_async_consume(
     klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
-
     /* @todo kjk 2026/08/01 I think we can make this stopping logic better */
     /* @todo Move these variable accesses behind a "stop" lock? */
     if (g_klog_state.message_produced_total_count == g_klog_state.message_consumed_total_count) {
@@ -57,7 +56,9 @@ bool klog_async_consume(
             return true;
         }
     }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_consumer);
     /* @todo This can move out of the shared block behind a consumer specific lock */
     /* Get our current consuming index and update the next consumer's index into the ring buffers */
     const uint32_t message_element_consumer_idx = g_klog_state.message_element_consumer_idx;
@@ -65,6 +66,7 @@ bool klog_async_consume(
     if (g_klog_state.message_element_consumer_idx >= g_klog_state.message_element_count) {
         g_klog_state.message_element_consumer_idx = 0;
     }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_consumer);
 
     /* Copy everything from the producer's buffers to our staging buffers, let the producer know it can go again */
     const uint32_t offset_file               = (g_klog_state.prefix_file_size + 1) * message_element_consumer_idx;
@@ -74,28 +76,40 @@ bool klog_async_consume(
     uint32_t       actual_message_length     = 0;
     {
         /* These operations are done in the same order as in the producer, so we can have a higher degree of parellelism */
-        requested_level = g_klog_state.b_message_levels[message_element_consumer_idx];
 
+        klog_platform_mutex_lock(g_klog_state.p_mutex_message_levels);
+        requested_level = g_klog_state.b_message_levels[message_element_consumer_idx];
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_message_levels);
+
+        klog_platform_mutex_lock(g_klog_state.p_mutex_messages_formatted);
         memcpy(
             g_klog_state.b_messages_formatted_staging + offset_messages_formatted,
             g_klog_state.b_messages_formatted + offset_messages_formatted,
             g_klog_state.message_formatted_max_size
         );
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_messages_formatted);
 
+        klog_platform_mutex_lock(g_klog_state.p_mutex_message_lengths);
         actual_message_length = g_klog_state.b_message_lengths[message_element_consumer_idx];
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_message_lengths);
 
+        klog_platform_mutex_lock(g_klog_state.p_mutex_prefixes_file);
         memcpy(
             g_klog_state.b_prefixes_file_staging + offset_file,
             g_klog_state.b_prefixes_file + offset_file,
             g_klog_state.prefix_file_size + 1
         );
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_file);
 
+        klog_platform_mutex_lock(g_klog_state.p_mutex_prefixes_console);
         memcpy(
             g_klog_state.b_prefixes_console_staging + offset_console,
             g_klog_state.b_prefixes_console + offset_console,
             g_klog_state.prefix_console_size + 1
         );
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_console);
 
+        klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
         /* @todo Can these things go behind the "stop" lock that the message_produced_total_count and message_consumed_total_count will go behind? */
         if (g_klog_state.message_unconsumed_count < 1) {
             kdprintf("klog_async_consume consumed too many messages\n");
@@ -103,8 +117,8 @@ bool klog_async_consume(
         }
         g_klog_state.message_consumed_total_count++;
         g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count - 1;
-
         klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+
         klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_empty);
     }
 
