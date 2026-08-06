@@ -46,11 +46,6 @@ bool klog_async_consume(
     klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
-    /**
-     * The variables in here which are actually shared amongst producer and consumer:
-     *  - message_produced_total_count
-     *  - message_unconsumed_count
-     */
     if (g_klog_state.message_produced_total_count == g_klog_state.message_consumed_total_count) {
         /* We have logged everything we should have - up to this point. Should we stop?? */
         if (should_deinit) {

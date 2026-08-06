@@ -516,7 +516,6 @@ void klog_log(
     klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
-    /* Let everyone know there is another message ready for consumption */
     g_klog_state.message_produced_total_count++;
     g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count + 1;
     if (g_klog_state.message_unconsumed_count > g_klog_state.message_element_count) {
