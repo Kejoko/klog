@@ -144,7 +144,21 @@ void klog_initialize(
         true,
         g_klog_config.alloc.alloc_cb
     );
+    g_klog_state.b_prefixes_file_staging = klog_initialize_buffer(
+        g_klog_state.message_element_count,
+        g_klog_state.prefix_file_size,
+        '\0',
+        true,
+        g_klog_config.alloc.alloc_cb
+    );
     g_klog_state.b_prefixes_console = klog_initialize_buffer(
+        g_klog_state.message_element_count,
+        g_klog_state.prefix_console_size,
+        '\0',
+        true,
+        g_klog_config.alloc.alloc_cb
+    );
+    g_klog_state.b_prefixes_console_staging = klog_initialize_buffer(
         g_klog_state.message_element_count,
         g_klog_state.prefix_console_size,
         '\0',
@@ -174,6 +188,23 @@ void klog_initialize(
         false,
         g_klog_config.alloc.alloc_cb
     );
+    g_klog_state.b_messages_formatted_staging = klog_initialize_buffer(
+        g_klog_state.message_element_count,
+        g_klog_state.message_formatted_max_size, /* Each message slot is null terminated */
+        '\0',
+        false,
+        g_klog_config.alloc.alloc_cb
+    );
+    g_klog_state.b_message_lengths = g_klog_config.alloc.alloc_cb(
+        sizeof(*g_klog_state.b_message_lengths)
+        * g_klog_state.message_element_count
+    );
+    memset(
+        g_klog_state.b_message_lengths,
+        0,
+        sizeof(*g_klog_state.b_message_lengths)
+        * g_klog_state.message_element_count
+    );
 
     g_klog_state.b_message_levels = g_klog_config.alloc.alloc_cb(
         sizeof(*g_klog_state.b_message_levels)
@@ -189,14 +220,28 @@ void klog_initialize(
     g_klog_state.s_filename = klog_format_filename(p_klog_file_info, g_klog_config.alloc.alloc_cb, g_klog_config.alloc.free_cb);
     g_klog_state.p_file     = klog_initialize_file(g_klog_state.s_filename);
 
-    g_klog_state.p_mutex_deinitialize = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_shared       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_producer     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_consumer     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_deinitialize       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_message_levels     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_messages_formatted = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_message_lengths    = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_prefixes_file      = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_prefixes_console   = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_shared             = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_producer           = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_consumer           = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_output_console     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_output_file        = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
     klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_message_levels);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_messages_formatted);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_message_lengths);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_prefixes_file);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_prefixes_console);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_shared);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_producer);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_consumer);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_output_console);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_output_file);
 
     g_klog_state.p_semaphore_messages_empty = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_semaphore_t));
     g_klog_state.p_semaphore_messages_full  = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_semaphore_t));
@@ -238,18 +283,39 @@ void klog_deinitialize(
         g_klog_config.alloc.free_cb(g_klog_state.b_threads);
     }
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_deinitialize);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_message_levels);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_messages_formatted);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_message_lengths);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_prefixes_file);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_prefixes_console);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_shared);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_producer);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_consumer);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_output_console);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_output_file);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_deinitialize);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_message_levels);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_messages_formatted);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_message_lengths);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_prefixes_file);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_prefixes_console);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_shared);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_producer);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_consumer);
-    g_klog_state.b_threads            = NULL;
-    g_klog_state.p_mutex_deinitialize = NULL;
-    g_klog_state.p_mutex_shared       = NULL;
-    g_klog_state.p_mutex_producer     = NULL;
-    g_klog_state.p_mutex_consumer     = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_output_console);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_output_file);
+    g_klog_state.b_threads                  = NULL;
+    g_klog_state.p_mutex_deinitialize       = NULL;
+    g_klog_state.p_mutex_message_levels     = NULL;
+    g_klog_state.p_mutex_messages_formatted = NULL;
+    g_klog_state.p_mutex_message_lengths    = NULL;
+    g_klog_state.p_mutex_prefixes_file      = NULL;
+    g_klog_state.p_mutex_prefixes_console   = NULL;
+    g_klog_state.p_mutex_shared             = NULL;
+    g_klog_state.p_mutex_producer           = NULL;
+    g_klog_state.p_mutex_consumer           = NULL;
+    g_klog_state.p_mutex_output_console     = NULL;
+    g_klog_state.p_mutex_output_file        = NULL;
 
     klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_empty);
     klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_full);
@@ -282,11 +348,15 @@ void klog_deinitialize(
 
     g_klog_state.prefix_file_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_file);
-    g_klog_state.b_prefixes_file = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_file_staging);
+    g_klog_state.b_prefixes_file         = NULL;
+    g_klog_state.b_prefixes_file_staging = NULL;
 
     g_klog_state.prefix_console_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_console);
-    g_klog_state.b_prefixes_console = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_console_staging);
+    g_klog_state.b_prefixes_console         = NULL;
+    g_klog_state.b_prefixes_console_staging = NULL;
 
     g_klog_state.prefix_time_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_prefixes_time);
@@ -298,7 +368,11 @@ void klog_deinitialize(
 
     g_klog_state.message_formatted_max_size = 0;
     g_klog_config.alloc.free_cb(g_klog_state.b_messages_formatted);
-    g_klog_state.b_messages_formatted = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_messages_formatted_staging);
+    g_klog_state.b_messages_formatted         = NULL;
+    g_klog_state.b_messages_formatted_staging = NULL;
+    g_klog_config.alloc.free_cb(g_klog_state.b_message_lengths);
+    g_klog_state.b_message_lengths = NULL;
 
     g_klog_config.alloc.free_cb(g_klog_state.b_message_levels);
     g_klog_state.b_message_levels = NULL;
@@ -408,8 +482,6 @@ void klog_log(
     (void)line_number;
     (void)format;
 #else
-    klog_platform_mutex_lock(g_klog_state.p_mutex_producer);
-
     klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
@@ -429,102 +501,21 @@ void klog_log(
 
     if (requested_level == 0) {
         kdprintf("Trying to log with the level set to OFF\n");
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
         return;
     }
     if ((requested_level > g_klog_config.console.max_level) && (requested_level > g_klog_config.file.max_level)) {
         kdprintf("Trying to log with a level that neither console nor file accept\n");
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
         return;
     }
 
     if (requested_level > g_klog_state.a_logger_levels[p_logger_handle->value]) {
         kdprintf("Trying to log with a level more verbose than the requested logger allows\n");
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
         return;
     }
 
     klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
-
-    /* We are getting the time first, so it's closest to the actual point of invocation */
-    char* s_prefix_time = g_klog_state.b_prefixes_time + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_time_size);
-    memset(s_prefix_time, '\0', g_klog_state.prefix_time_size);
-    const KlogString packed_time = g_klog_config.format.use_timestamp ? klog_format_time(s_prefix_time) : (KlogString) { 0, NULL };
-
-    /* Create the input string with the arguments injected - including space for null termination */
-    char* s_message_formatted = g_klog_state.b_messages_formatted
-        + (g_klog_state.message_element_producer_idx * g_klog_state.message_formatted_max_size);
-    va_list p_args;
-    va_start(p_args, s_format);
-    const uint32_t actual_message_length = klog_format_input_message(
-        s_message_formatted,
-        g_klog_state.message_formatted_max_size,
-        s_format,
-        p_args
-    );
-    va_end(p_args);
-
-    /* Get the information to create the message prefix */
-    const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
-    const uint32_t    logger_name_index = p_logger_handle->value * g_klog_config.format.logger_name_max_length;
-    const char* const s_logger_name     = &(g_klog_state.b_logger_names[logger_name_index]);
-    const char* const s_level           = &(g_klog_state.b_level_strings[G_klog_level_string_length * requested_level]);
-    const char* const s_level_colored   = &(g_klog_state.b_level_strings_colored[G_klog_colored_level_string_length * requested_level]);
-
-    const uint32_t* const   p_thread_id            = g_klog_config.format.use_thread_id ? &thread_id : NULL;
-    const KlogString        packed_name            = { g_klog_config.format.logger_name_max_length, s_logger_name };
-    const KlogString        packed_level_color     = { G_klog_colored_level_string_length, s_level_colored };
-    const KlogString        packed_level_file      = { G_klog_level_string_length, s_level };
-    const KlogString* const p_packed_level_console = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
-
-    char* s_prefix_source_location = g_klog_state.b_prefixes_source_location
-        + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_source_location_size);
-    const KlogString packed_source_location = (g_klog_config.format.source_location_filename_max_length && s_filename)
-        ? klog_format_source_location(
-                s_prefix_source_location,
-                g_klog_config.format.source_location_filename_max_length,
-                s_filename,
-                line_number
-            )
-        : (KlogString) { 0, NULL };
-
-    /* Get the pointers to the prefix buffers and reset them in preparation for setting */
-    char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_file_size);
-    char* s_prefix_console = g_klog_state.b_prefixes_console
-        + (g_klog_state.message_element_producer_idx * g_klog_state.prefix_console_size);
-    memset(s_prefix_file,    '\0', g_klog_state.prefix_file_size);
-    memset(s_prefix_console, '\0', g_klog_state.prefix_console_size);
-
-    /* Actually create the prefixes. We create one for the file and one for the console in case the console is using color */
-    const KlogString packed_prefix_file = klog_format_message_prefix(
-        s_prefix_file,
-        p_thread_id,
-        &packed_time,
-        &packed_name,
-        &packed_level_file,
-        &packed_source_location
-    );
-    const KlogString packed_prefix_console = klog_format_message_prefix(
-        s_prefix_console,
-        p_thread_id,
-        &packed_time,
-        &packed_name,
-        p_packed_level_console,
-        &packed_source_location
-    );
-
-    /* Update the level buffer */
-    g_klog_state.b_message_levels[g_klog_state.message_element_producer_idx] = requested_level;
-
-    /* Update the producer's index into our ring buffer */
-    g_klog_state.message_element_producer_idx = g_klog_state.message_element_producer_idx + 1;
-    if (g_klog_state.message_element_producer_idx >= g_klog_state.message_element_count) {
-        g_klog_state.message_element_producer_idx = 0;
-    }
-
-    /* Let everyone know there is another message ready for consumption */
     g_klog_state.message_produced_total_count++;
     g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count + 1;
     if (g_klog_state.message_unconsumed_count > g_klog_state.message_element_count) {
@@ -535,14 +526,117 @@ void klog_log(
         );
         exit(1);
     }
-
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_producer);
+    /* Update the producer's index into our ring buffer */
+    const uint32_t message_element_producer_idx = g_klog_state.message_element_producer_idx;
+    g_klog_state.message_element_producer_idx   = g_klog_state.message_element_producer_idx + 1;
+    if (g_klog_state.message_element_producer_idx >= g_klog_state.message_element_count) {
+        g_klog_state.message_element_producer_idx = 0;
+    }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
+
+    /**
+     * @brief We don't need to put a lock around the b_prefixes_time here, because it is gauranteed that only one
+     *      producer can be here with this specific message_element_producer_idx at a time. So no two producers can possibly
+     *      be modifying the same part of this buffer, and the consumer doesn't look in here, so we are safe.
+     */
+    /* We are getting the time first, so it's closest to the actual point of invocation */
+    char* s_prefix_time = g_klog_state.b_prefixes_time + (message_element_producer_idx * g_klog_state.prefix_time_size);
+    memset(s_prefix_time, '\0', g_klog_state.prefix_time_size);
+    const KlogString packed_time = g_klog_config.format.use_timestamp ? klog_format_time(s_prefix_time) : (KlogString) { 0, NULL };
+
+    /* Get the information to create the message prefixes */
+    const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
+    const uint32_t    logger_name_index = p_logger_handle->value * g_klog_config.format.logger_name_max_length;
+    const char* const s_logger_name     = &(g_klog_state.b_logger_names[logger_name_index]); /* Will eventually need to go behind a mutex for logger modifications */
+    const char* const s_level           = &(g_klog_state.b_level_strings[G_klog_level_string_length * requested_level]);
+    const char* const s_level_colored   = &(g_klog_state.b_level_strings_colored[G_klog_colored_level_string_length * requested_level]);
+
+    /* More message prefixe prep */
+    const uint32_t* const   p_thread_id            = g_klog_config.format.use_thread_id ? &thread_id : NULL;
+    const KlogString        packed_name            = { g_klog_config.format.logger_name_max_length, s_logger_name };
+    const KlogString        packed_level_color     = { G_klog_colored_level_string_length, s_level_colored };
+    const KlogString        packed_level_file      = { G_klog_level_string_length, s_level };
+    const KlogString* const p_packed_level_console = g_klog_config.console.use_color ? &packed_level_color : &packed_level_file;
+
+    /**
+     * @brief We don't need to put a lock around the b_prefixes_source_location here, because it is gauranteed that only one
+     *      producer can be here with this specific message_element_producer_idx at a time. So no two producers can possibly
+     *      be modifying the same part of this buffer, and the consumer doesn't look in here, so we are safe.
+     */
+    /* Source location for the message prefix */
+    char* s_prefix_source_location = g_klog_state.b_prefixes_source_location
+        + (message_element_producer_idx * g_klog_state.prefix_source_location_size);
+    const KlogString packed_source_location = (g_klog_config.format.source_location_filename_max_length && s_filename)
+        ? klog_format_source_location(
+                s_prefix_source_location,
+                g_klog_config.format.source_location_filename_max_length,
+                s_filename,
+                line_number
+            )
+        : (KlogString) { 0, NULL };
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_message_levels);
+    /* Update the level buffer */
+    g_klog_state.b_message_levels[message_element_producer_idx] = requested_level;
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_message_levels);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_messages_formatted);
+    /* Create the input string with the arguments injected - including space for null termination */
+    char* s_message_formatted = g_klog_state.b_messages_formatted
+        + (message_element_producer_idx * g_klog_state.message_formatted_max_size);
+    /* Clear the message buffer for the formatted message we just used */
+    memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
+    va_list p_args;
+    va_start(p_args, s_format);
+    const uint32_t actual_message_length = klog_format_input_message(
+        s_message_formatted,
+        g_klog_state.message_formatted_max_size,
+        s_format,
+        p_args
+    );
+    va_end(p_args);
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_messages_formatted);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_message_lengths);
+    /* Update the length buffer */
+    g_klog_state.b_message_lengths[message_element_producer_idx] = actual_message_length;
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_message_lengths);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_prefixes_file);
+    /* Actually create the file prefix */
+    char* s_prefix_file = g_klog_state.b_prefixes_file
+        + (message_element_producer_idx * (g_klog_state.prefix_file_size + 1));
+    memset(s_prefix_file, '\0', g_klog_state.prefix_file_size);
+    const KlogString packed_prefix_file = klog_format_message_prefix(
+        s_prefix_file,
+        p_thread_id,
+        &packed_time,
+        &packed_name,
+        &packed_level_file,
+        &packed_source_location
+    );
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_file);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_prefixes_console);
+    /* Actually create the console prefix */
+    char* s_prefix_console = g_klog_state.b_prefixes_console
+        + (message_element_producer_idx * (g_klog_state.prefix_console_size + 1));
+    memset(s_prefix_console, '\0', g_klog_state.prefix_console_size);
+    const KlogString packed_prefix_console = klog_format_message_prefix(
+        s_prefix_console,
+        p_thread_id,
+        &packed_time,
+        &packed_name,
+        p_packed_level_console,
+        &packed_source_location
+    );
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_console);
 
     klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_full);
 
-    klog_platform_mutex_unlock(g_klog_state.p_mutex_producer);
-
-    (void)actual_message_length;
     (void)packed_prefix_file;
     (void)packed_prefix_console;
 
@@ -550,6 +644,13 @@ void klog_log(
     if (g_klog_config.async.number_backing_threads > 0) {
         return;
     }
+
+    /**
+     * @brief We are still leveraging the consumer's function here because we need to guard against
+     *      the case where this klog_log function is being invoked from multiple threads without a
+     *      backing consumer. This will prevent any weirdness from happening if two threads are
+     *      both trying to produce logs at the same time
+     */
     klog_async_consume();
 #endif
 }

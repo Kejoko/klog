@@ -39,85 +39,104 @@ void* klog_async_thread_body(
 bool klog_async_consume(
     void
 ) {
-    klog_platform_mutex_lock(g_klog_state.p_mutex_consumer);
-
     klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_full);
 
-    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
+    klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
+    const bool should_deinit = !g_klog_state.is_initialized;
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     if (g_klog_state.message_produced_total_count == g_klog_state.message_consumed_total_count) {
         /* We have logged everything we should have - up to this point. Should we stop?? */
-        klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
-
-        if (!g_klog_state.is_initialized) {
+        if (should_deinit) {
             /* We should stop */
-            klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
             klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
-            klog_platform_mutex_unlock(g_klog_state.p_mutex_consumer);
             return true;
         }
-
-        /* Let's keep going */
-        klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
     }
-
-    /* Get the level from the global buffer of levels corresponding to messages */
-    const enum KlogLevel requested_level = g_klog_state.b_message_levels[g_klog_state.message_element_consumer_idx];
-
-    /* Get the formatted message from the message buffer */
-    char* s_message_formatted = g_klog_state.b_messages_formatted
-        + (g_klog_state.message_element_consumer_idx * g_klog_state.message_formatted_max_size);
-
-    /* @todo Do we need an additional buffer denoting lengths, for speed up so we don't have to use strlen? */
-    const uint32_t actual_message_length = strlen(s_message_formatted);
-
-    /* Get the console and file prefixes */
-    char* s_prefix_file    = g_klog_state.b_prefixes_file + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_file_size);
-    char* s_prefix_console = g_klog_state.b_prefixes_console
-        + (g_klog_state.message_element_consumer_idx * g_klog_state.prefix_console_size);
-    const KlogString packed_prefix_file    = { g_klog_state.prefix_file_size, s_prefix_file };
-    const KlogString packed_prefix_console = { g_klog_state.prefix_console_size, s_prefix_console };
-
-    uint32_t i_starting_character = 0;
-    while (i_starting_character <= actual_message_length) {
-        const char* const p_newline         = strchr(s_message_formatted + i_starting_character, '\n');
-        const uint32_t    submessage_length = p_newline
-            ? p_newline - (s_message_formatted + i_starting_character)
-            : actual_message_length;
-
-        const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
-        if (requested_level <= g_klog_config.console.max_level) {
-            klog_output_console(&packed_prefix_console, &packed_message);
-        }
-        if (g_klog_state.p_file && (requested_level <= g_klog_config.file.max_level)) {
-            klog_output_file(g_klog_state.p_file, &packed_prefix_file, &packed_message);
-        }
-
-        i_starting_character = i_starting_character + submessage_length + 1;
-    }
-
-    /* Clear the message buffer for the formatted message we just used */
-    /* @todo We shouldn't do this here - this should be done in the producer so we don't need to worry about staying sync-ed after outputting */
-    memset(s_message_formatted, 0, g_klog_state.message_formatted_max_size);
-
-    /* Update the consumer's index into our ring buffer */
-    g_klog_state.message_element_consumer_idx = g_klog_state.message_element_consumer_idx + 1;
-    if (g_klog_state.message_element_consumer_idx >= g_klog_state.message_element_count) {
-        g_klog_state.message_element_consumer_idx = 0;
-    }
-
     if (g_klog_state.message_unconsumed_count < 1) {
         kdprintf("klog_async_consume consumed too many messages\n");
         exit(1);
     }
     g_klog_state.message_consumed_total_count++;
     g_klog_state.message_unconsumed_count = g_klog_state.message_unconsumed_count - 1;
-
     klog_platform_mutex_unlock(g_klog_state.p_mutex_shared);
 
-    klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_empty);
-
+    klog_platform_mutex_lock(g_klog_state.p_mutex_consumer);
+    /* @todo This can move out of the shared block behind a consumer specific lock */
+    /* Get our current consuming index and update the next consumer's index into the ring buffers */
+    const uint32_t message_element_consumer_idx = g_klog_state.message_element_consumer_idx;
+    g_klog_state.message_element_consumer_idx   = g_klog_state.message_element_consumer_idx + 1;
+    if (g_klog_state.message_element_consumer_idx >= g_klog_state.message_element_count) {
+        g_klog_state.message_element_consumer_idx = 0;
+    }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_consumer);
+
+    /* Copy everything from the producer's buffers to our staging buffers, let the producer know it can go again */
+    const uint32_t offset_file               = (g_klog_state.prefix_file_size + 1) * message_element_consumer_idx;
+    const uint32_t offset_console            = (g_klog_state.prefix_console_size + 1) * message_element_consumer_idx;
+    const uint32_t offset_messages_formatted = g_klog_state.message_formatted_max_size * message_element_consumer_idx;
+    enum KlogLevel requested_level           = 0;
+    uint32_t       actual_message_length     = 0;
+    {
+        /* These operations are done in the same order as in the producer, so we can have a higher degree of parellelism */
+
+        klog_platform_mutex_lock(g_klog_state.p_mutex_message_levels);
+        requested_level = g_klog_state.b_message_levels[message_element_consumer_idx];
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_message_levels);
+
+        klog_platform_mutex_lock(g_klog_state.p_mutex_messages_formatted);
+        memcpy(
+            g_klog_state.b_messages_formatted_staging + offset_messages_formatted,
+            g_klog_state.b_messages_formatted + offset_messages_formatted,
+            g_klog_state.message_formatted_max_size
+        );
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_messages_formatted);
+
+        klog_platform_mutex_lock(g_klog_state.p_mutex_message_lengths);
+        actual_message_length = g_klog_state.b_message_lengths[message_element_consumer_idx];
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_message_lengths);
+
+        klog_platform_mutex_lock(g_klog_state.p_mutex_prefixes_file);
+        memcpy(
+            g_klog_state.b_prefixes_file_staging + offset_file,
+            g_klog_state.b_prefixes_file + offset_file,
+            g_klog_state.prefix_file_size + 1
+        );
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_file);
+
+        klog_platform_mutex_lock(g_klog_state.p_mutex_prefixes_console);
+        memcpy(
+            g_klog_state.b_prefixes_console_staging + offset_console,
+            g_klog_state.b_prefixes_console + offset_console,
+            g_klog_state.prefix_console_size + 1
+        );
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_prefixes_console);
+
+        klog_platform_semaphore_signal(g_klog_state.p_semaphore_messages_empty);
+    }
+
+    /* Get the formatted message from the message buffer */
+    char* s_message_formatted = g_klog_state.b_messages_formatted_staging + offset_messages_formatted;
+
+    /* Get the console and file prefixes */
+    char*            s_prefix_file         = g_klog_state.b_prefixes_file_staging + offset_file;
+    char*            s_prefix_console      = g_klog_state.b_prefixes_console_staging + offset_console;
+    const KlogString packed_prefix_file    = { g_klog_state.prefix_file_size, s_prefix_file };
+    const KlogString packed_prefix_console = { g_klog_state.prefix_console_size, s_prefix_console };
+
+    klog_output(
+        actual_message_length,
+        s_message_formatted,
+        packed_prefix_console,
+        packed_prefix_file,
+        requested_level,
+        g_klog_config.console.max_level,
+        g_klog_config.file.max_level,
+        g_klog_state.p_file,
+        g_klog_state.p_mutex_output_console,
+        g_klog_state.p_mutex_output_file
+    );
 
     return false;
 }

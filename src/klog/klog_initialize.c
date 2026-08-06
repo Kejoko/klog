@@ -203,7 +203,7 @@ FILE* klog_initialize_file(
     const char* const s_filename
 ) {
     if (s_filename == NULL) {
-        kdprintf("Not initializing output file\n");
+        kdprintf("Not initializing output file because filename is NULL\n");
         return NULL;
     }
 
@@ -212,7 +212,7 @@ FILE* klog_initialize_file(
         kdprintf("Failed to create log file at %s\n", s_filename);
         exit(KLOG_EXIT_CODE);
     }
-    kdprintf("Created output file pointer at %p\n", (void*)p_file);
+    kdprintf("Created output file pointer at %p, with name %s\n", (void*)p_file, s_filename);
 
     return p_file;
 }

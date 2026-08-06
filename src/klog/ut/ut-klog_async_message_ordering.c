@@ -21,7 +21,7 @@ char* populate_file(
 ) {
     /* Initialize klog with async and file information */
     KlogFormatInfo format_info = { 1, 4, 0, false, false };
-    KlogAsyncInfo  async_info  = { 5000, 4 };
+    KlogAsyncInfo  async_info  = { 5000, 1 };
     KlogFileInfo   file_info   = { KLOG_LEVEL_TRACE, "async_message_ordering" };
     klog_initialize(1, format_info, &async_info, NULL, &file_info, NULL);
 
@@ -74,8 +74,8 @@ int check(
     }
     const uint32_t line_size          = g_prefix_length + g_message_digit_count + 1; /* 12 for prefix, 4 for the digits + 1 for newline */
     const uint32_t file_size_expected = line_size * g_num_messages;
-    if (file_size != file_size_expected) {
-        printf("Actual file size (%d) != expecte file size (%d)\n", file_size, file_size_expected);
+    if ((uint32_t)file_size != file_size_expected) {
+        printf("Actual file size (%d) != expected file size (%d)\n", file_size, file_size_expected);
         return 1;
     }
 

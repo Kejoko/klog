@@ -29,6 +29,10 @@ typedef struct {
     bool     use_timestamp;
 } KlogFormatInfo;
 
+/**
+ * If number_backing_threads is greater than 1, the ordering of the output messages is not
+ * guaranteed to be the same as the order of the inputs
+ */
 typedef struct {
     uint32_t message_queue_number_elements;
     uint32_t number_backing_threads;
