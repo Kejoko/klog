@@ -52,7 +52,7 @@ if [ $should_pre_print -eq 0 ]; then
     P_EP="${NORMAL}passed (should pass)${NORMAL}"
     ME_EP="${FGYELLOW}MEMERR (should pass)${NORMAL}"
     F_EP="${FGRED}FAILED (should pass)${NORMAL}"
-SF_EP="${FGRED}SEGFLT (should pass)${NORMAL}"
+    SF_EP="${FGRED}SEGFLT (should pass)${NORMAL}"
 fi
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -101,7 +101,7 @@ run_test_update_failed_commands () {
       fi
     fi
 
-    { $command_to_run; } > /dev/null 2>&1
+    { $command_to_run; } > /dev/null 2>&1 # The curly braces basically allow us to silence any output fro core dumps
     local status=$?
 
     local did_expected=1

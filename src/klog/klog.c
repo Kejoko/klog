@@ -266,7 +266,7 @@ void klog_deinitialize(
 #else
     klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
-        kdprintf("Trying to de-initialize klog, when it is not yet initialized\n");
+        kdprintf("Trying to de-initialize klog, when it is not initialized\n");
         exit(KLOG_EXIT_CODE);
     }
 
@@ -501,7 +501,7 @@ void klog_log(
 #else
     klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
-        kdprintf("Trying to create klog logger, but klog is not initialized\n");
+        kdprintf("Trying to log, but klog is not initialized\n");
         exit(KLOG_EXIT_CODE);
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
