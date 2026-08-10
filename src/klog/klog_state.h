@@ -70,6 +70,7 @@ extern struct KlogState {
 
     klog_platform_thread_t*    b_threads;
     klog_platform_mutex_t*     p_mutex_deinitialize;
+    klog_platform_mutex_t*     p_mutex_logger_modification;
     klog_platform_mutex_t*     p_mutex_message_levels;
     klog_platform_mutex_t*     p_mutex_messages_formatted;
     klog_platform_mutex_t*     p_mutex_message_lengths;
