@@ -40,9 +40,10 @@ done
 P_EF="${FGRED}PASSED      (should fail)${NORMAL}"
 ME_EF="${FGYELLOW}MEMERR      (should fail)${NORMAL}"
 F_EF="${NORMAL}failed      (should fail)${NORMAL}"
-P_EP="${NORMAL}passed      (should pass)${NORMAL}"
+P_EP="${NORMAL} passed      (should pass)${NORMAL}"
 ME_EP="${FGYELLOW}MEMERR      (should pass)${NORMAL}"
 F_EP="${FGRED}FAILED      (should pass)${NORMAL}"
+SF_EP="${FGRED}SEGFLT      (should pass)${NORMAL}"
 
 if [ $should_pre_print -eq 0 ]; then
     P_EF="${FGRED}PASSED (should fail)${NORMAL}"
@@ -51,6 +52,7 @@ if [ $should_pre_print -eq 0 ]; then
     P_EP="${NORMAL}passed (should pass)${NORMAL}"
     ME_EP="${FGYELLOW}MEMERR (should pass)${NORMAL}"
     F_EP="${FGRED}FAILED (should pass)${NORMAL}"
+    SF_EP="${FGRED}SEGFLT (should pass)${NORMAL}"
 fi
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -99,7 +101,7 @@ run_test_update_failed_commands () {
       fi
     fi
 
-    $command_to_run > /dev/null 2>&1
+    { $command_to_run; } > /dev/null 2>&1 # The curly braces basically allow us to silence any output fro core dumps
     local status=$?
 
     local did_expected=1
@@ -109,18 +111,24 @@ run_test_update_failed_commands () {
             result_message=$P_EF
             failed_commands+=( "$command_to_run" )
             did_expected=0
-        elif [ "$status" -eq 54 ]; then
+        elif [ "$status" -eq 54 ]; then # This is our custom valgrind exit code - so map it to memerr
             result_message=$ME_EF
             failed_commands+=( "$command_to_run" )
             did_expected=0
+        elif [ "$status" -eq 139 ]; then # @todo Handle segfaults differently than normal failures
+            result_message=$F_EF
         else
             result_message=$F_EF
         fi
     else # Else (we should have succeeded)
         if [ "$status" -eq 0 ]; then
             result_message=$P_EP
-        elif [ "$status" -eq 54 ]; then
+        elif [ "$status" -eq 54 ]; then # This is our custom valgrind exit code - so map it to memerr
             result_message=$ME_EP
+            failed_commands+=( "$command_to_run" )
+            did_expected=0
+        elif [ "$status" -eq 139 ]; then # This is the seg fault code - so map it to segfault
+            result_message=$SF_EP
             failed_commands+=( "$command_to_run" )
             did_expected=0
         else

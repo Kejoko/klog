@@ -66,7 +66,7 @@ int check(
     );
 
     /* check post initialization values - not allocating threads here */
-    const uint32_t alloc_counter_init_expected = 31;
+    const uint32_t alloc_counter_init_expected = 32;
     if (g_alloc_counter != alloc_counter_init_expected) {
         printf("Alloc counter is %d after initialization when it should be %d\n", g_alloc_counter, alloc_counter_init_expected);
         return 1;
@@ -110,7 +110,7 @@ int check(
         printf("Alloc counter is %d after deinitializtion when it should be %d\n", g_alloc_counter, alloc_counter_deinit_expected);
         return 1;
     }
-    const uint32_t free_counter_deinit_expected = free_counter_created_expected + 30; /* @todo why is this different from the initial value (this is 1 less) */
+    const uint32_t free_counter_deinit_expected = free_counter_created_expected + 31; /* @todo why is this different from the initial value (this is 1 less) */
     if (g_free_counter != free_counter_deinit_expected) {
         printf("Free counter is %d after deinitialization when it should be %d\n", g_free_counter, free_counter_deinit_expected);
         return 1;

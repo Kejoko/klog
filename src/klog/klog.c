@@ -220,18 +220,20 @@ void klog_initialize(
     g_klog_state.s_filename = klog_format_filename(p_klog_file_info, g_klog_config.alloc.alloc_cb, g_klog_config.alloc.free_cb);
     g_klog_state.p_file     = klog_initialize_file(g_klog_state.s_filename);
 
-    g_klog_state.p_mutex_deinitialize       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_message_levels     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_messages_formatted = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_message_lengths    = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_prefixes_file      = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_prefixes_console   = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_shared             = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_producer           = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_consumer           = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_output_console     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
-    g_klog_state.p_mutex_output_file        = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_deinitialize        = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_logger_modification = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_message_levels      = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_messages_formatted  = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_message_lengths     = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_prefixes_file       = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_prefixes_console    = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_shared              = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_producer            = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_consumer            = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_output_console      = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
+    g_klog_state.p_mutex_output_file         = g_klog_config.alloc.alloc_cb(sizeof(klog_platform_mutex_t));
     klog_platform_mutex_initialize(g_klog_state.p_mutex_deinitialize);
+    klog_platform_mutex_initialize(g_klog_state.p_mutex_logger_modification);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_message_levels);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_messages_formatted);
     klog_platform_mutex_initialize(g_klog_state.p_mutex_message_lengths);
@@ -264,7 +266,7 @@ void klog_deinitialize(
 #else
     klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
-        kdprintf("Trying to de-initialize klog, when it is not yet initialized\n");
+        kdprintf("Trying to de-initialize klog, when it is not initialized\n");
         exit(KLOG_EXIT_CODE);
     }
 
@@ -283,6 +285,7 @@ void klog_deinitialize(
         g_klog_config.alloc.free_cb(g_klog_state.b_threads);
     }
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_deinitialize);
+    klog_platform_mutex_deinitialize(g_klog_state.p_mutex_logger_modification);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_message_levels);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_messages_formatted);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_message_lengths);
@@ -294,6 +297,7 @@ void klog_deinitialize(
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_output_console);
     klog_platform_mutex_deinitialize(g_klog_state.p_mutex_output_file);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_deinitialize);
+    g_klog_config.alloc.free_cb(g_klog_state.p_mutex_logger_modification);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_message_levels);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_messages_formatted);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_message_lengths);
@@ -304,18 +308,19 @@ void klog_deinitialize(
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_consumer);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_output_console);
     g_klog_config.alloc.free_cb(g_klog_state.p_mutex_output_file);
-    g_klog_state.b_threads                  = NULL;
-    g_klog_state.p_mutex_deinitialize       = NULL;
-    g_klog_state.p_mutex_message_levels     = NULL;
-    g_klog_state.p_mutex_messages_formatted = NULL;
-    g_klog_state.p_mutex_message_lengths    = NULL;
-    g_klog_state.p_mutex_prefixes_file      = NULL;
-    g_klog_state.p_mutex_prefixes_console   = NULL;
-    g_klog_state.p_mutex_shared             = NULL;
-    g_klog_state.p_mutex_producer           = NULL;
-    g_klog_state.p_mutex_consumer           = NULL;
-    g_klog_state.p_mutex_output_console     = NULL;
-    g_klog_state.p_mutex_output_file        = NULL;
+    g_klog_state.b_threads                   = NULL;
+    g_klog_state.p_mutex_deinitialize        = NULL;
+    g_klog_state.p_mutex_logger_modification = NULL;
+    g_klog_state.p_mutex_message_levels      = NULL;
+    g_klog_state.p_mutex_messages_formatted  = NULL;
+    g_klog_state.p_mutex_message_lengths     = NULL;
+    g_klog_state.p_mutex_prefixes_file       = NULL;
+    g_klog_state.p_mutex_prefixes_console    = NULL;
+    g_klog_state.p_mutex_shared              = NULL;
+    g_klog_state.p_mutex_producer            = NULL;
+    g_klog_state.p_mutex_consumer            = NULL;
+    g_klog_state.p_mutex_output_console      = NULL;
+    g_klog_state.p_mutex_output_file         = NULL;
 
     klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_empty);
     klog_platform_semaphore_deinitialize(g_klog_state.p_semaphore_messages_full);
@@ -399,10 +404,14 @@ const KlogLoggerHandle* klog_logger_create(
     (void)logger_name;
     return NULL;
 #else
+    klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(KLOG_EXIT_CODE);
     }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_logger_modification);
 
     if (g_klog_state.number_loggers_created >= g_klog_state.number_loggers_max) {
         kdprintf("Trying to create klog logger, but klog only allows %d loggers\n", g_klog_state.number_loggers_max);
@@ -432,6 +441,8 @@ const KlogLoggerHandle* klog_logger_create(
 
     g_klog_state.number_loggers_created++;
 
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_logger_modification);
+
     return p_logger_handle;
 #endif
 }
@@ -444,10 +455,14 @@ void klog_logger_level_set(
     (void)p_logger_handle;
     (void)updated_level;
 #else
+    klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
         kdprintf("Trying to create klog logger, but klog is not initialized\n");
         exit(KLOG_EXIT_CODE);
     }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
+
+    klog_platform_mutex_lock(g_klog_state.p_mutex_logger_modification);
 
     if (p_logger_handle->value >= g_klog_state.number_loggers_created) {
         kdprintf(
@@ -464,6 +479,8 @@ void klog_logger_level_set(
     }
 
     g_klog_state.a_logger_levels[p_logger_handle->value] = updated_level;
+
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_logger_modification);
 #endif
 }
 
@@ -484,15 +501,17 @@ void klog_log(
 #else
     klog_platform_mutex_lock(g_klog_state.p_mutex_deinitialize);
     if (!g_klog_state.is_initialized) {
-        kdprintf("Trying to create klog logger, but klog is not initialized\n");
+        kdprintf("Trying to log, but klog is not initialized\n");
         exit(KLOG_EXIT_CODE);
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_deinitialize);
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_logger_modification);
     if (p_logger_handle->value >= g_klog_state.number_loggers_created) {
         kdprintf("Trying to log with logger %d, when only %d loggers exist\n", p_logger_handle->value, g_klog_state.number_loggers_created);
         exit(KLOG_EXIT_CODE);
     }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_logger_modification);
 
     if (requested_level > KLOG_LEVEL_TRACE) {
         kdprintf("Trying to log with level (%d) greater than trace (%d)\n", requested_level, KLOG_LEVEL_TRACE);
@@ -503,15 +522,19 @@ void klog_log(
         kdprintf("Trying to log with the level set to OFF\n");
         return;
     }
+
     if ((requested_level > g_klog_config.console.max_level) && (requested_level > g_klog_config.file.max_level)) {
         kdprintf("Trying to log with a level that neither console nor file accept\n");
         return;
     }
 
+    klog_platform_mutex_lock(g_klog_state.p_mutex_logger_modification);
     if (requested_level > g_klog_state.a_logger_levels[p_logger_handle->value]) {
         kdprintf("Trying to log with a level more verbose than the requested logger allows\n");
+        klog_platform_mutex_unlock(g_klog_state.p_mutex_logger_modification);
         return;
     }
+    klog_platform_mutex_unlock(g_klog_state.p_mutex_logger_modification);
 
     klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
 
@@ -548,9 +571,10 @@ void klog_log(
     const KlogString packed_time = g_klog_config.format.use_timestamp ? klog_format_time(s_prefix_time) : (KlogString) { 0, NULL };
 
     /* Get the information to create the message prefixes */
+    /* b_logger_names doesn't need to be behind a mutex because it will never get updated after creation */
     const uint32_t    thread_id         = (uint32_t)klog_platform_get_current_thread_id();
     const uint32_t    logger_name_index = p_logger_handle->value * g_klog_config.format.logger_name_max_length;
-    const char* const s_logger_name     = &(g_klog_state.b_logger_names[logger_name_index]); /* Will eventually need to go behind a mutex for logger modifications */
+    const char* const s_logger_name     = &(g_klog_state.b_logger_names[logger_name_index]);
     const char* const s_level           = &(g_klog_state.b_level_strings[G_klog_level_string_length * requested_level]);
     const char* const s_level_colored   = &(g_klog_state.b_level_strings_colored[G_klog_colored_level_string_length * requested_level]);
 

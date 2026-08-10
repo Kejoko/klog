@@ -10,7 +10,9 @@ int main(
     void
 ) {
     /* Fail because klog is uninitialized */
+    printf("Attempting to create logger without initializing klog\n");
     const KlogLoggerHandle* handle_1 = klog_logger_create("MyLogger", 8);
+    printf("Attempting to create logger without initializing klog - done\n");
     klog(handle_1, KLOG_LEVEL_INFO, "This should not appear");
     klog_logger_level_set(handle_1, KLOG_LEVEL_DEBUG);
     klog(handle_1, KLOG_LEVEL_TRACE, "This should also not appear");

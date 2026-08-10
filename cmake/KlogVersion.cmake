@@ -22,4 +22,5 @@ endfunction()
 # set_klog_versions(0 0 15) # Don't allocate when formatting logger names
 # set_klog_versions(0 0 16) # Examples!
 # set_klog_versions(0 0 17) # Async logging with dedicated threads
-set_klog_versions(0 0 18) # Async logging improvements
+# set_klog_versions(0 0 18) # Async logging improvements
+set_klog_versions(0 0 19) # Non-logging async safety
