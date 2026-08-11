@@ -84,8 +84,48 @@ bool klog_initialize_are_parameters_valid(
 
     if (p_klog_file_info) {
         /* @todo kjk 2026/01/21 Validate file info */
-        /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parmaeters_are_valid.c */
+        /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parameters_are_valid.c */
         /* @todo kjk 2026/07/28 Make sure filename prefix is valid */
+
+        if (p_klog_file_info->max_level > KLOG_LEVEL_TRACE) {
+            kdprintf(
+                "Trying to initialize klog with file's max level (%d) more verbose than KLOG_LEVEL_TRACE (%d)\n",
+                p_klog_file_info->max_level,
+                KLOG_LEVEL_TRACE
+            );
+            return false;
+        }
+
+        if (p_klog_file_info->s_filename_prefix == NULL) {
+            kdprintf("Trying to initialize klog with file info, but the filename prefix is NULL\n");
+            return false;
+        }
+
+        const uint32_t filename_length = strlen(p_klog_file_info->s_filename_prefix);
+        if (filename_length == 0) {
+            kdprintf("Trying to initialize klog with file info, but the filename prefix has a length of 0\n");
+            return false;
+        }
+        for (uint32_t idx_char = 0; idx_char < filename_length; ++idx_char) {
+            const char current_char = p_klog_file_info->s_filename_prefix[idx_char];
+            const bool is_invalid   =
+                /* A bunch of invalid non-character characters (bell, backspace, etc) */
+                current_char <= 8 ||
+                /* Allow tab (9) and newline (10), but disallow vertical tab (11) and form feed (12) */
+                current_char == 11 || current_char == 12 ||
+                /* Allow carriage return (13) and newline (10), but disallow shift out (14), and everything everything after it and before space (12) */
+                (current_char >= 14 && current_char <= 30) ||
+                /* Disallow delete (127) */
+                current_char == 127;
+            if (is_invalid) {
+                kdprintf(
+                    "Trying to initialize klog with file info, but the filename contains an invalid character at index %d (character code = %d)\n",
+                    idx_char,
+                    (uint32_t)current_char
+                );
+                return false;
+            }
+        }
     }
 
     if (p_klog_alloc_info) {
@@ -99,8 +139,20 @@ bool klog_initialize_are_parameters_valid(
         }
     }
 
-    /* @todo kjk 2026/01/21 This is currently unused */
-    (void)p_klog_console_info;
+    if (p_klog_console_info) {
+        /* @todo kjk 2026/01/21 Validate file info */
+        /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parameters_are_valid.c */
+        /* @todo kjk 2026/07/28 Make sure filename prefix is valid */
+
+        if (p_klog_console_info->max_level > KLOG_LEVEL_TRACE) {
+            kdprintf(
+                "Trying to initialize klog with console's max level (%d) more verbose than KLOG_LEVEL_TRACE (%d)\n",
+                p_klog_console_info->max_level,
+                KLOG_LEVEL_TRACE
+            );
+            return false;
+        }
+    }
 
     return true;
 }
