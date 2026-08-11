@@ -202,6 +202,7 @@ int main(
         || no_logger_name_length()
         || no_message_length()
         || no_message_queue_elements()
+        || invalid_filenames()
         || no_backing_threads()
         || no_alloc_cb()
         || no_free_cb()
