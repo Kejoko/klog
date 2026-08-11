@@ -71,7 +71,6 @@ bool klog_initialize_are_parameters_valid(
     }
 
     if (p_klog_async_info) {
-        /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parmaeters_are_valid.c */
         if (p_klog_async_info->message_queue_number_elements == 0) {
             kdprintf("Trying to initialize klog with an async message queue of size 0\n");
             return false;
@@ -83,10 +82,6 @@ bool klog_initialize_are_parameters_valid(
     }
 
     if (p_klog_file_info) {
-        /* @todo kjk 2026/01/21 Validate file info */
-        /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parameters_are_valid.c */
-        /* @todo kjk 2026/07/28 Make sure filename prefix is valid */
-
         if (p_klog_file_info->max_level > KLOG_LEVEL_TRACE) {
             kdprintf(
                 "Trying to initialize klog with file's max level (%d) more verbose than KLOG_LEVEL_TRACE (%d)\n",
@@ -140,10 +135,6 @@ bool klog_initialize_are_parameters_valid(
     }
 
     if (p_klog_console_info) {
-        /* @todo kjk 2026/01/21 Validate file info */
-        /* @todo kjk 2026/02/09 Add test to ut-klog_initialize_parameters_are_valid.c */
-        /* @todo kjk 2026/07/28 Make sure filename prefix is valid */
-
         if (p_klog_console_info->max_level > KLOG_LEVEL_TRACE) {
             kdprintf(
                 "Trying to initialize klog with console's max level (%d) more verbose than KLOG_LEVEL_TRACE (%d)\n",

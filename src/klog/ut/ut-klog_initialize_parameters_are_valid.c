@@ -94,6 +94,59 @@ int no_backing_threads(
     return 0;
 }
 
+int invalid_filenames(
+    void
+) {
+    char*        prefix    = calloc(2, 1);
+    KlogFileInfo file_info = { KLOG_LEVEL_TRACE, prefix };
+
+    prefix[0] = 7;
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, &file_info, NULL)) {
+        printf("Parameters should be invalid when KlogFileInfo's prefix contains character 7\n");
+        return 1;
+    }
+
+    prefix[0] = 11;
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, &file_info, NULL)) {
+        printf("Parameters should be invalid when KlogFileInfo's prefix contains character 11\n");
+        return 1;
+    }
+
+    prefix[0] = 12;
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, &file_info, NULL)) {
+        printf("Parameters should be invalid when KlogFileInfo's prefix contains character 12\n");
+        return 1;
+    }
+
+    prefix[0] = 20;
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, &file_info, NULL)) {
+        printf("Parameters should be invalid when KlogFileInfo's prefix contains character 20\n");
+        return 1;
+    }
+
+    prefix[0] = 127;
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, &file_info, NULL)) {
+        printf("Parameters should be invalid when KlogFileInfo's prefix contains character 127\n");
+        return 1;
+    }
+
+    prefix[0] = '\0';
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, &file_info, NULL)) {
+        printf("Parameters should be invalid when KlogFileInfo's prefix has length of 0\n");
+        return 1;
+    }
+
+    free(prefix);
+
+    file_info.s_filename_prefix = NULL;
+    if (klog_initialize_are_parameters_valid(false, 10, (KlogFormatInfo) { 10, 0, 0, false, false }, NULL, NULL, &file_info, NULL)) {
+        printf("Parameters should be invalid when KlogFileInfo's prefix is NULL\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 int no_alloc_cb(
     void
 ) {
