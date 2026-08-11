@@ -14,7 +14,7 @@ void run(
     const uint32_t num_logs = 50000;
 
     const KlogFormatInfo format_info = { 4, 20, 0, false, false };
-    const KlogAsyncInfo  async_info  = { 100, num_threads };
+    const KlogAsyncInfo  async_info  = { 100, num_threads, false, false };
     const KlogFileInfo   file_info   = { KLOG_LEVEL_TRACE, "klog_sync_vs_async" };
 
     const KlogAsyncInfo* p_async_info = (num_threads > 0) ? &async_info : NULL;

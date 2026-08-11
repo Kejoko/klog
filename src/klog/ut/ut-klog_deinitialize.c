@@ -35,7 +35,7 @@ void print_memory(
 int check(
     void
 ) {
-    KlogAsyncInfo   async_info   = { 100, 3 };
+    KlogAsyncInfo   async_info   = { 100, 3, false, false };
     KlogFormatInfo  format_info  = { 6, 100, 10, true, true };
     KlogConsoleInfo console_info = { KLOG_LEVEL_INFO, true };
     KlogFileInfo    file_info    = { KLOG_LEVEL_TRACE, "BASIC\tPREFIX" };

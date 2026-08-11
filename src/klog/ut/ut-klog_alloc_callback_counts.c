@@ -51,7 +51,7 @@ int check(
     const uint32_t max_number_loggers = 2;
     const uint32_t max_name_length    = 3;
 
-    const KlogAsyncInfo   async_info   = { 20, 5 };
+    const KlogAsyncInfo   async_info   = { 20, 5, false, false };
     const KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
     const KlogFileInfo    file_info    = { KLOG_LEVEL_TRACE, "alloc_callback_counts" };
     const KlogAllocInfo   alloc_info   = { &malloc_wrapper, &free_wrapper };

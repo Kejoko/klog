@@ -53,7 +53,7 @@ int no_message_length(
 int no_message_queue_elements(
     void
 ) {
-    KlogAsyncInfo async_info = { 0, 10 };
+    KlogAsyncInfo async_info = { 0, 10, false, false };
     if (
         klog_initialize_are_parameters_valid(
             false,
@@ -75,7 +75,7 @@ int no_message_queue_elements(
 int no_backing_threads(
     void
 ) {
-    KlogAsyncInfo async_info = { 10, 0 };
+    KlogAsyncInfo async_info = { 10, 0, false, false };
     if (
         klog_initialize_are_parameters_valid(
             false,

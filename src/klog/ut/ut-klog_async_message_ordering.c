@@ -21,7 +21,7 @@ char* populate_file(
 ) {
     /* Initialize klog with async and file information */
     KlogFormatInfo format_info = { 1, 4, 0, false, false };
-    KlogAsyncInfo  async_info  = { 5000, 1 };
+    KlogAsyncInfo  async_info  = { 5000, 1, false, false };
     KlogFileInfo   file_info   = { KLOG_LEVEL_TRACE, "async_message_ordering" };
     klog_initialize(1, format_info, &async_info, NULL, &file_info, NULL);
 

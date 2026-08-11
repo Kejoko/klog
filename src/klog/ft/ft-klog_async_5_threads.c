@@ -13,7 +13,7 @@ int main(
     void
 ) {
     KlogFormatInfo  format_info  = { 1, 50, 0, false, false };
-    KlogAsyncInfo   async_info   = { 100, 5 };
+    KlogAsyncInfo   async_info   = { 100, 5, false, false };
     KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
     klog_initialize(4, format_info, &async_info, &console_info, NULL, NULL);
 
