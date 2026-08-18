@@ -1,10 +1,13 @@
 .build*
 .cache
+out
 
 scratch/
 
+CMakeSettings.json
 compile_commands.json
 
 notes.md
 
 .vscode
+.vs
