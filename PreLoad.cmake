@@ -5,7 +5,9 @@
 # the cmake command                                                           #
 # =========================================================================== #
 
-set(CMAKE_GENERATOR "Ninja" CACHE INTERNAL "" FORCE)
+if (NOT WIN32)
+	set(CMAKE_GENERATOR "Ninja" CACHE INTERNAL "" FORCE)
+endif ()
 
 # Not using clang, so we can have the minimal set of tools
 # set(CMAKE_C_COMPILER "clang" CACHE STRING "" FORCE)

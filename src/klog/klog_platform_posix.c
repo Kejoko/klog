@@ -1,3 +1,5 @@
+#if defined(__unix__) || defined(__linux__) || defined(__APPLE__)
+
 #include "./klog_platform.h"
 
 #include <errno.h>
@@ -251,3 +253,5 @@ timepoint_t klog_platform_get_current_timepoint(
 
     return timepoint;
 }
+
+#endif /* defined(__unix__) || defined(__linux__) || defined(__APPLE__) */

@@ -5,7 +5,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+
+/* @todo Do we actually need this unistd.h include for linux?? Should be wrapped by platform layer */
+/* #include <unistd.h> */
 
 #include "klog/klog.h"
 
