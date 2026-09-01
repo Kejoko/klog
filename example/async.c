@@ -15,8 +15,10 @@ int main(
     /* Set the thread id logging to true to display logging thread's ids */
     KlogFormatInfo  format_info = { 6, 100, 0, true, false };
     KlogAsyncInfo   async_info  = {
-        20, /* Maximum of 30 elements in the message queue before any blocking occurs */
-        3,  /* The number of backing threads that consume the log statements from the message queue */
+        20,    /* Maximum of 30 elements in the message queue before any blocking occurs */
+        3,     /* The number of backing threads that consume the log statements from the message queue */
+        false, /* Whether or not we should overwrite the oldest message in the buffer if the buffer is full */
+        false  /* Whether or not we should discard all of the unlogged messages upon de-initialization */
     };
     KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
     klog_initialize(3, format_info, &async_info, &console_info, NULL, NULL);

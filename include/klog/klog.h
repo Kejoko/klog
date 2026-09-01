@@ -10,6 +10,19 @@
 typedef struct KlogLoggerHandle KlogLoggerHandle;
 
 /**
+ * @enum KlogLevel The different levels of verbosity
+ */
+enum KlogLevel {
+    KLOG_LEVEL_OFF   = 0,
+    KLOG_LEVEL_FATAL = 1,
+    KLOG_LEVEL_ERROR = 2,
+    KLOG_LEVEL_WARN  = 3,
+    KLOG_LEVEL_INFO  = 4,
+    KLOG_LEVEL_DEBUG = 5,
+    KLOG_LEVEL_TRACE = 6
+};
+
+/**
  * @brief Formatting information
  *
  * @var logger_name_max_length
@@ -36,6 +49,8 @@ typedef struct {
 typedef struct {
     uint32_t message_queue_number_elements;
     uint32_t number_backing_threads;
+    bool     full_buffer_overwrite_oldest_message; /* @note this is not supported currently */
+    bool     deinitialize_discard_unconsumed;
 } KlogAsyncInfo;
 
 typedef struct {
@@ -59,19 +74,6 @@ typedef struct {
         void*
     );
 } KlogAllocInfo;
-
-/**
- * @enum KlogLevel The different levels of verbosity
- */
-enum KlogLevel {
-    KLOG_LEVEL_OFF   = 0,
-    KLOG_LEVEL_FATAL = 1,
-    KLOG_LEVEL_ERROR = 2,
-    KLOG_LEVEL_WARN  = 3,
-    KLOG_LEVEL_INFO  = 4,
-    KLOG_LEVEL_DEBUG = 5,
-    KLOG_LEVEL_TRACE = 6
-};
 
 void klog_initialize(
     const uint32_t         max_number_loggers,

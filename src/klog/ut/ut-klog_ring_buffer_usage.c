@@ -116,7 +116,7 @@ int single_element(
     const uint32_t  message_total_length = message_max_length + 1;
     const uint32_t  num_elements         = 1;
     KlogFormatInfo  format_info          = { logger_name_length, message_max_length, 0, false, false };
-    KlogAsyncInfo   async_info           = { num_elements, 3 };
+    KlogAsyncInfo   async_info           = { num_elements, 3, false, false };
     KlogConsoleInfo console_info         = { KLOG_LEVEL_INFO, false };
     klog_initialize(5, format_info, &async_info, &console_info, NULL, NULL);
 
@@ -219,7 +219,7 @@ int multiple_elements(
     const uint32_t  message_total_length = message_max_length + 1; /* +1 because each is null terminated */
     const uint32_t  num_elements         = 3;
     KlogFormatInfo  format_info          = { logger_name_length, message_max_length, 0, false, false };
-    KlogAsyncInfo   async_info           = { num_elements, 3 };
+    KlogAsyncInfo   async_info           = { num_elements, 3, false, false };
     KlogConsoleInfo console_info         = { KLOG_LEVEL_DEBUG, false };
     klog_initialize(num_loggers, format_info, &async_info, &console_info, NULL, NULL);
 
