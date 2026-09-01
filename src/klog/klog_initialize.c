@@ -102,17 +102,17 @@ bool klog_initialize_are_parameters_valid(
             return false;
         }
         for (uint32_t idx_char = 0; idx_char < filename_length; ++idx_char) {
-            const char current_char = p_klog_file_info->s_filename_prefix[idx_char];
-            const bool is_invalid   =
+            const char current_char    = p_klog_file_info->s_filename_prefix[idx_char];
+            const bool char_is_invalid =
                 /* A bunch of invalid non-character characters (bell, backspace, etc) */
                 current_char <= 8 ||
                 /* Allow tab (9) and newline (10), but disallow vertical tab (11) and form feed (12) */
                 current_char == 11 || current_char == 12 ||
-                /* Allow carriage return (13) and newline (10), but disallow shift out (14), and everything everything after it and before space (12) */
-                (current_char >= 14 && current_char <= 30) ||
+                /* Allow carriage return (13), but disallow shift out (14), and everything everything after it and before space (32) */
+                (current_char >= 14 && current_char <= 31) ||
                 /* Disallow delete (127) */
                 current_char == 127;
-            if (is_invalid) {
+            if (char_is_invalid) {
                 kdprintf(
                     "Trying to initialize klog with file info, but the filename contains an invalid character at index %d (character code = %d)\n",
                     idx_char,
