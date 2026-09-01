@@ -536,9 +536,7 @@ void klog_log(
     }
     klog_platform_mutex_unlock(g_klog_state.p_mutex_logger_modification);
 
-    if (!g_klog_config.async.full_buffer_overwrite_oldest_message) {
-        klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
-    }
+    klog_platform_semaphore_wait(g_klog_state.p_semaphore_messages_empty);
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     g_klog_state.message_produced_total_count++;

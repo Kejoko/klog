@@ -49,8 +49,8 @@ typedef struct {
 typedef struct {
     uint32_t message_queue_number_elements;
     uint32_t number_backing_threads;
-    bool     full_buffer_overwrite_oldest_message;
-    bool     deinitialize_discard_unconsumed;
+    bool     full_buffer_overwrite_oldest_message; /* @note this is not supported currently */
+    bool     deinitialize_discard_unconsumed;      /* @note this is not supported currently */
 } KlogAsyncInfo;
 
 typedef struct {
