@@ -6,14 +6,14 @@
 
 #include "../klog_debug_util.h"
 
-#define NUM_LOG_STATEMENTS 2000
+#define NUM_LOG_STATEMENTS 200
 
-/* This is testing klog with max async backing threads set to 5 */
+/* This is testing klog with async backing threads set to 3, with discarding unconsumed messages upon deinitialization */
 int main(
     void
 ) {
     KlogFormatInfo  format_info  = { 1, 50, 0, false, false };
-    KlogAsyncInfo   async_info   = { 100, 5, false, false };
+    KlogAsyncInfo   async_info   = { 100, 3, false, true };
     KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
     klog_initialize(4, format_info, &async_info, &console_info, NULL, NULL);
 
