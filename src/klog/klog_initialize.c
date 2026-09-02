@@ -43,7 +43,7 @@ char* klog_initialize_buffer(
 
 bool klog_initialize_are_parameters_valid(
     const bool                   klog_is_initialized,
-    const uint32_t               max_number_loggers,
+    const uint32_t               logger_count_max,
     const KlogFormatInfo         klog_format_info,
     const KlogAsyncInfo* const   p_klog_async_info,
     const KlogConsoleInfo* const p_klog_console_info,
@@ -55,37 +55,37 @@ bool klog_initialize_are_parameters_valid(
         return false;
     }
 
-    if (max_number_loggers == 0) {
+    if (logger_count_max == 0) {
         kdprintf("Trying to initialize klog with maximum number of loggers set to 0");
         return false;
     }
 
-    if (klog_format_info.logger_name_max_length == 0) {
+    if (klog_format_info.logger_name_length_max == 0) {
         kdprintf("Trying to initialize klog with maximum length of logger names set to 0");
         return false;
     }
 
-    if (klog_format_info.message_max_length == 0) {
+    if (klog_format_info.message_length_max == 0) {
         kdprintf("Trying to initialize klog with maximum length of messages set to 0\n");
         return false;
     }
 
     if (p_klog_async_info) {
-        if (p_klog_async_info->message_queue_number_elements == 0) {
+        if (p_klog_async_info->message_queue_element_count == 0) {
             kdprintf("Trying to initialize klog with an async message queue of size 0\n");
             return false;
         }
-        if (p_klog_async_info->number_backing_threads == 0) {
+        if (p_klog_async_info->backing_thread_count == 0) {
             kdprintf("Trying to initialize klog with async information, but using 0 backing threads\n");
             return false;
         }
     }
 
     if (p_klog_file_info) {
-        if (p_klog_file_info->max_level > KLOG_LEVEL_TRACE) {
+        if (p_klog_file_info->level_max > KLOG_LEVEL_TRACE) {
             kdprintf(
                 "Trying to initialize klog with file's max level (%d) more verbose than KLOG_LEVEL_TRACE (%d)\n",
-                p_klog_file_info->max_level,
+                p_klog_file_info->level_max,
                 KLOG_LEVEL_TRACE
             );
             return false;
@@ -135,10 +135,10 @@ bool klog_initialize_are_parameters_valid(
     }
 
     if (p_klog_console_info) {
-        if (p_klog_console_info->max_level > KLOG_LEVEL_TRACE) {
+        if (p_klog_console_info->level_max > KLOG_LEVEL_TRACE) {
             kdprintf(
                 "Trying to initialize klog with console's max level (%d) more verbose than KLOG_LEVEL_TRACE (%d)\n",
-                p_klog_console_info->max_level,
+                p_klog_console_info->level_max,
                 KLOG_LEVEL_TRACE
             );
             return false;
@@ -149,12 +149,12 @@ bool klog_initialize_are_parameters_valid(
 }
 
 KlogLoggerHandle* klog_initialize_logger_handle_array(
-    const uint32_t max_number_loggers,
+    const uint32_t logger_count_max,
     void* (* const alloc_cb)(
         size_t size
     )
 ) {
-    const uint32_t          total_handle_array_size = max_number_loggers * sizeof(KlogLoggerHandle);
+    const uint32_t          total_handle_array_size = logger_count_max * sizeof(KlogLoggerHandle);
     KlogLoggerHandle* const a_logger_handles        = alloc_cb(total_handle_array_size);
     kdprintf("Created logger handle array\n");
     kdprintf("  start: %p\n", (void*)a_logger_handles);
@@ -165,12 +165,12 @@ KlogLoggerHandle* klog_initialize_logger_handle_array(
 }
 
 uint8_t* klog_initialize_logger_levels_array(
-    const uint32_t max_number_loggers,
+    const uint32_t logger_count_max,
     void* (* const alloc_cb)(
         size_t size
     )
 ) {
-    const uint32_t logger_levels_array_size_bytes = max_number_loggers * sizeof(uint8_t*);
+    const uint32_t logger_levels_array_size_bytes = logger_count_max * sizeof(uint8_t*);
     uint8_t* const a_logger_levels                = alloc_cb(logger_levels_array_size_bytes);
     memset(a_logger_levels, 0, logger_levels_array_size_bytes);
 

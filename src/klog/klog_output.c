@@ -16,8 +16,8 @@ void klog_output(
     const KlogString       packed_prefix_console,
     const KlogString       packed_prefix_file,
     const uint8_t          level_requested,
-    const uint8_t          max_level_console,
-    const uint8_t          max_level_file,
+    const uint8_t          level_max_console,
+    const uint8_t          level_max_file,
     FILE*                  p_file,
     klog_platform_mutex_t* p_mutex_console,
     klog_platform_mutex_t* p_mutex_file
@@ -30,12 +30,12 @@ void klog_output(
             : actual_message_length;
 
         const KlogString packed_message = { submessage_length, s_message_formatted + i_starting_character };
-        if (level_requested <= max_level_console) {
+        if (level_requested <= level_max_console) {
             klog_platform_mutex_lock(p_mutex_console);
             klog_output_console(&packed_prefix_console, &packed_message);
             klog_platform_mutex_unlock(p_mutex_console);
         }
-        if (p_file && (level_requested <= max_level_file)) {
+        if (p_file && (level_requested <= level_max_file)) {
             klog_platform_mutex_lock(p_mutex_file);
             klog_output_file(p_file, &packed_prefix_file, &packed_message);
             klog_platform_mutex_unlock(p_mutex_file);

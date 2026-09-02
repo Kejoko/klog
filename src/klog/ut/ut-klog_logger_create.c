@@ -15,12 +15,12 @@
 int create_single_logger(
     void
 ) {
-    const uint32_t max_number_loggers = 1;
-    const uint32_t max_name_length    = 3;
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
+    const uint32_t logger_count_max = 1;
+    const uint32_t max_name_length  = 3;
+    klog_initialize(logger_count_max, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
 
-    if (g_klog_state.number_loggers_max != max_number_loggers) {
-        printf("Klog initialized with max number of loggers %d instead of %d\n", g_klog_state.number_loggers_max, max_number_loggers);
+    if (g_klog_state.number_loggers_max != logger_count_max) {
+        printf("Klog initialized with max number of loggers %d instead of %d\n", g_klog_state.number_loggers_max, logger_count_max);
         return 1;
     }
 
@@ -47,12 +47,12 @@ int create_single_logger(
 int create_multiple_loggers(
     void
 ) {
-    const uint32_t max_number_loggers = 100;
-    const uint32_t max_name_length    = 3;
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
+    const uint32_t logger_count_max = 100;
+    const uint32_t max_name_length  = 3;
+    klog_initialize(logger_count_max, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
 
-    if (g_klog_state.number_loggers_max != max_number_loggers) {
-        printf("Klog initialized with max number of loggers %d instead of %d\n", g_klog_state.number_loggers_max, max_number_loggers);
+    if (g_klog_state.number_loggers_max != logger_count_max) {
+        printf("Klog initialized with max number of loggers %d instead of %d\n", g_klog_state.number_loggers_max, logger_count_max);
         return 1;
     }
 
@@ -61,7 +61,7 @@ int create_multiple_loggers(
         return 1;
     }
 
-    for (uint32_t i = 0; i < max_number_loggers; ++i) {
+    for (uint32_t i = 0; i < logger_count_max; ++i) {
         char* s_name = malloc(max_name_length + 1);
         sprintf(s_name, "%.3d", i);
 

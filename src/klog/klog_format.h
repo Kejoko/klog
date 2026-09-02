@@ -30,9 +30,9 @@ char* klog_format_filename(
 uint32_t klog_format_prefix_length_get(
     const bool     use_thread_id,
     const bool     use_timestamp,
-    const uint32_t logger_name_max_length,
+    const uint32_t logger_name_length_max,
     const bool     use_color,
-    const uint32_t source_location_filename_max_length
+    const uint32_t source_length_max
 );
 
 /**

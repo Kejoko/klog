@@ -12,9 +12,9 @@ int no_async_param(
     void
 ) {
     const uint32_t  logger_name_length          = 6;
-    const uint32_t  message_max_length          = 7;
-    const uint32_t  message_total_length_length = message_max_length + 1;
-    KlogFormatInfo  format_info                 = { logger_name_length, message_max_length, 0, false, false };
+    const uint32_t  message_length_max          = 7;
+    const uint32_t  message_total_length_length = message_length_max + 1;
+    KlogFormatInfo  format_info                 = { logger_name_length, message_length_max, 0, false, false };
     KlogConsoleInfo console_info                = { KLOG_LEVEL_TRACE, false };
     klog_initialize(5, format_info, NULL, &console_info, NULL, NULL);
 
@@ -112,10 +112,10 @@ int single_element(
     void
 ) {
     const uint32_t  logger_name_length   = 8;
-    const uint32_t  message_max_length   = 11;
-    const uint32_t  message_total_length = message_max_length + 1;
+    const uint32_t  message_length_max   = 11;
+    const uint32_t  message_total_length = message_length_max + 1;
     const uint32_t  num_elements         = 1;
-    KlogFormatInfo  format_info          = { logger_name_length, message_max_length, 0, false, false };
+    KlogFormatInfo  format_info          = { logger_name_length, message_length_max, 0, false, false };
     KlogAsyncInfo   async_info           = { num_elements, 3, false, false };
     KlogConsoleInfo console_info         = { KLOG_LEVEL_INFO, false };
     klog_initialize(5, format_info, &async_info, &console_info, NULL, NULL);
@@ -140,8 +140,8 @@ int single_element(
         return 1;
     }
 
-    if (g_klog_state.message_formatted_max_size != message_max_length + 1) {
-        printf("Klog message max length should be %d but it is %d\n", message_max_length + 1, g_klog_state.message_formatted_max_size);
+    if (g_klog_state.message_formatted_max_size != message_length_max + 1) {
+        printf("Klog message max length should be %d but it is %d\n", message_length_max + 1, g_klog_state.message_formatted_max_size);
         return 1;
     }
 
@@ -215,10 +215,10 @@ int multiple_elements(
 ) {
     const uint32_t  num_loggers          = 4;
     const uint32_t  logger_name_length   = 3;
-    const uint32_t  message_max_length   = 7;                      /* good length to set manually if needed */
-    const uint32_t  message_total_length = message_max_length + 1; /* +1 because each is null terminated */
+    const uint32_t  message_length_max   = 7;                      /* good length to set manually if needed */
+    const uint32_t  message_total_length = message_length_max + 1; /* +1 because each is null terminated */
     const uint32_t  num_elements         = 3;
-    KlogFormatInfo  format_info          = { logger_name_length, message_max_length, 0, false, false };
+    KlogFormatInfo  format_info          = { logger_name_length, message_length_max, 0, false, false };
     KlogAsyncInfo   async_info           = { num_elements, 3, false, false };
     KlogConsoleInfo console_info         = { KLOG_LEVEL_DEBUG, false };
     klog_initialize(num_loggers, format_info, &async_info, &console_info, NULL, NULL);
@@ -395,7 +395,7 @@ int multiple_elements(
         "!!!!!!!!Checking buffer starting %p through %p (%d bytes)\n",
         g_klog_state.b_messages_formatted + (message_total_length * 1),
         g_klog_state.b_messages_formatted + (message_total_length * 1) + message_total_length,
-        message_max_length
+        message_length_max
     );
     if (memcmp(g_klog_state.b_messages_formatted + (message_total_length * 1), dirty_message_buffer, message_total_length)) {
         printf(

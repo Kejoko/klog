@@ -25,41 +25,41 @@ enum KlogLevel {
 /**
  * @brief Formatting information
  *
- * @var logger_name_max_length
- * @var message_max_length This is the maximum length (in characters) that a fully formatted message
+ * @var logger_name_length_max
+ * @var message_length_max This is the maximum length (in characters) that a fully formatted message
  *      can be. Note that this length is enforced prior to the message being split at newlines. If you
  *      set this field to 10, and you have a message of length 15 with a newline at character index 5,
  *      you will get a line of 5 characters (0-4) and a line of 4 characters (6-9).
- * @var source_location_filename_max_length
+ * @var source_length_max
  * @var use_thread_id
  * @var use_timestamp
  */
 typedef struct {
-    uint32_t logger_name_max_length;
-    uint32_t message_max_length;
-    uint32_t source_location_filename_max_length;
+    uint32_t logger_name_length_max;
+    uint32_t message_length_max;
+    uint32_t source_length_max;
     bool     use_thread_id;
     bool     use_timestamp;
 } KlogFormatInfo;
 
 /**
- * If number_backing_threads is greater than 1, the ordering of the output messages is not
+ * If backing_thread_count is greater than 1, the ordering of the output messages is not
  * guaranteed to be the same as the order of the inputs
  */
 typedef struct {
-    uint32_t message_queue_number_elements;
-    uint32_t number_backing_threads;
-    bool     full_buffer_overwrite_oldest_message; /* @note this is not supported currently */
-    bool     deinitialize_discard_unconsumed;
+    uint32_t message_queue_element_count;
+    uint32_t backing_thread_count;
+    bool     overwrite_messages; /* @note this is not supported currently */
+    bool     discard_unconsumed;
 } KlogAsyncInfo;
 
 typedef struct {
-    uint8_t max_level;
+    uint8_t level_max;
     bool    use_color;
 } KlogConsoleInfo;
 
 typedef struct {
-    uint8_t     max_level;
+    uint8_t     level_max;
     const char* s_filename_prefix;
 } KlogFileInfo;
 
@@ -76,7 +76,7 @@ typedef struct {
 } KlogAllocInfo;
 
 void klog_initialize(
-    const uint32_t         max_number_loggers,
+    const uint32_t         logger_count_max,
     const KlogFormatInfo   klog_format_info,
     const KlogAsyncInfo*   p_klog_async_info,
     const KlogConsoleInfo* p_klog_console_info,
@@ -107,7 +107,7 @@ void klog_deinitialize(
  *      logger, a handle to the existing logger with a truncated name will be
  *      returned.
  * @pre klog has been initialized.
- * @pre There exists fewer than KLOG_MAX_NUMBER_LOGGERS, if a logger for the
+ * @pre There exists fewer than KLOG_logger_count_max, if a logger for the
  *      given name does not exist.
  * @pre name_length is greater than 0
  * @param logger_name The name of the logger to create
@@ -117,7 +117,7 @@ void klog_deinitialize(
  *      not already exist, or the retrieved handle if logger_name did exist
  */
 const KlogLoggerHandle* klog_logger_create(
-    const char* s_logger_name,
+    const char* s_name,
     uint32_t    name_length
 );
 

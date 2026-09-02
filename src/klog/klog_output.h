@@ -14,8 +14,8 @@ void klog_output(
     KlogString             packed_prefix_console,
     KlogString             packed_prefix_file,
     uint8_t                level_requested,
-    uint8_t                max_level_console,
-    uint8_t                max_level_file,
+    uint8_t                level_max_console,
+    uint8_t                level_max_file,
     FILE*                  p_file,
     klog_platform_mutex_t* p_mutex_console,
     klog_platform_mutex_t* p_mutex_file

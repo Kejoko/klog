@@ -9,7 +9,7 @@
 
 bool klog_initialize_are_parameters_valid(
     const bool             klog_is_initialized,
-    const uint32_t         max_number_loggers,
+    const uint32_t         logger_count_max,
     const KlogFormatInfo   klog_format_info,
     const KlogAsyncInfo*   p_klog_async_info,
     const KlogConsoleInfo* p_klog_console_info,
@@ -28,14 +28,14 @@ char* klog_initialize_buffer(
 );
 
 KlogLoggerHandle* klog_initialize_logger_handle_array(
-    const uint32_t max_number_loggers,
+    const uint32_t logger_count_max,
     void* (* const alloc_cb)(
         size_t size
     )
 );
 
 uint8_t* klog_initialize_logger_levels_array(
-    const uint32_t max_number_loggers,
+    const uint32_t logger_count_max,
     void* (* const alloc_cb)(
         size_t size
     )

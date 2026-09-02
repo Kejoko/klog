@@ -65,9 +65,9 @@ char* klog_format_filename(
 uint32_t klog_format_prefix_length_get(
     const bool     use_thread_id,
     const bool     use_timestamp,
-    const uint32_t logger_name_max_length,
+    const uint32_t logger_name_length_max,
     const bool     use_color,
-    const uint32_t source_location_filename_max_length
+    const uint32_t source_length_max
 ) {
     uint32_t total = 0;
 
@@ -77,13 +77,13 @@ uint32_t klog_format_prefix_length_get(
     if (use_timestamp) {
         total += G_klog_time_string_length + 1; /* 19 digit timestamp + space */
     }
-    total += logger_name_max_length + 2 + 1;     /* logger name + brackets + space */
+    total += logger_name_length_max + 2 + 1;     /* logger name + brackets + space */
     total += G_klog_level_string_length + 2 + 1; /* level + brackets + space */
     if (use_color) {
         total += 9;
     }
-    if (source_location_filename_max_length > 0) {
-        total += source_location_filename_max_length + 2 + 1 + 4 + 1; /* filename + brackets + colon + line + space */
+    if (source_length_max > 0) {
+        total += source_length_max + 2 + 1 + 4 + 1; /* filename + brackets + colon + line + space */
     }
 
     total += 1; /* Null terminator */

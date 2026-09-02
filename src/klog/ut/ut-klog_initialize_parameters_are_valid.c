@@ -65,7 +65,7 @@ int no_message_queue_elements(
             NULL
         )
     ) {
-        printf("Parameters should be invalid when KlogAsyncInfo pointer is provided but message_queue_number_elements is 0\n");
+        printf("Parameters should be invalid when KlogAsyncInfo pointer is provided but message_queue_element_count is 0\n");
         return 1;
     }
 
@@ -87,7 +87,7 @@ int no_backing_threads(
             NULL
         )
     ) {
-        printf("Parameters should be invalid when KlogAsyncInfo pointer is provided but number_backing_threads is 0\n");
+        printf("Parameters should be invalid when KlogAsyncInfo pointer is provided but backing_thread_count is 0\n");
         return 1;
     }
 
