@@ -117,9 +117,14 @@ typedef struct {
 } KlogAllocInfo;
 
 /**
+ * @fn klog_initialize
  * @brief Initialize klog
- * @details
- * @param logger_count_max
+ * @details This accepts many parameters regarding the maximum number of things which will be used, for the
+ *      sake of allocating all memory up front.
+ * @note This is where klog allocates memory on the heap, according to the provided allocation callback.
+ * @pre Klog is not currently initialized.
+ * @pre All of the parameters contain valid values or are NULL.
+ * @param logger_count_max    The maximum number of loggers that can be created.
  * @param klog_format_info
  * @param p_klog_async_info
  * @param p_klog_console_info
@@ -135,6 +140,19 @@ void klog_initialize(
     const KlogAllocInfo*   p_klog_alloc_info
 );
 
+/**
+ * @fn klog_deinitialize
+ * @brief De-initialize Klog
+ * @details Clear the message queue, join all of the backing threads, free all of the memory.
+ * @note This will block until all of the messages in the message queue have been logged, if the async information
+ *      has the discard_unconsumed field set to false. If discard_unconsumed is set to true, the remaining messages
+ *      will be cleared.
+ * @note This is where klog "frees" (according to the provided free callback in the klog_initialize() invocation)
+ *      the memory allocated on the heap.
+ * @pre Klog is currently initialized.
+ * @post Klog is not initialized.
+ * @post All of Klog's backing threads have joined.
+ */
 void klog_deinitialize(
     void
 );
@@ -189,6 +207,23 @@ void klog_logger_level_set(
     const enum KlogLevel    updated_level
 );
 
+/**
+ * @fn klog_initialize
+ * @brief The underlying log functionality. You should prefer to use the abbreviated versions instead.
+ * @details This is only exposed here so we can wrap it with quality of life macros to automatically populate
+ *      the filename and line number arguments.
+ * @note This is used under the hood for the abbreviated klog logging functionality. See klog, klog_trace,
+ *      klog_debug, etc.
+ * @pre Klog is initialized.
+ * @pre The provided logger handle has been created.
+ * @pre The requested level is not greater than KLOG_LEVEL_TRACE.
+ * @param p_logger_handle The logger handle with which to log.
+ * @param requested_level The requested level at which the message should be output.
+ * @param s_filename      The filename in which this function was invoked.
+ * @param line_number     The line number on which this function was invoked.
+ * @param s_format        The printf style format string.
+ * @param ...             The variadic arguments to populate the formatting string with.
+ */
 void klog_log(
     const KlogLoggerHandle* p_logger_handle,
     const enum KlogLevel    requested_level,
@@ -198,12 +233,52 @@ void klog_log(
     ...
 );
 
+/**
+ * @defgroup Klog logging interface
+ */
+/**@{*/
+
+/**
+ * @fn klog
+ * @brief Log a message with the given logger at the desired level.
+ * @details This is a wrapper around klog_log for quality of life to automatically have the line number
+ *      and filename populated.
+ * @note Prefer to use this instead of klog_log if you desire to log at a dynamic level.
+ * @pre Klog is initialized.
+ * @pre The provided logger handle has been created.
+ * @pre The requested level is not greater than KLOG_LEVEL_TRACE.
+ * @param p_logger_handle The logger handle with which to log.
+ * @param requested_level The requested level at which the message should be output.
+ * @param ...             The formatting string and variadic arguments.
+ */
 #define klog(p_logger_handle, requested_level, ...) klog_log(p_logger_handle, requested_level, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_trace(p_logger_handle, ...)            klog_log(p_logger_handle, KLOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_debug(p_logger_handle, ...)            klog_log(p_logger_handle, KLOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_info(p_logger_handle, ...)             klog_log(p_logger_handle, KLOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_warn(p_logger_handle, ...)             klog_log(p_logger_handle, KLOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_error(p_logger_handle, ...)            klog_log(p_logger_handle, KLOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define klog_fatal(p_logger_handle, ...)            klog_log(p_logger_handle, KLOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+
+/**
+ * @fn klog_trace
+ * @fn klog_debug
+ * @fn klog_info
+ * @fn klog_warn
+ * @fn klog_error
+ * @fn klog_fatal
+ * @brief Log a message with the given logger at a fixed level according to the chosen invocation.
+ * @details This is a wrapper around klog_log for quality of life to automatically have the line number
+ *      and filename populated, and a fixed logging level for transparency and to reduce the number of
+ *      required arguments.
+ * @note Prefer to use this instead of klog_log if you desire to log at a dynamic level.
+ * @pre Klog is initialized.
+ * @pre The provided logger handle has been created.
+ * @param p_logger_handle The logger handle with which to log.
+ * @param ...             The formatting string and variadic arguments.
+ */
+/**@{*/
+#define klog_trace(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_debug(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_info(p_logger_handle, ...)  klog_log(p_logger_handle, KLOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_warn(p_logger_handle, ...)  klog_log(p_logger_handle, KLOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_error(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#define klog_fatal(p_logger_handle, ...) klog_log(p_logger_handle, KLOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+/**@}*/
+
+/**@}*/
 
 #endif /* KLOG_INCLUDED */

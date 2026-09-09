@@ -70,6 +70,13 @@ bool klog_initialize_are_parameters_valid(
         return false;
     }
 
+    /*
+     *    if (!p_klog_file_info && !p_klog_console_info) {
+     *     kdprintf("Trying to initialize klog but neither console nor file infos are provided\n");
+     *     return false;
+     *    }
+     */
+
     if (p_klog_async_info) {
         if (p_klog_async_info->message_queue_element_count == 0) {
             kdprintf("Trying to initialize klog with an async message queue of size 0\n");
