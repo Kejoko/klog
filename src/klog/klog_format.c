@@ -166,15 +166,6 @@ KlogString klog_format_message_prefix(
     /* 00+                                  123456789|       |                   */
     /* 00+                                           12345678|                   */
 
-    /**
-     * @brief So in total we have:
-     *      8[thread id and space] +
-     *      (p_time.length+1)[timestamp and space] +
-     *      (p_name.length+3)[logger name, brackets, space] +
-     *      (p_level+3)[level name, brackets, space] +
-     *      (p_source_location.length+3)[source location, brackets, space]
-     */
-
     /* @todo should we use our prefix_length_get function here? */
     /* @todo should we memset to 0 at the front here instead of the end of klog_log? */
 
