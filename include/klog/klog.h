@@ -209,7 +209,7 @@ void klog_logger_level_set(
 
 /**
  * @fn klog_initialize
- * @brief The underlying log functionality. You should prefer to use the abbreviated versions instead.
+ * @brief The underlying log functionality. You should prefer to use the abbreviated versions instead of this.
  * @details This is only exposed here so we can wrap it with quality of life macros to automatically populate
  *      the filename and line number arguments.
  * @note This is used under the hood for the abbreviated klog logging functionality. See klog, klog_trace,
