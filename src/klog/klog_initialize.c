@@ -10,37 +10,6 @@
 #include "./klog_platform.h"
 #include "klog_format.h"
 
-char* klog_initialize_buffer(
-    const uint32_t number_elements,
-    const uint32_t element_length_max,
-    const char     fill_char,
-    const bool     null_terminate,
-    void* (* const alloc_cb)(
-        size_t size
-    )
-) {
-    const uint32_t element_length_max_real = null_terminate ? element_length_max + 1 : element_length_max;
-    const uint32_t total_size              = number_elements * element_length_max_real;
-    char* const    b_buffer                = alloc_cb(total_size);
-    memset(b_buffer, fill_char, total_size);
-    if (null_terminate) {
-        for (uint32_t i = 0; i < number_elements; ++i) {
-            const uint32_t end_index = (i * element_length_max_real) + (element_length_max_real - 1);
-            b_buffer[end_index]      = '\0';
-        }
-    }
-
-    kdprintf("Created buffer\n");
-    kdprintf("  start: %p\n",                    (void*)b_buffer);
-    kdprintf("  end  : %p\n",                    (void*)(b_buffer + total_size));
-    kdprintf("  total size : %d\n",              total_size);
-    kdprintf("  num elements: %d\n",             number_elements);
-    kdprintf("  element max length: %d\n",       element_length_max);
-    kdprintf("  null terminated elements: %b\n", null_terminate);
-
-    return b_buffer;
-}
-
 bool klog_initialize_are_parameters_valid(
     const bool                   klog_is_initialized,
     const uint32_t               logger_count_max,
@@ -153,6 +122,37 @@ bool klog_initialize_are_parameters_valid(
     }
 
     return true;
+}
+
+char* klog_initialize_buffer(
+    const uint32_t number_elements,
+    const uint32_t element_length_max,
+    const char     fill_char,
+    const bool     null_terminate,
+    void* (* const alloc_cb)(
+        size_t size
+    )
+) {
+    const uint32_t element_length_max_real = null_terminate ? element_length_max + 1 : element_length_max;
+    const uint32_t total_size              = number_elements * element_length_max_real;
+    char* const    b_buffer                = alloc_cb(total_size);
+    memset(b_buffer, fill_char, total_size);
+    if (null_terminate) {
+        for (uint32_t i = 0; i < number_elements; ++i) {
+            const uint32_t end_index = (i * element_length_max_real) + (element_length_max_real - 1);
+            b_buffer[end_index]      = '\0';
+        }
+    }
+
+    kdprintf("Created buffer\n");
+    kdprintf("  start: %p\n",                    (void*)b_buffer);
+    kdprintf("  end  : %p\n",                    (void*)(b_buffer + total_size));
+    kdprintf("  total size : %d\n",              total_size);
+    kdprintf("  num elements: %d\n",             number_elements);
+    kdprintf("  element max length: %d\n",       element_length_max);
+    kdprintf("  null terminated elements: %b\n", null_terminate);
+
+    return b_buffer;
 }
 
 KlogLoggerHandle* klog_initialize_logger_handle_array(
