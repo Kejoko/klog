@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+/**
+ * @brief The hidden handle structure. All that the user gets
+ *      is a pointer to this with no visibility into the contents.
+ */
 struct KlogLoggerHandle {
     uint32_t value;
 };

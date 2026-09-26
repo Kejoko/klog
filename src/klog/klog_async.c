@@ -47,7 +47,7 @@ bool klog_async_consume(
 
     klog_platform_mutex_lock(g_klog_state.p_mutex_shared);
     const bool consumed_everything = g_klog_state.message_produced_total_count == g_klog_state.message_consumed_total_count;
-    if (consumed_everything || g_klog_config.async.deinitialize_discard_unconsumed) {
+    if (consumed_everything || g_klog_config.async.discard_unconsumed) {
         /* We have logged everything we should have - up to this point. Should we stop?? */
         if (should_deinit) {
             /* We should stop */
@@ -132,8 +132,8 @@ bool klog_async_consume(
         packed_prefix_console,
         packed_prefix_file,
         requested_level,
-        g_klog_config.console.max_level,
-        g_klog_config.file.max_level,
+        g_klog_config.console.level_max,
+        g_klog_config.file.level_max,
         g_klog_state.p_file,
         g_klog_state.p_mutex_output_console,
         g_klog_state.p_mutex_output_file

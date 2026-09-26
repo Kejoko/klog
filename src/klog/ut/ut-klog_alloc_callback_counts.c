@@ -48,8 +48,8 @@ int check(
     g_alloc_counter = 0;
     g_free_counter  = 0;
 
-    const uint32_t max_number_loggers = 2;
-    const uint32_t max_name_length    = 3;
+    const uint32_t logger_count_max = 2;
+    const uint32_t max_name_length  = 3;
 
     const KlogAsyncInfo   async_info   = { 20, 5, false, false };
     const KlogConsoleInfo console_info = { KLOG_LEVEL_TRACE, true };
@@ -57,7 +57,7 @@ int check(
     const KlogAllocInfo   alloc_info   = { &malloc_wrapper, &free_wrapper };
 
     klog_initialize(
-        max_number_loggers,
+        logger_count_max,
         (KlogFormatInfo) { max_name_length, 10, 0, false, false },
         &async_info,
         &console_info,

@@ -18,11 +18,11 @@
 int set_levels(
     void
 ) {
-    const uint32_t max_number_loggers = 100;
-    const uint32_t max_name_length    = 3;
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
+    const uint32_t logger_count_max = 100;
+    const uint32_t max_name_length  = 3;
+    klog_initialize(logger_count_max, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, NULL, NULL);
 
-    for (uint32_t i = 0; i < max_number_loggers; ++i) {
+    for (uint32_t i = 0; i < logger_count_max; ++i) {
         const uint32_t desired_level = i % KLOG_LEVEL_COUNT;
 
         char* s_name = malloc(max_name_length + 1);
@@ -48,11 +48,11 @@ int set_levels(
 int log_levels_tempfile(
     void
 ) {
-    const uint32_t     max_number_loggers = 100;
-    const uint32_t     max_name_length    = 3;
-    const KlogFileInfo file_info          = { KLOG_LEVEL_TRACE, "/tmp/ut-klog_logger_level_set" }; /* @todo kjk 2026/02/11 portable tempfile path for windows and mac */
+    const uint32_t     logger_count_max = 100;
+    const uint32_t     max_name_length  = 3;
+    const KlogFileInfo file_info        = { KLOG_LEVEL_TRACE, "/tmp/ut-klog_logger_level_set" };   /* @todo kjk 2026/02/11 portable tempfile path for windows and mac */
     printf("Initializing klog\n");
-    klog_initialize(max_number_loggers, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, &file_info, NULL);
+    klog_initialize(logger_count_max, (KlogFormatInfo) { max_name_length, 10, 0, false, false }, NULL, NULL, &file_info, NULL);
     printf("Initializing klog - done\n");
 
     const char*             l_names[KLOG_LEVEL_COUNT]   = { "001", "002", "003", "004", "005", "006", "007" };

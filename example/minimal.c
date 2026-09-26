@@ -7,8 +7,8 @@
 int main(
     void
 ) {
-    KlogFormatInfo  format_info  = { .logger_name_max_length = 6, .message_max_length = 50 };
-    KlogConsoleInfo console_info = { .max_level = KLOG_LEVEL_DEBUG };
+    KlogFormatInfo  format_info  = { .logger_name_length_max = 6, .message_length_max = 50 };
+    KlogConsoleInfo console_info = { .level_max = KLOG_LEVEL_DEBUG };
     klog_initialize(4, format_info, NULL, &console_info, NULL, NULL);
 
     const KlogLoggerHandle* handle = klog_logger_create("My Logger", 8);
