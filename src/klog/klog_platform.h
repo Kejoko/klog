@@ -115,7 +115,7 @@ const char* klog_platform_get_basename(
  */
 
 typedef struct {
-    uint32_t second_j2k;
+    uint64_t second_j2k;
 
     uint32_t microsecond;
     uint32_t second;
@@ -216,7 +216,7 @@ const char* klog_platform_get_basename(
 /* Time ------------------------------------------------------------------------------------------------------------- */
 
 typedef struct {
-    uint32_t second_j2k;
+    uint64_t second_j2k;
 
     uint32_t microsecond;
     uint32_t second;
